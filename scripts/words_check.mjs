@@ -27,6 +27,22 @@ async function settings(combine, fields, language = 'en') {
   await page.locator('#settings-form button[type=submit]').click();
 }
 
+async function textHover() {
+  const point = await page.evaluate(() => {
+    const view = Object.values(window.Bokeh.index).find(view => document.querySelector('#scatter').contains(view.el));
+    const data = view.model.renderers.find(renderer => renderer.data_source).data_source.data;
+    const ids = data.x.map((_, id) => id).filter(id => Number.isFinite(data.x[id]) && data.hover_0[id] !== '\\N');
+    const id = ids.sort((a, b) => data.x[b] - data.x[a])[0];
+    const rectangle = view.canvas_view.events_el.getBoundingClientRect();
+    return { x: rectangle.x + view.frame.x_scale.compute(data.x[id]),
+      y: rectangle.y + view.frame.y_scale.compute(data.y[id]), text: data.hover_0[id] };
+  });
+  await page.mouse.move(point.x, point.y);
+  await page.locator('.bk-tooltip-content').filter({ hasText: point.text }).first().waitFor();
+  await page.screenshot({ path: '.cache/text-hover.png' });
+  await page.mouse.move(0, 0);
+}
+
 async function linkedBrush(selector) {
   await page.click('#clear-selection');
   const box = await page.locator(`${selector} .bk-events`).boundingBox();
@@ -43,10 +59,12 @@ async function linkedBrush(selector) {
       hover: plot.toolbar.tools.find(tool => tool.type === 'HoverTool').tooltips };
   }));
   const selected = (await snapshot()).selected;
-  for (const plot of data) {
+  const projections = (await snapshot()).projections;
+  for (const [index, plot] of data.entries()) {
     assert.deepEqual(plot.selected, selected);
     assert.ok(plot.axesHidden);
-    assert.deepEqual(plot.hover, [['Row', '@row']]);
+    assert.deepEqual(plot.hover.map(([name]) => name).sort(), [...projections[index].config.features].sort());
+    assert.ok(plot.hover.every(([, template]) => template.includes('@hover_') && !template.includes('@row')));
   }
   return selected.length;
 }
@@ -83,6 +101,7 @@ try {
   const rows = (await snapshot()).rows;
   assert.ok(rows < 10000);
   await fit(0, 'pca');
+  await textHover();
   const primary = (await snapshot()).projections[0];
   assert.equal(primary.config.vectorLanguage, 'en');
   assert.equal(primary.dimensions, 300);

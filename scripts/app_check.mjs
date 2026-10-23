@@ -20,8 +20,7 @@ async function example(name, rows) {
   results.push({ fixture: name, rows, fields: (await snapshot()).fields.length });
 }
 
-async function brush() {
-  await page.click('#clear-selection');
+async function highlight() {
   const events = page.locator('#scatter .bk-events');
   const box = await events.boundingBox();
   await page.mouse.move(box.x + box.width * 0.15, box.y + box.height * 0.15);
@@ -29,6 +28,27 @@ async function brush() {
   await page.mouse.move(box.x + box.width * 0.85, box.y + box.height * 0.85, { steps: 16 });
   await page.mouse.up();
   await page.waitForFunction(() => window.explorer.snapshot().selected.length > 0);
+}
+
+async function previewSelection() {
+  await page.check('#preview-selection');
+  await page.click('#clear-selection');
+  assert.ok(await page.locator('.data-table tr[data-id="0"]').count());
+  await highlight();
+  const selected = (await snapshot()).selected;
+  const ids = await page.locator('.data-table tr[data-id]').evaluateAll(rows => rows.map(row => Number(row.dataset.id)));
+  assert.ok(ids.length > 0 && ids.every(id => selected.includes(id)));
+  assert.equal(await page.locator('.data-table tr.selected').count(), 0);
+  assert.equal(await page.locator('#table-scroll').evaluate(node => node.scrollTop), 0);
+  assert.equal(await page.locator('#table-count').textContent(), `${selected.length.toLocaleString()} shown`);
+  await page.uncheck('#preview-selection');
+  assert.ok(await page.locator('.data-table tr[data-id="0"]').count());
+}
+
+async function brush() {
+  await page.click('#clear-selection');
+  await highlight();
+  await previewSelection();
   const highlighted = await snapshot();
   assert.equal(highlighted.visible, highlighted.rows);
   await page.click('#filter-selection');
@@ -166,6 +186,11 @@ try {
   await mkdir('.cache', { recursive: true });
   assert.equal(await page.locator('.workspace > .panel').count(), 4);
   await example('uefa_players.csv', 987);
+  const rawHover = await page.evaluate(() => {
+    const view = Object.values(window.Bokeh.index).find(view => document.querySelector('#scatter').contains(view.el));
+    return view.model.toolbar.tools.find(tool => tool.type === 'HoverTool').tooltips.map(([name]) => name);
+  });
+  assert.deepEqual(rawHover, await page.locator('#scatter-panel .axis-controls select').evaluateAll(selects => [...new Set(selects.map(select => select.value).filter(Boolean))]));
   await brush();
   await aggregateSelection();
   await charts();

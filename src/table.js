@@ -1,7 +1,10 @@
-import { display, element, glyph } from './dom.js';
+import { $, display, element, glyph } from './dom.js';
 import { numberOf } from './schema.js';
 
 const rowHeight = 25;
+
+export const previewRows = (model, enabled) => enabled && model.selected.size
+  ? model.visible.filter(id => model.selected.has(id)) : model.visible;
 
 export class TableView {
   constructor(model, container) {
@@ -25,7 +28,11 @@ export class TableView {
     });
     model.on('schema', () => this.rebuild());
     model.on('view', () => { this.container.scrollTop = 0; this.render(true); });
-    model.on('selection', () => this.render(true));
+    model.on('selection', () => {
+      if ($('#preview-selection').checked) { this.container.scrollTop = 0; }
+      this.render(true);
+    });
+    $('#preview-selection').onchange = () => { this.container.scrollTop = 0; this.render(true); };
     model.on('annotation', () => this.render(true));
     new ResizeObserver(() => this.render(true)).observe(container);
   }
@@ -68,8 +75,9 @@ export class TableView {
       ids = [...next];
     }
     if (event.shiftKey && this.anchor !== undefined) {
-      const a = this.model.visible.indexOf(this.anchor), b = this.model.visible.indexOf(id);
-      ids = this.model.visible.slice(Math.min(a, b), Math.max(a, b) + 1);
+      const visible = previewRows(this.model, $('#preview-selection').checked);
+      const a = visible.indexOf(this.anchor), b = visible.indexOf(id);
+      ids = a < 0 ? [id] : visible.slice(Math.min(a, b), Math.max(a, b) + 1);
     }
     this.anchor = id;
     this.model.select(ids, id);
@@ -85,13 +93,14 @@ export class TableView {
     const row = this.model.rows[id];
     const selected = this.model.selected.has(id);
     return element('tr', { 'data-id': id, tabindex: '0',
-      class: selected ? 'selected' : '', 'aria-selected': String(selected) },
+      class: selected && !$('#preview-selection').checked ? 'selected' : '', 'aria-selected': String(selected) },
     [element('th', { text: id + 1, scope: 'row' }), ...this.model.fields.map(field =>
       element('td', { text: display(row[field.name]), title: display(row[field.name]) }))]);
   }
 
   render(force = false) {
-    const { visible } = this.model;
+    const visible = previewRows(this.model, $('#preview-selection').checked);
+    $('#table-count').textContent = $('#preview-selection').checked ? `${visible.length.toLocaleString()} shown` : '';
     const start = Math.max(0, Math.floor(this.container.scrollTop / rowHeight) - 6);
     if (!force && start === this.start) { return; }
     this.start = start;

@@ -99,7 +99,11 @@ filters, while zoom/pan and fitted coordinates stay independent. With unchanged 
 PCA and UMAP reuse the same prepared features. Change selected fields or aggregation in
 Settings and fit either view to compare different text perspectives. Captions retain the
 settings used for each fit; editing settings never changes an existing fitted result.
-Reduced-space plots omit numeric axes and coordinate tooltips; raw data axes retain them.
+Reduced-space plots omit numeric axes and show the fitted text columns on hover.
+Raw data axes show the original field names and values, including category labels.
+Both scatter tooltips omit row numbers. The table's **Preview selection** checkbox
+temporarily shows the highlighted records intersected with the current filters, without
+changing other views or fitting again. Clearing the selection restores all filtered rows.
 
 The bottom status bar reports byte reads, indeterminate parsing/runtime/SVD/PCA stages,
 completed embedding records and UMAP epochs. Table parsing runs in a worker, and

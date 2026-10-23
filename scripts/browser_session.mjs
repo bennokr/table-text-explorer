@@ -18,6 +18,10 @@ export async function browserSession() {
   const command = mode === 'dev' ? [] : ['preview'];
   const server = spawn('node', ['node_modules/vite/bin/vite.js', ...command, '--host', '127.0.0.1',
     '--port', '4175', '--strictPort'], { stdio: 'pipe' });
+  server.stdout.on('data', chunk => {
+    if (mode === 'dev') { process.stdout.write(chunk); }
+  });
+  server.stderr.on('data', chunk => { process.stderr.write(chunk); });
   let browser;
   const close = async () => { await browser?.close(); server.kill(); };
   try {
