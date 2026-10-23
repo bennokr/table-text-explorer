@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';">
   <link rel="icon" href="data:,">
-  <title>Table + text explorer · v0.1</title>
+  <title>Table + text explorer · v0.2</title>
   <link rel="stylesheet" href="/src/style.css">
   <script src="/vendor/bokeh/bokeh.min.js"></script>
   <script src="/vendor/bokeh/bokeh-api.min.js"></script>
 </head>
 <body>
   <nav class="topbar" aria-label="Table operations">
-    <strong>Table + text</strong><span class="version">v0.1</span>
+    <strong>Table + text</strong><span class="version">v0.2</span>
     <button id="import" title="Import a local table" aria-label="Import a local table">↥</button>
     <input id="file" type="file" accept=".csv,.json,.sav,.xlsx" hidden>
     <select id="examples" aria-label="Example dataset" title="Load an example from the local fixtures folder"><option value="">Examples…</option></select>
@@ -32,12 +32,18 @@
         </select>
         <button id="fit" title="Fit projection on all records" aria-label="Fit projection on all records">▶</button>
         <button id="cancel" hidden title="Cancel projection" aria-label="Cancel projection">■</button>
+        <label title="Show a second linked projection"><input id="compare" type="checkbox">Compare</label>
+        <span id="compare-controls" hidden><select id="projection-secondary" aria-label="Comparison projection method"><option value="umap">UMAP</option><option value="pca">PCA</option><option value="svd">SVD</option></select>
+          <button id="fit-secondary" title="Fit comparison with current settings on all records" aria-label="Fit comparison">▶</button></span>
         <span class="axis-controls"><label for="x-axis">X</label><select id="x-axis" aria-label="X axis"></select>
           <label for="y-axis">Y</label><select id="y-axis" aria-label="Y axis"></select></span>
         <label for="color">Color</label><select id="color" aria-label="Color by"></select>
         <button id="clear-selection" title="Clear highlighting" aria-label="Clear highlighting">×</button>
       </header>
-      <div id="scatter"><p class="empty">Import a table or choose an example. Brush points to highlight records.</p></div>
+      <div class="scatter-pair">
+        <div class="scatter-view"><small id="projection-info-0">Import a table or choose an example.</small><div id="scatter"></div></div>
+        <div class="scatter-view" id="secondary-view" hidden><small id="projection-info-1">Choose settings, then fit this view.</small><div id="scatter-secondary"></div></div>
+      </div>
     </section>
     <section class="panel" aria-label="Chart stack">
       <header class="panel-head"><h2>Charts</h2><button id="add-chart" title="Add a distribution or two-variable chart" aria-label="Add chart">＋</button></header>
@@ -60,7 +66,7 @@
       </div>
     </section>
   </main>
-  <footer><span id="counts"></span><span id="status" role="status" aria-live="polite">Import a local file or choose an example. Your data stays on this machine.</span></footer>
+  <footer><span id="counts"></span><progress id="task-progress" hidden aria-label="Task progress"></progress><span id="status" role="status" aria-live="polite">Import a local file or choose an example. Your data stays on this machine.</span></footer>
   <dialog id="chart-dialog" aria-labelledby="chart-title"><form id="chart-form">
     <h2 id="chart-title">Add chart</h2>
     <label>Variable <select id="chart-x" required></select></label>
@@ -78,8 +84,14 @@
   <dialog id="settings-dialog" aria-labelledby="settings-title"><form id="settings-form">
     <h2 id="settings-title">Settings</h2>
     <fieldset><legend>Projection features</legend>
-      <label>Input <select id="feature-mode"><option value="table">Numeric and categorical columns</option><option value="text">Text · TF-IDF words + bigrams</option></select></label>
+      <label>Input <select id="feature-mode"><option value="table">Numeric and categorical columns</option><option value="text">Text · TF-IDF words + bigrams</option><option value="words">Text · static word vectors</option></select></label>
       <div id="feature-list"></div>
+      <div id="word-options" hidden>
+        <label>Vector model <select id="vector-language"><option value="nl">Dutch · spaCy nl_core_news_md · 33 MB</option><option value="en">English · spaCy en_core_web_md · 32 MB</option></select></label>
+        <label>Words within each field <select id="word-pooling"><option value="mean">Mean of word vectors</option><option value="tfidf">TF-IDF weighted mean</option></select></label>
+        <label>Combine fields <select id="field-combine"><option value="mean">Weighted mean · shared semantic space</option><option value="concat">Concatenate vectors · preserve field identity</option></select></label>
+        <small>Weights appear beside columns. Each field vector is normalized; the combined record vector is normalized too. Concatenation scales blocks by √weight. Empty or unknown text contributes no vector. Static vectors use all words, without truncation. Models are separate language spaces, loaded from local assets.</small>
+      </div>
       <label>Stopword list <select id="language"><option value="nl">Dutch · basic</option><option value="en">English · basic</option><option value="none">None</option></select></label>
       <label>Additional stopwords <textarea id="stopwords" rows="2" placeholder="Separate with spaces, commas or newlines"></textarea></label>
       <label>UMAP neighbors <input id="neighbors" type="number" min="2" max="100" required></label>

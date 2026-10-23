@@ -11,7 +11,8 @@ export class Dataset extends EventTarget {
   pinned = null;
   revision = 0;
   config = { categoryLimit: 50, overrides: {}, mode: 'table', language: 'nl',
-    features: null, stopwords: '', neighbors: 15, epochs: 150 };
+    features: null, stopwords: '', neighbors: 15, epochs: 150,
+    vectorLanguage: 'nl', pooling: 'mean', combine: 'mean', weights: {} };
 
   emit(type) { this.dispatchEvent(new Event(type)); }
   on(type, callback) {
@@ -34,6 +35,8 @@ export class Dataset extends EventTarget {
     this.pinned = null;
     this.sort = null;
     this.coordinates = null;
+    this.projections = [null, null];
+    this.config.weights = {};
     this.visible = rows.map((_, index) => index);
     this.emit('data');
   }

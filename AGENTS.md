@@ -12,7 +12,8 @@
   to satisfy size limits. Split modules by responsibility when needed.
 - Run `npm run check`, `npm run build` and relevant feasibility checks before handoff.
 - Ruff and ESLint cap complexity at 8 and statements per function at 35.
-  AST size checks cap each authored module at 250 statements and each language at 2500.
+  AST size checks cap each authored module at 250 statements, Python at 2500 total
+  and JavaScript at 3500 total (v0.2 rationale in docs/feasibility.md).
   Imports, functions and nested bodies count; comments and blank lines do not.
   Vendor/generated files and dependencies are excluded. Raise budgets only with a written
   explanation in the feasibility report; do not add per-file bypasses.

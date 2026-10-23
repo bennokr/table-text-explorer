@@ -19,8 +19,10 @@ async function initialize(id) {
 self.onmessage = async ({ data: { id, payload } }) => {
   try {
     const python = await initialize(id);
-    self.postMessage({ id, progress: 'Preparing features for all records…' });
-    python.globals.set('payload', JSON.stringify(payload));
+    self.postMessage({ id, progress: payload.mode === 'prepared' ? `Fitting ${payload.method.toUpperCase()}` : 'Reducing all-record features with SVD' });
+    const { features, ...parameters } = payload;
+    python.globals.set('embedding_values', features ?? null);
+    python.globals.set('payload', JSON.stringify(parameters));
     const result = JSON.parse(await python.runPythonAsync('run_projection(payload)'));
     self.postMessage({ id, result });
   } catch (error) {

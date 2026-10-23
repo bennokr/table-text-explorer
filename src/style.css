@@ -22,7 +22,10 @@ input[type=search] { min-width: 130px; flex: 1; }
 .panel-head h2 { font-size: 12px; font-weight: 600; margin: 0 auto 0 0; }
 .panel-head select { max-width: 125px; }
 .axis-controls { display: flex; align-items: center; gap: 4px; }
-#scatter { flex: 1; min-height: 0; min-width: 0; position: relative; }
+.scatter-pair { display: flex; flex: 1; min-height: 0; }
+.scatter-view { display: flex; flex: 1; flex-direction: column; min-width: 0; border-right: 1px solid #eee; }
+.scatter-view > small { padding: 3px 6px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+#scatter, #scatter-secondary { flex: 1; min-height: 0; min-width: 0; position: relative; }
 .scroll { min-height: 0; overflow: auto; flex: 1; }
 .empty { color: #737b80; padding: 12px; }
 #charts { padding: 4px; overflow-x: hidden; }
@@ -49,6 +52,7 @@ input[type=search] { min-width: 130px; flex: 1; }
 .annotation-bar input { min-width: 75px; flex: 1; width: 100px; }
 .annotation-bar select { max-width: 140px; }
 footer { display: flex; gap: 12px; padding: 3px 7px; border-top: 1px solid #ccc; min-height: 23px; }
+footer progress { width: 110px; height: 12px; flex-shrink: 0; align-self: center; }
 #counts { white-space: nowrap; }
 #status { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #69747a; }
 #status.error { color: #a33b2a; }
@@ -61,6 +65,9 @@ dialog textarea { display: block; width: 100%; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 5px; margin-top: 10px; }
 #feature-list { max-height: 150px; overflow: auto; display: grid; grid-template-columns: 1fr 1fr; }
 #feature-list label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.feature-choice { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.feature-choice label { flex: 1; }
+.feature-choice input[type=number] { width: 50px; min-height: 22px; }
 .types-scroll { max-height: 230px; overflow: auto; }
 .types-scroll table { width: 100%; text-align: left; border-collapse: collapse; }
 .types-scroll th, .types-scroll td { padding: 2px 4px; border-bottom: 1px solid #eee; }

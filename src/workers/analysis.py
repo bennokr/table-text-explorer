@@ -8,6 +8,8 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import StandardScaler
 
+embedding_values = None  # Replaced by the worker bridge for each request.
+
 
 def table_features(data):
     records = [{} for _ in data["rows"]]
@@ -39,25 +41,36 @@ def text_features(data):
 
 
 def project(data):
+    if data["mode"] == "prepared":
+        return coordinates(np.asarray(embedding_values.to_py(), dtype=np.float32), data["method"])
     if len(data["rows"]) < 2 or not data["fields"]:
         raise ValueError("Choose at least one feature and import at least two records.")
-    matrix = text_features(data) if data["mode"] == "text" else table_features(data)
+    if data["mode"] == "words":
+        matrix = np.asarray(embedding_values.to_py(), dtype=np.float32).reshape(
+            -1, data["dimensions"]
+        )
+    else:
+        matrix = text_features(data) if data["mode"] == "text" else table_features(data)
     if matrix.shape[1] == 0:
         raise ValueError("No usable features. Choose other columns or stopwords.")
     components = min(32, matrix.shape[0] - 1, matrix.shape[1])
     reduced = (
-        matrix.toarray()
+        np.asarray(matrix.toarray() if hasattr(matrix, "toarray") else matrix)
         if matrix.shape[1] == 1
         else TruncatedSVD(n_components=components, random_state=42).fit_transform(matrix)
     )
-    if data["method"] == "umap":
+    if data["method"] in {"umap", "prepare"}:
         return {"features": reduced.tolist(), "dimensions": matrix.shape[1]}
-    if data["method"] == "pca" and reduced.shape[1] > 1:
+    return coordinates(reduced, data["method"])
+
+
+def coordinates(reduced, method):
+    if method == "pca" and reduced.shape[1] > 1:
         reduced = PCA(n_components=min(2, *reduced.shape), random_state=42).fit_transform(reduced)
     coordinates = reduced[:, :2]
     if coordinates.shape[1] == 1:
         coordinates = np.column_stack((coordinates[:, 0], np.zeros(len(coordinates))))
-    return {"coordinates": coordinates.tolist(), "dimensions": matrix.shape[1]}
+    return {"coordinates": coordinates.tolist()}
 
 
 def run_projection(payload):

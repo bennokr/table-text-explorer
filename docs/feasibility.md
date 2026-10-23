@@ -108,3 +108,20 @@ all values, variable labels, value labels and user missing ranges. A pointer bru
 highlights 4,770 records without hiding any; explicit filtering reduces visibility to
 4,770 while retaining all 20,000 original source records. All 33 intercepted requests
 are local GET requests; there are zero browser page errors.
+
+## v0.2 scope and code budget
+
+The JavaScript total statement ceiling increases from 2500 to 3500 for the requested
+word-vector pipeline, worker-based imports, task progress, independent linked projections,
+and regression checks. The per-module 250-statement ceiling and complexity/readability
+limits remain unchanged. Feature preparation is extracted from projection controls rather
+than compressed to fit the old total. Python retains its 2500-statement total ceiling.
+
+Static spaCy 3.7 medium vectors are converted at build-preparation time, without shipping
+spaCy or its tagging/parsing pipelines to the browser. Pinned Dutch and English assets
+contain 20,000 × 300 float32 vectors (24 MB), plus word-to-row JSON: 32.93 MB Dutch and
+32.13 MB English total. They are separate, unaligned monolingual spaces, not multilingual
+sentence models. Each generated directory retains the model/source licenses and a
+manifest with revision, source hashes and output hashes. Unknown words are skipped;
+coverage is reported, with zero-vector records left unprojected. The tokenizer is a
+Unicode word tokenizer, not spaCy's full language tokenizer. Stopwords are optional.

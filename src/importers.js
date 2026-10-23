@@ -1,50 +1,26 @@
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
-import { readSav } from '@irbisadm/statfmt';
+import { Workers } from './workers/client.js';
+import { readBytes } from './workers/assets.js';
 
-function jsonRecords(text) {
-  const rows = JSON.parse(text);
-  if (!Array.isArray(rows) || rows.some(row => !row || typeof row !== 'object' || Array.isArray(row))) {
-    throw new Error('JSON must contain an array of record objects.');
-  }
-  return rows;
+const importer = new Workers();
+
+export function cancelImport() { importer.cancel('Import replaced.'); }
+
+async function parse(bytes, name, progress) {
+  return importer.run('import', { bytes, name }, progress);
 }
 
-function readCsv(text) {
-  const result = Papa.parse(text, { header: true, skipEmptyLines: 'greedy' });
-  if (result.errors.length) { throw new Error(`CSV: ${result.errors[0].message}`); }
-  return result.data;
+export async function importTable(file, progress) {
+  const bytes = await readBytes(new Response(file), counts => progress({ message: 'Reading local file', ...counts, total: file.size }));
+  return parse(bytes, file.name, progress);
 }
 
-function readExcel(bytes) {
-  const book = XLSX.read(bytes, { cellDates: true });
-  const rows = XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]], { defval: null });
-  return rows.map(row => Object.fromEntries(Object.entries(row).map(([key, value]) =>
-    [key, value instanceof Date ? value.toISOString() : value])));
-}
-
-export async function importTable(file) {
-  const extension = file.name.split('.').at(-1).toLowerCase();
-  const bytes = await file.arrayBuffer();
-  const text = () => new TextDecoder().decode(bytes);
-  const readers = { csv: () => ({ rows: readCsv(text()) }),
-    json: () => ({ rows: jsonRecords(text()) }),
-    xlsx: () => ({ rows: readExcel(bytes) }),
-    sav: () => {
-      const data = readSav(new Uint8Array(bytes));
-      return { rows: data.toObjects(), metadata: Object.fromEntries(
-        data.variables.map(field => [field.name, field])) };
-    } };
-  if (!Object.hasOwn(readers, extension)) { throw new Error('Choose a CSV, JSON records, SAV or XLSX file.'); }
-  const result = readers[extension]();
-  if (!result.rows.length) { throw new Error('The table contains no records.'); }
-  return { ...result, name: file.name };
-}
-
-export async function importExample(name) {
+export async function importExample(name, progress) {
   const response = await fetch(`/fixtures/${encodeURIComponent(name)}`);
   if (!response.ok) { throw new Error('Example is unavailable. Run npm run build to refresh fixtures.'); }
-  return importTable(new File([await response.blob()], name));
+  const bytes = await readBytes(response, counts => progress({ message: 'Reading example', ...counts }));
+  return parse(bytes, name, progress);
 }
 
 export function exportTable(model, format, scope) {

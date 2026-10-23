@@ -9,4 +9,5 @@ vendor/
 public/fixtures/
 public/examples.json
 public/reference/
+public/attribution/
 playwright-report/

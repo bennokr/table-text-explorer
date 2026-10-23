@@ -1,15 +1,20 @@
 import { $, element, options } from './dom.js';
-import { featureCandidates, featureFields } from './projection.js';
+import { featureCandidates, featureFields } from './features.js';
+import { weightOf } from './word-vectors.js';
 
 function featureList(model) {
   const config = { ...model.config, mode: $('#feature-mode').value };
   if (config.mode !== model.config.mode) { config.features = null; }
   const temporary = { fields: model.fields, config };
   const selected = new Set(featureFields(temporary).map(field => field.name));
+  $('#word-options').hidden = config.mode !== 'words';
   $('#feature-list').replaceChildren(...featureCandidates(temporary).map(field =>
-    element('label', {}, [element('input', { type: 'checkbox', name: 'feature', value: field.name,
+    element('div', { class: 'feature-choice' }, [element('label', {}, [element('input', { type: 'checkbox', name: 'feature', value: field.name,
       ...(selected.has(field.name) ? { checked: '' } : {}) }),
-    document.createTextNode(`${field.name} · ${field.kind}`)])));
+    document.createTextNode(`${field.name} · ${field.kind}`)]),
+    element('input', { type: 'number', min: '0', max: '100', step: '0.1', value: weightOf(model.config.weights, field.name),
+      'data-weight': field.name, 'aria-label': `Weight of ${field.name}`, title: `Weight of ${field.name}`,
+      ...(config.mode === 'words' ? {} : { hidden: '' }) })])));
 }
 
 function fieldTable(model) {
@@ -31,20 +36,29 @@ export function settings(model, status) {
     $('#stopwords').value = model.config.stopwords;
     $('#neighbors').value = model.config.neighbors;
     $('#epochs').value = model.config.epochs;
+    $('#vector-language').value = model.config.vectorLanguage;
+    $('#word-pooling').value = model.config.pooling;
+    $('#field-combine').value = model.config.combine;
     featureList(model);
     fieldTable(model);
     $('#settings-dialog').showModal();
   };
   $('#feature-mode').onchange = () => featureList(model);
+  $('#vector-language').onchange = () => {
+    if ($('#language').value !== 'none') { $('#language').value = $('#vector-language').value; }
+  };
   $('#settings-form').onsubmit = event => {
     event.preventDefault();
     const overrides = Object.fromEntries([...$('#field-types').querySelectorAll('select')]
       .filter(select => select.value).map(select => [select.dataset.field, select.value]));
-    model.configure({ categoryLimit: Number($('#category-limit').value), overrides,
+    model.configure({ ...model.config, categoryLimit: Number($('#category-limit').value), overrides,
       mode: $('#feature-mode').value, language: $('#language').value,
       features: [...$('#feature-list').querySelectorAll('input:checked')].map(input => input.value),
       stopwords: $('#stopwords').value, neighbors: Number($('#neighbors').value),
-      epochs: Number($('#epochs').value) });
+      epochs: Number($('#epochs').value), vectorLanguage: $('#vector-language').value,
+      pooling: $('#word-pooling').value, combine: $('#field-combine').value,
+      weights: Object.fromEntries([...$('#feature-list').querySelectorAll('[data-weight]')]
+        .map(input => [input.dataset.weight, Number(input.value)])) });
     $('#settings-dialog').close();
     status('Settings applied. Existing fitted coordinates are retained until you fit again.');
   };

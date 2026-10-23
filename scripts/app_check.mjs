@@ -140,7 +140,7 @@ async function fit(method, expectedRows) {
 async function textProjection() {
   await page.click('#settings');
   await page.selectOption('#feature-mode', 'text');
-  const checkboxes = page.locator('#feature-list input');
+  const checkboxes = page.locator('#feature-list input[type=checkbox]');
   assert.ok(await checkboxes.count() > 1);
   for (const input of await checkboxes.all()) { await input.check(); }
   await page.locator('#settings-form button[type=submit]').click();

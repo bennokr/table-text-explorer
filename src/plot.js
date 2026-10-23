@@ -21,7 +21,7 @@ export function figure(attributes = {}) {
 
 export function ticks(axis, labels) {
   axis.ticker = new B.FixedTicker({ ticks: labels.map((_, index) => index) });
-  axis.major_label_overrides = Object.fromEntries(labels.map((label, index) => [index, label.slice(0, 28)]));
+  axis.major_label_overrides = new Map(labels.map((label, index) => [index, label.slice(0, 28)]));
 }
 
 export function dimension(values, field) {

@@ -1,6 +1,6 @@
 {
   "name": "data-explorer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,6 +11,10 @@
     "test": "node --test tests/*.test.mjs",
     "test:browser": "node scripts/app_check.mjs",
     "test:browser:dev": "BROWSER_SERVER=dev node scripts/app_check.mjs",
+    "prepare:vectors": "uv run --cache-dir .cache/uv --script scripts/prepare_vectors.py",
+    "prepare:booking": "node scripts/prepare_booking.mjs && node scripts/prepare_examples.mjs",
+    "test:words": "node scripts/words_check.mjs",
+    "test:words:dev": "BROWSER_SERVER=dev node scripts/words_check.mjs",
     "check": "eslint . && python3 scripts/check_size.py && node scripts/check_size.mjs && uv run --offline --cache-dir .cache/uv ruff check . && uv run --offline --cache-dir .cache/uv ruff format --check .",
     "feasibility": "node scripts/browser_check.mjs"
   },

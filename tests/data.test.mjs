@@ -5,7 +5,7 @@ import { Dataset } from '../src/state.js';
 import { parseQuery } from '../src/query.js';
 import { aggregate, countsFor } from '../src/aggregate.js';
 import { dateNumber } from '../src/dates.js';
-import { featureFields } from '../src/projection.js';
+import { featureFields } from '../src/features.js';
 
 test('schema distinguishes IDs, low-cardinality categories, continuous values, dates and missing cells', () => {
   const rows = Array.from({ length: 20 }, (_, id) => ({ id: id + 1, rating: id % 5,

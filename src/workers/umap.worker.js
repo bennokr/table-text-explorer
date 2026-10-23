@@ -15,7 +15,8 @@ self.onmessage = async ({ data: { id, payload } }) => {
       nEpochs: payload.epochs, random: seededRandom() };
     const umap = new UMAP(options);
     const coordinates = await umap.fitAsync(payload.features, epoch => {
-      if (epoch % 10 === 0) { self.postMessage({ id, progress: `UMAP · ${epoch}/${payload.epochs} epochs` }); }
+      if (epoch % 10 === 0) { self.postMessage({ id, progress: {
+        message: 'Fitting UMAP', completed: epoch, total: payload.epochs } }); }
     });
     if (!coordinates.every(point => point.every(Number.isFinite))) {
       throw new Error('UMAP produced invalid coordinates. Try different features or PCA.');

@@ -1,4 +1,6 @@
 const createWorker = {
+  import: () => new Worker(new URL('./import.worker.js', import.meta.url), { type: 'module' }),
+  words: () => new Worker(new URL('./words.worker.js', import.meta.url), { type: 'module' }),
   python: () => new Worker(new URL('./analysis.worker.js', import.meta.url), { type: 'module' }),
   umap: () => new Worker(new URL('./umap.worker.js', import.meta.url), { type: 'module' }),
 };
