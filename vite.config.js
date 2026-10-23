@@ -5,5 +5,8 @@ export default defineConfig({
   resolve: { alias: { 'node:zlib': fileURLToPath(new URL('./feasibility/zlib.js', import.meta.url)) } },
   worker: { format: 'es' },
   server: { host: '127.0.0.1' },
-  build: { target: 'esnext' },
+  build: { target: 'esnext', rolldownOptions: { input: {
+    app: fileURLToPath(new URL('./index.html', import.meta.url)),
+    feasibility: fileURLToPath(new URL('./feasibility.html', import.meta.url)),
+  } } },
 });

@@ -80,7 +80,7 @@ function validate(report) {
 try {
   await waitForServer();
   const page = await launch();
-  await page.goto(origin);
+  await page.goto(`${origin}/feasibility.html`);
   await page.waitForFunction(() => window.feasibility, null, { timeout: 10000 });
   await page.click('#run');
   await page.waitForFunction(() => window.feasibility?.complete, null, { timeout: 240000 });

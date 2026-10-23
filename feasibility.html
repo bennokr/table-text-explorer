@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';">
+  <link rel="icon" href="data:,">
+  <title>Data explorer — feasibility</title>
+  <link rel="stylesheet" href="/feasibility/style.css">
+  <script src="/vendor/bokeh/bokeh.min.js"></script>
+  <script src="/vendor/bokeh/bokeh-api.min.js"></script>
+</head>
+<body>
+  <main>
+    <h1>Data explorer · feasibility</h1>
+    <p>Local fixture checks. Canvas plots, WASM analysis and worker-based UMAP.</p>
+    <button id="run">Run baseline checks</button>
+    <button id="embed">Opt in: test multilingual embeddings (~135 MB including tokenizer)</button>
+    <p>Embeddings load only after opting in. This harness serves prepared assets locally.</p>
+    <div class="selection"><span id="selected">0 highlighted</span>
+      <button id="filter">Filter to highlighted records</button></div>
+    <div id="plots"></div>
+    <pre id="report" aria-live="polite">Ready.</pre>
+  </main>
+  <script type="module" src="/feasibility/main.js"></script>
+</body>
+</html>

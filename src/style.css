@@ -1,0 +1,69 @@
+:root { font: 12px system-ui, sans-serif; color: #29343a; background: #f5f5f3; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+button, select, input, textarea { font: inherit; color: inherit; }
+button, select, input:not([type=checkbox]) { min-height: 26px; }
+button { cursor: pointer; }
+button[disabled] { cursor: default; }
+button[title] { min-width: 26px; }
+input[type=search] { min-width: 130px; flex: 1; }
+[aria-invalid=true] { outline: 1px solid #b64733; }
+.topbar, .panel-head, .annotation-bar { display: flex; align-items: center; gap: 5px; padding: 4px 6px; }
+.topbar { border-bottom: 1px solid #ccc; flex-wrap: wrap; }
+.topbar strong { font-size: 13px; white-space: nowrap; }
+.topbar select { max-width: 210px; }
+.version, small { color: #737b80; font-size: 10px; }
+.workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 62fr) minmax(0, 38fr);
+  grid-template-rows: minmax(0, 57fr) minmax(0, 43fr); gap: 4px; padding: 4px; }
+.panel { min-height: 0; min-width: 0; background: #fff; border: 1px solid #d2d5d6;
+  display: flex; flex-direction: column; overflow: hidden; }
+.panel-head { flex-wrap: wrap; border-bottom: 1px solid #e2e4e5; min-height: 32px; }
+.panel-head h2 { font-size: 12px; font-weight: 600; margin: 0 auto 0 0; }
+.panel-head select { max-width: 125px; }
+.axis-controls { display: flex; align-items: center; gap: 4px; }
+#scatter { flex: 1; min-height: 0; min-width: 0; position: relative; }
+.scroll { min-height: 0; overflow: auto; flex: 1; }
+.empty { color: #737b80; padding: 12px; }
+#charts { padding: 4px; overflow-x: hidden; }
+.chart-card { border-bottom: 1px solid #ddd; margin-bottom: 5px; }
+.chart-card header { display: flex; align-items: center; gap: 5px; padding: 2px 4px; }
+.chart-card header span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chart-plot { height: 180px; min-width: 0; }
+.missing-count { padding: 0 4px; border: 0; background: transparent; color: #737b80; min-height: 18px; font-size: 10px; }
+.data-table { border-collapse: separate; border-spacing: 0; table-layout: fixed; width: max-content; min-width: 100%; }
+.data-table th, .data-table td { min-width: 130px; max-width: 180px; height: 25px; padding: 2px 6px;
+  border-bottom: 1px solid #eee; border-right: 1px solid #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.data-table thead { position: sticky; top: 0; z-index: 3; background: #f3f4f4; }
+.data-table thead button { padding: 0; border: 0; background: transparent; display: block; text-align: left; min-height: 16px; }
+.data-table tbody th, .data-table thead th:first-child { position: sticky; left: 0; background: #f3f4f4; min-width: 44px; max-width: 44px; z-index: 2; }
+.data-table tbody tr { cursor: pointer; }
+.data-table .selected td, .data-table .selected th { background: #fff0db; }
+.data-table tbody tr:focus { outline: 1px solid #6e8ba0; outline-offset: -1px; }
+.data-table .spacer td { padding: 0; border: 0; min-height: 0; }
+#record-body { margin: 0; padding: 0 7px; }
+.record-field { padding: 5px 0; border-bottom: 1px solid #eceeee; display: grid; grid-template-columns: minmax(80px, 28%) 1fr; gap: 8px; }
+.record-field dt { color: #6b7377; overflow-wrap: anywhere; }
+.record-field dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.annotation-bar { border-top: 1px solid #ddd; flex-wrap: wrap; }
+.annotation-bar input { min-width: 75px; flex: 1; width: 100px; }
+.annotation-bar select { max-width: 140px; }
+footer { display: flex; gap: 12px; padding: 3px 7px; border-top: 1px solid #ccc; min-height: 23px; }
+#counts { white-space: nowrap; }
+#status { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #69747a; }
+#status.error { color: #a33b2a; }
+dialog { width: min(700px, 92vw); max-height: 88vh; overflow: auto; padding: 12px; border: 1px solid #aaa; }
+dialog::backdrop { background: #0003; }
+dialog h2 { font-size: 14px; margin: 0 0 10px; }
+dialog fieldset { margin: 8px 0; border: 1px solid #ddd; }
+dialog form > label, dialog fieldset > label { display: block; margin: 5px 0; }
+dialog textarea { display: block; width: 100%; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 5px; margin-top: 10px; }
+#feature-list { max-height: 150px; overflow: auto; display: grid; grid-template-columns: 1fr 1fr; }
+#feature-list label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.types-scroll { max-height: 230px; overflow: auto; }
+.types-scroll table { width: 100%; text-align: left; border-collapse: collapse; }
+.types-scroll th, .types-scroll td { padding: 2px 4px; border-bottom: 1px solid #eee; }
+.types-scroll thead { position: sticky; top: 0; background: white; }
+@media (max-width: 800px) { .workspace { grid-template-columns: minmax(0, 56fr) minmax(0, 44fr); }
+  .topbar strong, .version { display: none; } .axis-controls select { max-width: 85px; } }

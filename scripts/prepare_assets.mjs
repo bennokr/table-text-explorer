@@ -1,4 +1,4 @@
-import { copyFile, cp, mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 
 const root = 'public/vendor';
@@ -64,6 +64,6 @@ async function modelAssets() {
 
 await pythonAssets();
 await browserAssets();
-await cp('fixtures', 'public/fixtures', { recursive: true });
+await import('./prepare_examples.mjs');
 if (process.argv.includes('--model')) { await modelAssets(); }
 await writeFile(`${root}/manifest.json`, JSON.stringify(manifest, null, 2));
