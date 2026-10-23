@@ -1,0 +1,33 @@
+{
+  "name": "data-explorer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "check": "eslint . && python3 scripts/check_size.py && node scripts/check_size.mjs && uv run --offline --cache-dir .cache/uv ruff check . && uv run --offline --cache-dir .cache/uv ruff format --check .",
+    "feasibility": "node scripts/browser_check.mjs"
+  },
+  "dependencies": {
+    "@bokeh/bokehjs": "3.8.0",
+    "@huggingface/transformers": "4.3.1",
+    "@irbisadm/statfmt": "0.1.1",
+    "fflate": "0.8.3",
+    "papaparse": "5.5.3",
+    "pyodide": "0.29.0",
+    "umap-js": "1.4.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.13.0",
+    "eslint-visitor-keys": "4.2.1",
+    "espree": "10.4.0",
+    "globals": "16.5.0",
+    "playwright": "1.58.2",
+    "vite": "8.3.5"
+  },
+  "overrides": {
+    "@xmldom/xmldom": "^0.9.12"
+  }
+}

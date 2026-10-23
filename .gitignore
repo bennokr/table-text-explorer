@@ -1,0 +1,11 @@
+node_modules/
+/fixtures/
+.DS_Store
+dist/
+.cache/
+.venv/
+.ruff_cache/
+vendor/
+public/fixtures/
+public/reference/
+playwright-report/
