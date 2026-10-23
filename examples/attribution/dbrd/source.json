@@ -1,0 +1,18 @@
+{
+  "source": "https://github.com/benjaminvdb/DBRD/releases/download/v3.0/DBRD_v3.tgz",
+  "archiveSha256": "2d7eed5a2c56b19fec22f1656722b6036569aa542d362e576bd761eb91e1e76a",
+  "release": "v3.0",
+  "split": "test",
+  "authors": [
+    "Benjamin van der Burgh",
+    "Suzan Verberne"
+  ],
+  "license": "CC-BY-NC-SA-4.0",
+  "rows": 2224,
+  "sentimentCounts": {
+    "positive": 1112,
+    "negative": 1112
+  },
+  "transformation": "Text preserved verbatim; IDs/ratings from filenames; whitespace word and character counts derived.",
+  "outputSha256": "9a1e6586897d7536364d06a4df76d8e1446f62f3539c04b67f40ff022b9b0ac2"
+}

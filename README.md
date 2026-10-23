@@ -121,3 +121,38 @@ and dataset card are downloaded locally, not committed. Attribution is included 
 [spaCy nl_core_news_md](https://huggingface.co/spacy/nl_core_news_md) (CC BY-SA 4.0);
 English vectors from [spaCy en_core_web_md](https://huggingface.co/spacy/en_core_web_md)
 (MIT). Generated asset directories retain licenses and provenance manifests.
+
+Dutch examples:
+
+- **dbrd-test.json** is vendored in `examples/`: all 2,224 official DBRD test reviews,
+  balanced positive/negative, about 3.6 MB. Review text is preserved verbatim. Rating
+  and review ID come from the original filenames; word/character counts are derived.
+  Dataset license: **CC BY-NC-SA 4.0**. The archive's license, README/citation and hash
+  provenance are retained under `examples/attribution/dbrd/` and copied into builds.
+  It appears in the picker even without a private `fixtures/` directory. Dutch static
+  vectors and the `text` field are selected as defaults; fitting remains explicit.
+- **bol-absa-preview.json** is an acquired local example of 1,000 Dutch product reviews.
+  Select it in the picker after running `npm run probe:dutch-data`. Original `text`,
+  `pros` and `cons` (aspect-to-similarity-score dictionaries) are retained. Derived
+  `pros_text`/`cons_text` columns join their aspect phrases, with counts for exploration.
+  These two fields are selected for Dutch embeddings by default. The repository has
+  no declared license, so this data remains in ignored local fixtures, not vendored.
+
+`npm run prepare:dbrd` reproduces the vendored JSON from the official v3.0 archive,
+checking its pinned SHA-256. It is unnecessary for a normal checkout. The Bol probe
+also saves five original test records and exactly a 4 KiB training-file head under
+`.cache/acquisition/`, without downloading the 12 MB training file. The server returned
+HTTP 206 for that range. Of the 1,000 test records, 493 contain both pros and cons;
+product categories, dates and star ratings are absent from this published test file.
+
+Crawlfeeds' bulk download route currently redirects to sign-in. Its public Hugging Face
+Booking repository contains the English sample already acquired, so it supplies no
+Dutch bulk stream to filter without access. The recorded checks are in
+`docs/dutch-data-acquisition.json`. `npm run test:dutch-examples` checks the actual DBRD
+and local Bol imports and Dutch vector projections (run the probe and prepare vectors first).
+
+DBRD: Benjamin van der Burgh and Suzan Verberne, *The merits of Universal Language Model
+Fine-tuning for Small Datasets – a case with Dutch book reviews* (2019),
+[dataset](https://github.com/benjaminvdb/DBRD), [paper](https://arxiv.org/abs/1910.00896).
+Bol data: Fieke Middelraad, [DutchABSA](https://github.com/FM12001/DutchABSA), pinned at
+`c72597e0806b42c6ef52c27c4d393bff5ac2c126`.

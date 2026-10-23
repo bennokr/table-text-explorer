@@ -3,6 +3,8 @@
 - Work in stages. Stop for user feedback after each working stage.
 - Keep table data, text, embeddings, queries and annotations on the user's machine.
   Never upload fixtures. Static asset downloads are allowed; bundle them for offline use.
+- Public datasets explicitly approved for vendoring live in `examples/` with their
+  licenses and provenance. Private/local `fixtures/` remain ignored and uncommitted.
 - Bokeh uses Canvas; inference uses WASM. No GPU requirement or analytics.
 - Fit on all records initially. Highlight before explicit filtering. Never silently refit.
 - Original values are preserved. Annotations are independent columns; cluster/topic names

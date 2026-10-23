@@ -15,6 +15,17 @@ let importVersion = 0;
 
 const reportError = error => complete(error.message ?? String(error), true);
 
+function exampleSettings() {
+  const presets = new Map([
+    ['crawlfeeds-booking.csv', ['en', ['positive_review_text', 'negative_review_text']]],
+    ['dbrd-test.json', ['nl', ['text']]],
+    ['bol-absa-preview.json', ['nl', ['pros_text', 'cons_text']]],
+  ]);
+  const [language, features] = presets.get(model.name) ?? [];
+  if (!features || !features.every(name => model.fields.some(field => field.name === name))) { return; }
+  model.configure({ ...model.config, mode: 'words', language, vectorLanguage: language, features });
+}
+
 function summary() {
   $('#dataset-name').textContent = model.name ?? 'No table';
   $('#counts').textContent = `${model.visible.length.toLocaleString()} / ${model.rows.length.toLocaleString()} records · ${model.selected.size} highlighted`;
@@ -42,10 +53,7 @@ async function load(action) {
     await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
     if (version !== importVersion) { return; }
     model.load(table);
-    if (table.name === 'crawlfeeds-booking.csv') {
-      model.configure({ ...model.config, mode: 'words', language: 'en', vectorLanguage: 'en',
-        features: ['positive_review_text', 'negative_review_text'] });
-    }
+    exampleSettings();
     complete(`${table.name} · ${model.rows.length} records, ${model.fields.length} columns · data axes`);
   } catch (error) { if (version === importVersion) { reportError(error); } }
   finally { if (version === importVersion) { projection.busy(false); summary(); } }
