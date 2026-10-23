@@ -5,7 +5,8 @@ let runtime;
 async function initialize(id) {
   if (runtime) { return runtime; }
   self.postMessage({ id, progress: 'Loading local Python runtime…' });
-  const url = '/vendor/pyodide/pyodide.mjs';
+  // Absolute URLs keep Vite from treating this public asset as a source import.
+  const url = new URL('/vendor/pyodide/pyodide.mjs', self.location.origin).href;
   const { loadPyodide } = await import(/* @vite-ignore */ url);
   const python = await loadPyodide({ indexURL: '/vendor/pyodide/' });
   self.postMessage({ id, progress: 'Loading scikit-learn…' });

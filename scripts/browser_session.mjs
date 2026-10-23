@@ -14,7 +14,9 @@ async function ready(server) {
 }
 
 export async function browserSession() {
-  const server = spawn('node', ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1',
+  const mode = process.env.BROWSER_SERVER ?? 'preview';
+  const command = mode === 'dev' ? [] : ['preview'];
+  const server = spawn('node', ['node_modules/vite/bin/vite.js', ...command, '--host', '127.0.0.1',
     '--port', '4175', '--strictPort'], { stdio: 'pipe' });
   let browser;
   const close = async () => { await browser?.close(); server.kill(); };

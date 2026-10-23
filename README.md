@@ -35,6 +35,7 @@ npm test
 npm run check
 npm run build
 npm run test:browser
+npm run test:browser:dev
 ```
 
 The asset command downloads static runtime packages and optional weights only.
@@ -49,6 +50,8 @@ For the browser check install Chromium with `npx playwright install chromium`, o
 server, disables GPU APIs, blocks external traffic, tests the three fixtures plus a
 synthetic JSON import, and exercises both projection workers. Screenshots and exported
 test data stay in ignored `.cache/`; tracked diagnostics contain aggregate results only.
+`test:browser` checks the production build; `test:browser:dev` runs the same checks
+against Vite's development server, including its worker and asset loading behavior.
 
 The original probe is retained at `/feasibility.html`. To rerun its native ReadStat
 comparison and optional model test:

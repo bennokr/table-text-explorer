@@ -4,7 +4,8 @@ let runtime;
 
 self.onmessage = async ({ data }) => {
   try {
-    const runtimeURL = '/vendor/pyodide/pyodide.mjs';
+    // Load the public asset directly, without Vite's source-import transform.
+    const runtimeURL = new URL('/vendor/pyodide/pyodide.mjs', self.location.origin).href;
     const { loadPyodide } = await import(/* @vite-ignore */ runtimeURL);
     runtime ??= await loadPyodide({ indexURL: '/vendor/pyodide/' });
     await runtime.loadPackage('scikit-learn');
