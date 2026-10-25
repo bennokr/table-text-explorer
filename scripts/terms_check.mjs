@@ -42,6 +42,7 @@ async function synthetic() {
   await page.setInputFiles('#file', { name: 'terms.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(rows)) });
   await page.waitForFunction(() => window.explorer.snapshot().rows === 12);
   await page.selectOption('#projection', 'pca');
+  assert.equal(await page.locator('.axis-controls').isVisible(), false);
   await page.click('#fit');
   await page.waitForFunction(() => window.explorer.snapshot().projection === 'pca');
   const projection = (await snapshot()).projections;
@@ -54,6 +55,7 @@ async function synthetic() {
   await build();
   await described(4, 8);
   assert.equal(await page.locator('.term-field').count(), 2);
+  await resultViews();
   const phrase = field('positive').locator('tr[data-term="vriendelijk personeel"]');
   assert.equal(await phrase.locator('td').nth(1).textContent(), '4 · 100%');
   assert.equal(await phrase.locator('td').nth(2).textContent(), '0 · 0%');
@@ -63,13 +65,60 @@ async function synthetic() {
   await field('positive').getByRole('button', { name: 'Record 1', exact: true }).last().click();
   assert.deepEqual((await snapshot()).selected, [0, 1, 2, 3]);
   assert.equal((await snapshot()).active, 0);
-  await field('positive').getByRole('button', { name: 'heerlijk ontbijt', exact: true }).click();
+  await field('positive').getByRole('button', { name: 'personeel heerlijk ontbijt', exact: true }).click();
   await field('positive').getByRole('button', { name: 'Highlight matches', exact: true }).click();
   await described(2, 10);
   assert.deepEqual((await snapshot()).selected, [1, 3]);
   await subsetChanges(projection);
   await reuseIndex();
   await cancelIndex();
+}
+
+async function resultViews() {
+  const positive = field('positive');
+  assert.equal(await positive.locator('tr[data-term="vriendelijk"]').count(), 0);
+  await page.uncheck('#terms-deduplicate');
+  await positive.locator('tr[data-term="vriendelijk"]').waitFor();
+  await page.check('#terms-deduplicate');
+  await page.waitForFunction(() => !document.querySelector('tr[data-term="vriendelijk"]'));
+  await positive.getByRole('checkbox', { name: 'Inline view for positive' }).check();
+  assert.equal(await positive.locator('.term-table').isVisible(), false);
+  assert.equal(await field('negative').locator('.term-table').isVisible(), true);
+  await positive.locator('.term-inline').getByRole('button', { name: 'vriendelijk personeel', exact: true }).click();
+  assert.ok(await positive.getByRole('button', { name: 'Highlight matches' }).isVisible());
+  await page.locator('#terms-settings > summary').click();
+  assert.equal(await page.locator('#terms-build').isVisible(), false);
+  assert.equal(await positive.locator('.term-inline').isVisible(), true);
+  await select([1, 3]);
+  await described(2, 10);
+  assert.equal(await positive.locator('.term-inline').isVisible(), true);
+  assert.equal(await page.locator('#terms-settings').getAttribute('open'), null);
+  await page.screenshot({ path: '.cache/terms-compact.png' });
+  await select([0, 1, 2, 3]);
+  await described(4, 8);
+  await positive.getByRole('checkbox', { name: 'Inline view for positive' }).uncheck();
+  await page.locator('#terms-settings > summary').click();
+}
+
+async function layout() {
+  await page.click('#show-charts');
+  const header = page.locator('.explore-head');
+  assert.equal(await header.locator('h2').count(), 0);
+  const bounds = await header.boundingBox();
+  const tabs = await page.locator('.view-tabs').boundingBox();
+  const add = await page.locator('#add-chart').boundingBox();
+  assert.ok(tabs.x - bounds.x < 10 && bounds.x + bounds.width - add.x - add.width < 10);
+  await page.check('#compare');
+  assert.equal(await page.locator('.projection-controls #projection').count(), 1);
+  assert.equal(await page.locator('.projection-controls .axis-controls').count(), 1);
+  await page.selectOption('#projection', 'axes');
+  assert.equal(await page.locator('.axis-controls').isVisible(), true);
+  await page.selectOption('#projection', 'umap');
+  assert.equal(await page.locator('.axis-controls').isVisible(), false);
+  await page.selectOption('#projection', 'axes');
+  await page.uncheck('#compare');
+  await page.click('#show-terms');
+  assert.equal(await page.locator('#add-chart').isVisible(), false);
 }
 
 async function subsetChanges(projection) {
@@ -117,11 +166,13 @@ async function cancelIndex() {
   const projections = (await snapshot()).projections;
   await page.evaluate(() => {
     document.querySelector('#terms-form').requestSubmit();
+    if (!document.querySelector('#fit .loading-glyph')) { throw new Error('Missing busy glyph'); }
     document.querySelector('#cancel').click();
   });
   await page.waitForFunction(() => !window.explorer.snapshot().busy && !document.querySelector('#fit').disabled);
   assert.equal(await page.locator('.term-field').count(), 0);
   assert.match(await page.locator('#terms-status').textContent(), /Build an n-gram index/);
+  assert.equal(await page.locator('#fit').textContent(), '▶');
   assert.deepEqual((await snapshot()).projections, projections);
   await build();
   await described(3, 9);
@@ -130,6 +181,7 @@ async function cancelIndex() {
 async function example(name, rows, fields, query) {
   await page.selectOption('#examples', name);
   await page.waitForFunction(rows => window.explorer.snapshot().rows === rows, rows);
+  await layout();
   assert.equal(await page.locator('.term-field').count(), 0);
   const checked = await page.locator('#terms-fields input:checked').evaluateAll(inputs => inputs.map(input => input.value));
   assert.deepEqual(checked, fields);

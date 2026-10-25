@@ -6,6 +6,9 @@ button, select, input, textarea { font: inherit; color: inherit; }
 button, select, input:not([type=checkbox]) { min-height: 26px; }
 button { cursor: pointer; }
 button[disabled] { cursor: default; }
+.loading-glyph { display: inline-block; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .loading-glyph { animation: none; } }
 button[title] { min-width: 26px; }
 input[type=search] { min-width: 130px; flex: 1; }
 [aria-invalid=true] { outline: 1px solid #b64733; }
@@ -21,6 +24,7 @@ input[type=search] { min-width: 130px; flex: 1; }
 .panel-head { flex-wrap: wrap; border-bottom: 1px solid #e2e4e5; min-height: 32px; }
 .panel-head h2 { font-size: 12px; font-weight: 600; margin: 0 auto 0 0; }
 .panel-head select { max-width: 125px; }
+.projection-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
 .axis-controls { display: flex; align-items: center; gap: 4px; }
 .scatter-pair { display: flex; flex: 1; min-height: 0; }
 .scatter-view { display: flex; flex: 1; flex-direction: column; min-width: 0; border-right: 1px solid #eee; }
@@ -28,6 +32,11 @@ input[type=search] { min-width: 130px; flex: 1; }
 #scatter, #scatter-secondary { flex: 1; min-height: 0; min-width: 0; position: relative; }
 .scroll { min-height: 0; overflow: auto; flex: 1; }
 .empty { color: #737b80; padding: 12px; }
+.view-tabs { display: flex; gap: 0; }
+.view-tabs button { border: 0; border-bottom: 2px solid transparent; background: transparent; }
+.view-tabs button[aria-pressed=true] { border-bottom-color: #587b96; background: #f3f4f4; }
+#add-chart { margin-left: auto; }
+#terms-settings > summary { cursor: pointer; margin-bottom: 5px; }
 #charts { padding: 4px; overflow-x: hidden; }
 #terms { padding: 5px; }
 #terms fieldset { border: 1px solid #ddd; margin: 0 0 5px; padding: 5px; }
@@ -37,6 +46,10 @@ input[type=search] { min-width: 130px; flex: 1; }
 #terms-fields label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 #terms-status, .term-help { margin: 5px 0; font-size: 11px; color: #69747a; }
 .term-field { border-top: 1px solid #ddd; padding: 5px 0; }
+.term-field header { display: flex; align-items: center; gap: 6px; }
+.term-field header label { margin-left: auto; font-size: 10px; white-space: nowrap; }
+.term-inline { display: flex; flex-wrap: wrap; gap: 3px 9px; margin: 5px 0; }
+.term-inline button { padding: 0; border: 0; background: transparent; min-height: 20px; text-align: left; }
 .term-field h3 { font-size: 12px; margin: 2px 0; overflow-wrap: anywhere; }
 .term-table { width: 100%; border-collapse: collapse; font-size: 10px; }
 .term-table th, .term-table td { padding: 3px; border-bottom: 1px solid #eee; text-align: right; }

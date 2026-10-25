@@ -9,6 +9,7 @@ export class Terms {
   indexId = null;
   running = false;
   intent = null;
+  views = new Map();
 
   constructor(model, projection) {
     this.model = model;
@@ -27,7 +28,7 @@ export class Terms {
       this.invalidate('Text settings changed. Build the index again.');
       this.signature = this.signatureKey();
     };
-    for (const id of ['terms-scope', 'terms-ranking', 'terms-support']) {
+    for (const id of ['terms-scope', 'terms-ranking', 'terms-support', 'terms-deduplicate']) {
       $(`#${id}`).oninput = () => this.describe();
     }
     model.on('data', () => { this.custom = false; this.fields(); });
@@ -95,7 +96,7 @@ export class Terms {
     const support = Number($('#terms-support').value);
     if (!Number.isInteger(support) || support < 1) { throw new Error('Minimum support must be a positive record count.'); }
     return { indexId: this.indexId, ...comparisonSets(this.model, $('#terms-scope').value),
-      support, ranking: $('#terms-ranking').value };
+      support, ranking: $('#terms-ranking').value, deduplicate: $('#terms-deduplicate').checked };
   }
 
   describe() {
@@ -182,7 +183,7 @@ export class Terms {
     renderTerms($('#terms-results'), result, this.model, (field, phrase) => {
       this.intent = { field, phrase };
       this.drain();
-    });
+    }, this.views);
     $('#terms-status').textContent = `${result.subset} subset / ${result.comparison} comparison records${result.comparison ? '' : ' · no comparison; subset scores only'}`;
     complete('N-gram description updated. Projection fits unchanged.');
   }

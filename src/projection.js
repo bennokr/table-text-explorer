@@ -1,4 +1,4 @@
-import { $, options } from './dom.js';
+import { $, options, element } from './dom.js';
 import { numberOf, categorical } from './schema.js';
 import { featureFields } from './features.js';
 import { Analysis } from './analysis.js';
@@ -19,11 +19,14 @@ export class Projection {
       $('#compare-controls').hidden = !$('#compare').checked;
       $('#secondary-view').hidden = !$('#compare').checked;
     };
-    $('#projection').onchange = () => { if ($('#projection').value === 'axes') { this.axes(); } };
+    $('#projection').onchange = () => {
+      $('.axis-controls').hidden = $('#projection').value !== 'axes';
+      if ($('#projection').value === 'axes') { this.axes(); }
+    };
     for (const id of ['x-axis', 'y-axis']) { $(`#${id}`).onchange = () => this.axes(); }
     model.on('data', () => this.reset());
     model.on('schema', () => { this.controls(); if (!model.coordinates?.fitted) { this.axes(); } });
-    model.on('coordinates', () => { $('.axis-controls').hidden = Boolean(model.coordinates?.fitted); });
+    model.on('coordinates', () => { $('.axis-controls').hidden = $('#projection').value !== 'axes'; });
     this.controls();
   }
 
@@ -93,6 +96,10 @@ export class Projection {
   }
 
   busy(value) {
+    for (const id of ['fit', 'fit-secondary']) {
+      $(`#${id}`).replaceChildren(value ? element('span', { class: 'loading-glyph', 'aria-hidden': 'true', text: '◌' })
+        : document.createTextNode('▶'));
+    }
     for (const id of ['fit', 'fit-secondary', 'projection', 'projection-secondary', 'settings', 'x-axis', 'y-axis']) {
       $(`#${id}`).disabled = value;
     }

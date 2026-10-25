@@ -27,27 +27,47 @@ function examples(model, field, ids, phrase) {
 const coverage = (count, total) => `${count} · ${total ? Math.round(100 * count / total) : 0}%`;
 const score = value => value.toPrecision(3);
 
-function termRow(term, show, comparison) {
-  const counts = [coverage(term.support, term.subsetSize), comparison ? coverage(term.rest, term.restSize) : '—',
+const headers = ['Phrase', 'Subset', 'Rest', 'c-TF-IDF', 'Δ', 'Lift'];
+
+function termCounts(term, comparison) {
+  return [coverage(term.support, term.subsetSize), comparison ? coverage(term.rest, term.restSize) : '—',
     score(term.ctfidf), comparison ? score(term.contrast) : '—', comparison ? `${(2 ** term.lift).toPrecision(3)}×` : '—'];
-  return element('tr', { 'data-term': term.phrase }, [element('td', {}, [element('button', {
-    type: 'button', text: term.phrase, title: 'Show matching excerpts', onclick: () => show(term) })]),
-  ...counts.map(text => element('td', { text }))]);
 }
 
-export function renderTerms(container, result, model, highlight) {
-  container.replaceChildren(...result.fields.map(field => {
-    const preview = element('div');
-    const show = term => preview.replaceChildren(
-      element('strong', { text: term.phrase }), element('button', { type: 'button', text: 'Highlight matches',
-        onclick: () => highlight(field.name, term.phrase) }), examples(model, field.name, term.examples, term.phrase));
-    const table = element('table', { class: 'term-table' }, [element('thead', {}, [element('tr', {},
-      ['Phrase', 'Subset', 'Rest', 'c-TF-IDF', 'Δ', 'Lift'].map(text => element('th', { text })))]),
-    element('tbody', {}, field.terms.map(term => termRow(term, show, result.comparison > 0)))]);
-    const representatives = element('details', {}, [element('summary', { text: 'Representative records' }),
-      examples(model, field.name, field.representatives, '')]);
-    return element('section', { class: 'term-field', 'data-field': field.name }, [
-      element('h3', { text: field.name }), element('small', { text: `${field.vocabulary.toLocaleString()} indexed terms` }),
-      representatives, field.terms.length ? table : element('p', { text: 'No terms meet the current support and ranking. Try a larger subset or lower minimum support.' }), preview]);
-  }));
+function termRow(term, show, comparison) {
+  return element('tr', { 'data-term': term.phrase }, [element('td', {}, [element('button', {
+    type: 'button', text: term.phrase, title: 'Show matching excerpts', onclick: () => show(term) })]),
+  ...termCounts(term, comparison).map(text => element('td', { text }))]);
+}
+
+function fieldView(field, comparison, model, highlight, views) {
+  const preview = element('div');
+  const show = term => preview.replaceChildren(
+    element('strong', { text: term.phrase }), element('button', { type: 'button', text: 'Highlight matches',
+      onclick: () => highlight(field.name, term.phrase) }), examples(model, field.name, term.examples, term.phrase));
+  const table = element('table', { class: 'term-table' }, [element('thead', {}, [element('tr', {},
+    headers.map(text => element('th', { text })))]),
+  element('tbody', {}, field.terms.map(term => termRow(term, show, comparison)))]);
+  const inline = element('div', { class: 'term-inline' }, field.terms.map(term => element('button', {
+    type: 'button', 'data-term': term.phrase, 'aria-label': term.phrase,
+    title: termCounts(term, comparison).map((value, index) => `${headers[index + 1]}: ${value}`).join(' · '),
+    onclick: () => show(term) }, [document.createTextNode(`${term.phrase} `),
+    element('small', { text: coverage(term.support, term.subsetSize) })])));
+  const toggle = element('input', { type: 'checkbox', 'aria-label': `Inline view for ${field.name}` });
+  toggle.checked = views.get(field.name) ?? false;
+  toggle.onchange = () => { views.set(field.name, toggle.checked); table.hidden = toggle.checked; inline.hidden = !toggle.checked; };
+  table.hidden = toggle.checked;
+  inline.hidden = !toggle.checked;
+  const heading = element('header', {}, [element('h3', { text: field.name }),
+    element('label', {}, [toggle, document.createTextNode('Inline')])]);
+  const representatives = element('details', {}, [element('summary', { text: 'Representative records' }),
+    examples(model, field.name, field.representatives, '')]);
+  return element('section', { class: 'term-field', 'data-field': field.name }, [heading,
+    element('small', { text: `${field.vocabulary.toLocaleString()} indexed terms` }), representatives,
+    ...(field.terms.length ? [table, inline] : [element('p', {
+      text: 'No terms meet the current support and ranking. Try a larger subset or lower minimum support.' })]), preview]);
+}
+
+export function renderTerms(container, result, model, highlight, views = new Map()) {
+  container.replaceChildren(...result.fields.map(field => fieldView(field, result.comparison > 0, model, highlight, views)));
 }

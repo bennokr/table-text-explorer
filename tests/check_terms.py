@@ -19,7 +19,7 @@ terms = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(terms)
 
 
-def build(rows, fields=("text",), sizes=(1, 1)):
+def build(rows, fields=("text",), sizes=(1, 1), stopwords=()):
     return json.loads(
         terms.build_term_index(
             json.dumps(
@@ -27,7 +27,7 @@ def build(rows, fields=("text",), sizes=(1, 1)):
                     "rows": len(rows),
                     "indexId": "test",
                     "sizes": sizes,
-                    "stopwords": [],
+                    "stopwords": stopwords,
                     "columns": [
                         {"name": field, "texts": [row.get(field) for row in rows]}
                         for field in fields
@@ -122,6 +122,41 @@ class TermTests(unittest.TestCase):
         build([{"text": None}, {"text": "\\N"}])
         result = json.loads(terms.describe_terms(request([0], [1])))
         self.assertEqual(result["fields"][0]["vocabulary"], 0)
+
+    def test_redundant_nested_phrases_keep_two_informative_spans(self):
+        phrase = {"text": "kleur komt overeen met afbeelding"}
+        build(
+            [phrase] * 18
+            + [{"text": "andere klacht"}, phrase]
+            + [{"text": "andere producten"}] * 980,
+            sizes=(1, 3),
+            stopwords=("met",),
+        )
+        subset, rest = list(range(19)), list(range(19, 1000))
+        result = json.loads(terms.describe_terms(request(subset, rest, support=2)))
+        phrases = [term["phrase"] for term in result["fields"][0]["terms"]]
+        self.assertEqual(set(phrases), {"kleur komt overeen", "overeen met afbeelding"})
+        raw = json.loads(terms.describe_terms(request(subset, rest, support=2, deduplicate=False)))
+        raw_terms = {term["phrase"]: term for term in raw["fields"][0]["terms"]}
+        for term in result["fields"][0]["terms"]:
+            self.assertEqual(term, raw_terms[term["phrase"]])
+        self.assertIn("afbeelding", raw_terms)
+
+    def test_redundancy_requires_nested_words_and_actual_record_overlap(self):
+        members = {"goed": {0, 1}, "heel goed": {2, 3}, "prima": {0, 1}}
+        values = dict.fromkeys(members, 1.0)
+        self.assertFalse(terms.redundant_phrase("goed", "heel goed", members, values))
+        self.assertFalse(terms.redundant_phrase("goed", "prima", members, values))
+        members["heel goed"] = {0, 1}
+        self.assertTrue(terms.redundant_phrase("goed", "heel goed", members, values))
+        members["goed"] = set(range(20))
+        members["heel goed"] = set(range(18))
+        self.assertTrue(terms.redundant_phrase("goed", "heel goed", members, values))
+        members["heel goed"] = set(range(17))
+        self.assertFalse(terms.redundant_phrase("goed", "heel goed", members, values))
+        members["heel goed"] = set(range(20))
+        values["heel goed"] = 0.5
+        self.assertFalse(terms.redundant_phrase("goed", "heel goed", members, values))
 
     def test_twenty_thousand_sparse_records(self):
         build(

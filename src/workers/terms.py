@@ -139,6 +139,30 @@ def term_row(field, column, scores, ranked, sizes):
     }
 
 
+def redundant_phrase(short, long, members, values):
+    if short == long or f" {short} " not in f" {long} ":
+        return False
+    if values[long] < values[short] - 0.1 * abs(values[short]):
+        return False
+    overlap = len(members[short] & members[long]) / len(members[short] | members[long])
+    return overlap >= 0.9
+
+
+def distinct_terms(field, order, values, records):
+    # A bounded ranking pool keeps repeated brushing cheap; scores/index stay intact.
+    phrases = {str(field["terms"][column]): column for column in order[:150]}
+    mask = np.zeros(term_record_count, dtype=bool)
+    mask[records] = True
+    members = {phrase: set(membership(field, phrase, mask)) for phrase in phrases}
+    scores = {phrase: values[column] for phrase, column in phrases.items()}
+    kept = []
+    for phrase in sorted(phrases, key=lambda phrase: -len(phrase.split())):
+        if not any(redundant_phrase(phrase, long, members, scores) for long in kept):
+            kept.append(phrase)
+    columns = {phrases[phrase] for phrase in kept}
+    return [column for column in order if column in columns][:15]
+
+
 def describe_field(name, field, data, subset, comparison):
     if field is None:
         return {"name": name, "vocabulary": 0, "terms": [], "representatives": []}
@@ -146,7 +170,12 @@ def describe_field(name, field, data, subset, comparison):
     eligible = np.flatnonzero(scores["support"] >= data["support"])
     if data["ranking"] != "ctfidf" and len(comparison):
         eligible = eligible[scores[data["ranking"]][eligible] > 0]
-    order = eligible[np.argsort(-scores[data["ranking"]][eligible], kind="stable")[:15]]
+    order = eligible[np.argsort(-scores[data["ranking"]][eligible], kind="stable")]
+    order = (
+        distinct_terms(field, order, scores[data["ranking"]], np.concatenate([subset, comparison]))
+        if data.get("deduplicate", True)
+        else order[:15]
+    )
     ranked = representatives(field["matrix"], subset, scores)
     sizes = (len(subset), len(comparison))
     return {

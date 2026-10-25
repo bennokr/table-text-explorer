@@ -37,7 +37,13 @@ Internal stopwords are allowed in phrases; stopwords at phrase boundaries are om
 Built-in stoplists retain negations; explicit additional stopwords are honored.
 
 Vocabulary is capped at 20,000 terms per field, selected by global occurrence count.
-Support counts records, not repetitions. Default ranking is c-TF-IDF contrast;
+Support counts records, not repetitions. Display pruning checks the top 150 eligible
+candidates and retains up to 15 phrases. A nested shorter phrase is suppressed when
+a longer retained phrase has at least 90% Jaccard overlap of matching record IDs across
+both classes and a score no more than 10% lower. Unrelated co-occurring phrases stay
+separate; scores and vocabulary are unchanged. Disable "Reduce redundant phrases" to
+see the unpruned ranking. Each field has a retained table/inline view switch; all
+inspector settings above the results share one collapsible disclosure. Default ranking is c-TF-IDF contrast;
 raw c-TF-IDF and smoothed document lift are also available. With class term counts
 `t[c,w]`, `L[c] = sum_w t[c,w]`, and `A = mean_c L[c]`:
 
@@ -63,7 +69,7 @@ the historical harness. This stage remains within those budgets. Ranking and ind
 live in small Python functions, separate from controls and rendering. The earlier
 budget increase is recorded in [historical feasibility notes](archive/feasibility.md).
 
-Validation: 16 JavaScript tests and six native numerical/boundary tests pass, including
+Validation: 16 JavaScript tests and eight native numerical/boundary tests pass, including
 a synthetic 20,000-record sparse index. Browser checks cover actual Pyodide indexing
 on Bol (1,000 records, two fields) and DBRD (2,224 records), exact phrase highlighting,
 filter comparisons, rapid selection changes, and retained PCA/SVD coordinates.

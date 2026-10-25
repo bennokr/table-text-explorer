@@ -76,6 +76,9 @@ click **Build index**. Brush records to compare them with the remaining visible 
 or choose filtered rows versus the rest of the table. Each field shows distinctive
 phrases, record coverage, c-TF-IDF, contrast and lift, with representative excerpts.
 Click a phrase to inspect examples, then **Highlight matches** to narrow the highlight.
+Nested phrases with nearly identical record coverage are reduced by default; the
+checkbox restores the unpruned ranking. Collapse **Settings & comparison** to focus
+on results, and use each field's **Inline** switch for a compact phrase list.
 Changing subsets reuses the index and preserves fitted projections. Rebuild explicitly
 after changing text/index settings. Minimum support counts records, not repetitions.
 
