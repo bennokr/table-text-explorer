@@ -1,4 +1,5 @@
 import { element, display } from './dom.js';
+import { phraseCloud } from './phrase-cloud.js';
 
 export function comparisonSets(model, scope) {
   if (scope === 'filtered') {
@@ -40,7 +41,8 @@ function termRow(term, show, comparison) {
   ...termCounts(term, comparison).map(text => element('td', { text }))]);
 }
 
-function fieldView(field, comparison, model, highlight, views) {
+function fieldView(field, result, model, highlight, views) {
+  const comparison = result.comparison > 0;
   const preview = element('div');
   const show = term => preview.replaceChildren(
     element('strong', { text: term.phrase }), element('button', { type: 'button', text: 'Highlight matches',
@@ -48,26 +50,24 @@ function fieldView(field, comparison, model, highlight, views) {
   const table = element('table', { class: 'term-table' }, [element('thead', {}, [element('tr', {},
     headers.map(text => element('th', { text })))]),
   element('tbody', {}, field.terms.map(term => termRow(term, show, comparison)))]);
-  const inline = element('div', { class: 'term-inline' }, field.terms.map(term => element('button', {
-    type: 'button', 'data-term': term.phrase, 'aria-label': term.phrase,
-    title: termCounts(term, comparison).map((value, index) => `${headers[index + 1]}: ${value}`).join(' · '),
-    onclick: () => show(term) }, [document.createTextNode(`${term.phrase} `),
-    element('small', { text: coverage(term.support, term.subsetSize) })])));
-  const toggle = element('input', { type: 'checkbox', 'aria-label': `Inline view for ${field.name}` });
+  const packed = phraseCloud(field.terms, result.ranking ?? 'contrast',
+    term => termCounts(term, comparison).map((value, index) => `${headers[index + 1]}: ${value}`).join(' · '), show);
+  const toggle = element('input', { type: 'checkbox', 'aria-label': `Cloud view for ${field.name}` });
   toggle.checked = views.get(field.name) ?? false;
-  toggle.onchange = () => { views.set(field.name, toggle.checked); table.hidden = toggle.checked; inline.hidden = !toggle.checked; };
+  toggle.onchange = () => { views.set(field.name, toggle.checked); table.hidden = toggle.checked; packed.hidden = !toggle.checked; };
   table.hidden = toggle.checked;
-  inline.hidden = !toggle.checked;
+  packed.hidden = !toggle.checked;
   const heading = element('header', {}, [element('h3', { text: field.name }),
     element('small', { text: `${field.vocabulary.toLocaleString()} indexed terms` }),
-    element('label', {}, [toggle, document.createTextNode('Inline')])]);
+    element('label', {}, [toggle, document.createTextNode('Cloud')])]);
   const representatives = element('details', {}, [element('summary', { text: 'Representative records' }),
     examples(model, field.name, field.representatives, '')]);
   return element('section', { class: 'term-field', 'data-field': field.name }, [heading, representatives,
-    ...(field.terms.length ? [table, inline] : [element('p', {
+    ...(field.terms.length ? [table, packed] : [element('p', {
       text: 'No terms meet the current support and ranking. Try a larger subset or lower minimum support.' })]), preview]);
 }
 
 export function renderTerms(container, result, model, highlight, views = new Map()) {
-  container.replaceChildren(...result.fields.map(field => fieldView(field, result.comparison > 0, model, highlight, views)));
+  for (const node of container.querySelectorAll('.term-cloud')) { node.dispose(); }
+  container.replaceChildren(...result.fields.map(field => fieldView(field, result, model, highlight, views)));
 }

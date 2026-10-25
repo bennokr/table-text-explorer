@@ -208,7 +208,13 @@ def describe_terms(payload):
         for name, field in term_indexes.items()
     ]
     return json.dumps(
-        {"subset": len(subset), "comparison": len(comparison), "fields": result}, allow_nan=False
+        {
+            "subset": len(subset),
+            "comparison": len(comparison),
+            "ranking": data["ranking"],
+            "fields": result,
+        },
+        allow_nan=False,
     )
 
 

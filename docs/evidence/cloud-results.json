@@ -1,0 +1,10 @@
+{
+  "phrases": 15,
+  "keyboard": true,
+  "resizing": true,
+  "hiddenAndReplaced": true,
+  "unplacedFallback": true,
+  "pageErrors": 0,
+  "externalRequests": 0,
+  "gpuDisabled": true
+}

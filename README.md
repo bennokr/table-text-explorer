@@ -78,10 +78,13 @@ phrases, record coverage, c-TF-IDF, contrast and lift, with representative excer
 Click a phrase to inspect examples, then **Highlight matches** to narrow the highlight.
 Nested phrases with nearly identical record coverage are reduced by default; the
 checkbox restores the unpruned ranking. Collapse **Settings & comparison** to focus
-on results, and use each field's **Inline** switch for a compact phrase list.
+on results, and use each field's **Cloud** switch for tightly packed, log-scaled phrases.
+Cloud phrases retain hover scores, keyboard activation, excerpts and highlighting.
 Changing subsets reuses the index and preserves fitted projections. Rebuild explicitly
 after changing text/index settings. Minimum support counts records, not repetitions.
 
+`npm run test:cloud` checks packed-cloud interactions, resizing and overflow without
+loading Python or fixtures.
 `npm run test:terms` checks ranking math and a 20,000-record sparse index natively.
 `npm run test:terms:browser` and `npm run test:terms:dev` check the actual Pyodide worker,
 selection/filter interactions and Dutch examples, with external traffic blocked.

@@ -81,22 +81,23 @@ async function resultViews() {
   await positive.locator('tr[data-term="vriendelijk"]').waitFor();
   await page.check('#terms-deduplicate');
   await page.waitForFunction(() => !document.querySelector('tr[data-term="vriendelijk"]'));
-  await positive.getByRole('checkbox', { name: 'Inline view for positive' }).check();
+  await positive.getByRole('checkbox', { name: 'Cloud view for positive' }).check();
   assert.equal(await positive.locator('.term-table').isVisible(), false);
   assert.equal(await field('negative').locator('.term-table').isVisible(), true);
-  await positive.locator('.term-inline').getByRole('button', { name: 'vriendelijk personeel', exact: true }).click();
+  await positive.locator('.term-cloud[aria-busy=false]').waitFor();
+  await positive.locator('.term-cloud').getByRole('button', { name: 'vriendelijk personeel', exact: true }).click();
   assert.ok(await positive.getByRole('button', { name: 'Highlight matches' }).isVisible());
   await page.locator('#terms-settings > summary').click();
   assert.equal(await page.locator('#terms-build').isVisible(), false);
-  assert.equal(await positive.locator('.term-inline').isVisible(), true);
+  assert.equal(await positive.locator('.term-cloud').isVisible(), true);
   await select([1, 3]);
   await described(2, 10);
-  assert.equal(await positive.locator('.term-inline').isVisible(), true);
+  assert.equal(await positive.locator('.term-cloud').isVisible(), true);
   assert.equal(await page.locator('#terms-settings').getAttribute('open'), null);
   await page.screenshot({ path: '.cache/terms-compact.png' });
   await select([0, 1, 2, 3]);
   await described(4, 8);
-  await positive.getByRole('checkbox', { name: 'Inline view for positive' }).uncheck();
+  await positive.getByRole('checkbox', { name: 'Cloud view for positive' }).uncheck();
   await page.locator('#terms-settings > summary').click();
 }
 
@@ -119,6 +120,31 @@ async function layout() {
   await page.uncheck('#compare');
   await page.click('#show-terms');
   assert.equal(await page.locator('#add-chart').isVisible(), false);
+}
+
+async function cloudLayout(name) {
+  const section = field(name);
+  const toggle = section.getByRole('checkbox', { name: `Cloud view for ${name}` });
+  const expected = await section.locator('.term-table tbody tr').count();
+  await toggle.check();
+  await section.locator('.term-cloud[aria-busy=false]').waitFor();
+  const packed = section.locator('.term-cloud');
+  assert.equal(await packed.getByRole('button').count(), expected);
+  const positions = await packed.locator('svg text').evaluateAll(nodes => nodes.map(node => [node.textContent, node.getAttribute('x'), node.getAttribute('y')]));
+  await packed.getByRole('button').first().focus();
+  await page.keyboard.press('Enter');
+  assert.ok(await section.getByRole('button', { name: 'Highlight matches' }).isVisible());
+  await toggle.uncheck();
+  await toggle.check();
+  await section.locator('.term-cloud[aria-busy=false]').waitFor();
+  assert.deepEqual(await packed.locator('svg text').evaluateAll(nodes => nodes.map(node => [node.textContent, node.getAttribute('x'), node.getAttribute('y')])), positions);
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.waitForFunction(() => [...document.querySelectorAll('.term-cloud:not([hidden]) svg')].every(svg => Number(svg.getAttribute('width')) <= svg.parentElement.clientWidth));
+  await section.locator('.term-cloud[aria-busy=false]').waitFor();
+  assert.equal(await packed.getByRole('button').count(), expected);
+  await page.screenshot({ path: `.cache/cloud-${name}.png` });
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await toggle.uncheck();
 }
 
 async function subsetChanges(projection) {
@@ -194,6 +220,7 @@ async function example(name, rows, fields, query) {
   await described(visible, rows - visible);
   assert.equal(await page.locator('.term-field').count(), fields.length);
   assert.ok(await page.locator('.term-table tbody tr').count() > 0);
+  await cloudLayout(fields[0]);
   await page.screenshot({ path: `.cache/terms-${name}.png` });
   return { rows, subset: visible, fields: fields.length };
 }

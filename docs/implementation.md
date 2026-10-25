@@ -42,8 +42,11 @@ candidates and retains up to 15 phrases. A nested shorter phrase is suppressed w
 a longer retained phrase has at least 90% Jaccard overlap of matching record IDs across
 both classes and a score no more than 10% lower. Unrelated co-occurring phrases stay
 separate; scores and vocabulary are unchanged. Disable "Reduce redundant phrases" to
-see the unpruned ranking. Each field has a retained table/inline view switch; all
-inspector settings above the results share one collapsible disclosure. Default ranking is c-TF-IDF contrast;
+see the unpruned ranking. Each field has a retained table/cloud view switch; all
+inspector settings above the results share one collapsible disclosure. Clouds use
+local d3-cloud Canvas packing and accessible SVG text, with horizontal phrases,
+within-field log-scaled ranking sizes, and deterministic placement. Width changes
+repack the cloud; any unplaced phrases remain available in a list below it. Default ranking is c-TF-IDF contrast;
 raw c-TF-IDF and smoothed document lift are also available. With class term counts
 `t[c,w]`, `L[c] = sum_w t[c,w]`, and `A = mean_c L[c]`:
 
@@ -64,12 +67,13 @@ we aggregate per-record counts to preserve n-gram boundaries.
 ## Quality and limits
 
 Ruff/ESLint enforce complexity 8, function statements 35, and module statements 250.
-Python's total statement ceiling is 2500; JavaScript's is 3500, including checks and
+Python's total statement ceiling is 2500; JavaScript's is 3750, including checks and
 the historical harness. This stage remains within those budgets. Ranking and indexing
-live in small Python functions, separate from controls and rendering. The earlier
+live in small Python functions, separate from controls and rendering. The cloud-stage budget increase is explained in [cloud feasibility](evidence/cloud-feasibility.md).
+The earlier
 budget increase is recorded in [historical feasibility notes](archive/feasibility.md).
 
-Validation: 16 JavaScript tests and eight native numerical/boundary tests pass, including
+Validation: 18 JavaScript tests and eight native numerical/boundary tests pass, including
 a synthetic 20,000-record sparse index. Browser checks cover actual Pyodide indexing
 on Bol (1,000 records, two fields) and DBRD (2,224 records), exact phrase highlighting,
 filter comparisons, rapid selection changes, and retained PCA/SVD coordinates.
