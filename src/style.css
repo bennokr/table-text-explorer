@@ -48,8 +48,8 @@ input[type=search] { min-width: 130px; flex: 1; }
 .term-field { border-top: 1px solid #ddd; padding: 5px 0; }
 .term-field header { display: flex; align-items: center; gap: 6px; }
 .term-field header label { margin-left: auto; font-size: 10px; white-space: nowrap; }
-.term-inline { display: flex; flex-wrap: wrap; gap: 3px 9px; margin: 5px 0; }
-.term-inline button { padding: 0; border: 0; background: transparent; min-height: 20px; text-align: left; }
+.term-inline { display: flex; flex-wrap: wrap; gap: 0 9px; margin: 3px 0; }
+.term-inline button { padding: 0; border: 0; background: transparent; min-height: 16px; line-height: 1.15; text-align: left; }
 .term-field h3 { font-size: 12px; margin: 2px 0; overflow-wrap: anywhere; }
 .term-table { width: 100%; border-collapse: collapse; font-size: 10px; }
 .term-table th, .term-table td { padding: 3px; border-bottom: 1px solid #eee; text-align: right; }

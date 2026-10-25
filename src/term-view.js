@@ -59,11 +59,11 @@ function fieldView(field, comparison, model, highlight, views) {
   table.hidden = toggle.checked;
   inline.hidden = !toggle.checked;
   const heading = element('header', {}, [element('h3', { text: field.name }),
+    element('small', { text: `${field.vocabulary.toLocaleString()} indexed terms` }),
     element('label', {}, [toggle, document.createTextNode('Inline')])]);
   const representatives = element('details', {}, [element('summary', { text: 'Representative records' }),
     examples(model, field.name, field.representatives, '')]);
-  return element('section', { class: 'term-field', 'data-field': field.name }, [heading,
-    element('small', { text: `${field.vocabulary.toLocaleString()} indexed terms` }), representatives,
+  return element('section', { class: 'term-field', 'data-field': field.name }, [heading, representatives,
     ...(field.terms.length ? [table, inline] : [element('p', {
       text: 'No terms meet the current support and ranking. Try a larger subset or lower minimum support.' })]), preview]);
 }
