@@ -5,7 +5,7 @@ const createWorker = {
   umap: () => new Worker(new URL('./umap.worker.js', import.meta.url), { type: 'module' }),
 };
 
-export class Workers {
+export class Workers extends EventTarget {
   instances = new Map();
   sequence = 0;
   pending = null;
@@ -25,6 +25,7 @@ export class Workers {
         clearTimeout(timeout);
         this.pending = null;
         if (data.error) { reject(new Error(data.error)); } else { resolve(data.result); }
+        setTimeout(() => this.dispatchEvent(new Event('idle')), 0);
       };
       worker.onerror = event => this.cancel(`Worker failed: ${event.message}`);
       worker.postMessage({ id, payload });
@@ -37,5 +38,6 @@ export class Workers {
     clearTimeout(this.pending?.timeout);
     this.pending?.reject(new Error(message));
     this.pending = null;
+    this.dispatchEvent(new CustomEvent('reset', { detail: message }));
   }
 }

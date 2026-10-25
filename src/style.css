@@ -29,6 +29,21 @@ input[type=search] { min-width: 130px; flex: 1; }
 .scroll { min-height: 0; overflow: auto; flex: 1; }
 .empty { color: #737b80; padding: 12px; }
 #charts { padding: 4px; overflow-x: hidden; }
+#terms { padding: 5px; }
+#terms fieldset { border: 1px solid #ddd; margin: 0 0 5px; padding: 5px; }
+.term-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 4px 0; }
+.term-controls input { width: 55px; }
+#terms-fields { display: grid; grid-template-columns: 1fr 1fr; max-height: 140px; overflow: auto; }
+#terms-fields label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+#terms-status, .term-help { margin: 5px 0; font-size: 11px; color: #69747a; }
+.term-field { border-top: 1px solid #ddd; padding: 5px 0; }
+.term-field h3 { font-size: 12px; margin: 2px 0; overflow-wrap: anywhere; }
+.term-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+.term-table th, .term-table td { padding: 3px; border-bottom: 1px solid #eee; text-align: right; }
+.term-table th:first-child, .term-table td:first-child { text-align: left; }
+.term-table button { border: 0; background: transparent; padding: 0; min-height: 18px; text-align: left; }
+.term-excerpts { margin: 5px 0; padding: 0; list-style: none; font-size: 11px; overflow-wrap: anywhere; }
+.term-excerpts li { margin: 5px 0; white-space: pre-wrap; }
 .chart-card { border-bottom: 1px solid #ddd; margin-bottom: 5px; }
 .chart-card header { display: flex; align-items: center; gap: 5px; padding: 2px 4px; }
 .chart-card header span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -11,3 +11,4 @@ public/examples.json
 public/reference/
 public/attribution/
 playwright-report/
+__pycache__/

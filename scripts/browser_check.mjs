@@ -96,7 +96,7 @@ try {
     network: { requests: requests.length, external: requests.filter(request => !request.local),
       nonGet: requests.filter(request => request.method !== 'GET') } };
   await mkdir('docs', { recursive: true });
-  await writeFile('docs/feasibility-results.json', JSON.stringify(result, null, 2));
+  await writeFile('docs/evidence/feasibility-results.json', JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result, null, 2));
   validate(report);
   assert.deepEqual(errors, []);

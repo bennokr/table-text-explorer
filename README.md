@@ -1,10 +1,10 @@
-# Table + text explorer · v0.1
+# Table + text explorer
 
 A client-side, four-panel explorer: a fixed Canvas scatter, a virtualized table,
 a scrollable stack of linked Bokeh charts, and a full-record viewer. Native controls
 provide local import/export, Boolean search, dtype overrides and annotation columns.
-See [v0.1 behavior and validation](docs/v0.1.md), [the agreed scope](docs/spec.md),
-and [initial feasibility evidence](docs/feasibility.md).
+See [current behavior](docs/implementation.md), [next stages](docs/plan.md), [the agreed scope](docs/spec.md),
+and [initial feasibility evidence](docs/archive/feasibility.md).
 
 Fixtures and user data are never uploaded. Fixtures, downloaded assets and generated
 bundles remain excluded from Git. The local build contains fixture copies; do not
@@ -21,7 +21,7 @@ npm run dev
 
 Place private examples in `fixtures/`. Dev/build commands prepare the example picker
 from CSV, JSON, SAV and XLSX files in that folder. An empty folder is fine; the file
-picker works without examples. No pretrained embedding model is needed for v0.1.
+picker works without examples. Table features and TF-IDF need no pretrained model.
 
 Choose X/Y axes for an immediate view, or select UMAP/PCA/SVD and press ▶ to fit on
 all records. Settings chooses table features or one/multiple text columns (TF-IDF),
@@ -70,6 +70,18 @@ that button is clicked. The application CSP limits connections to the local orig
 Ruff/ESLint enforce complexity and function limits. AST checks enforce module and
 language budgets without counting comments, blank lines, dependencies or generated
 assets. Read [AGENTS.md](AGENTS.md) before extending the implementation.
+
+Subset descriptions: open **N-grams** in the Explore panel, choose text fields and
+click **Build index**. Brush records to compare them with the remaining visible rows,
+or choose filtered rows versus the rest of the table. Each field shows distinctive
+phrases, record coverage, c-TF-IDF, contrast and lift, with representative excerpts.
+Click a phrase to inspect examples, then **Highlight matches** to narrow the highlight.
+Changing subsets reuses the index and preserves fitted projections. Rebuild explicitly
+after changing text/index settings. Minimum support counts records, not repetitions.
+
+`npm run test:terms` checks ranking math and a 20,000-record sparse index natively.
+`npm run test:terms:browser` and `npm run test:terms:dev` check the actual Pyodide worker,
+selection/filter interactions and Dutch examples, with external traffic blocked.
 
 Word vectors and linked comparisons:
 
@@ -148,7 +160,7 @@ product categories, dates and star ratings are absent from this published test f
 Crawlfeeds' bulk download route currently redirects to sign-in. Its public Hugging Face
 Booking repository contains the English sample already acquired, so it supplies no
 Dutch bulk stream to filter without access. The recorded checks are in
-`docs/dutch-data-acquisition.json`. `npm run test:dutch-examples` checks the actual DBRD
+`docs/evidence/dutch-data-acquisition.json`. `npm run test:dutch-examples` checks the actual DBRD
 and local Bol imports and Dutch vector projections (run the probe and prepare vectors first).
 
 DBRD: Benjamin van der Burgh and Suzan Verberne, *The merits of Universal Language Model

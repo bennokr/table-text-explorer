@@ -135,7 +135,7 @@ try {
   assert.ok(session.requests.every(request => request.local && request.method === 'GET'));
   const report = { rows, embedded: primary.count, dimensions: primary.dimensions,
     progressEvents: tasks.length, pageErrors: 0, externalRequests: 0, gpuDisabled: true };
-  const destination = process.env.BROWSER_SERVER === 'dev' ? '.cache/dev-words-results.json' : 'docs/v0.2-results.json';
+  const destination = process.env.BROWSER_SERVER === 'dev' ? '.cache/dev-words-results.json' : 'docs/evidence/v0.2-results.json';
   await writeFile(destination, JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report));
 } catch (error) {

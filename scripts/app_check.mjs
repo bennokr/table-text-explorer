@@ -225,7 +225,7 @@ try {
   await page.screenshot({ path: '.cache/v0.1-overview.png' });
   assert.deepEqual(session.errors, []);
   assert.ok(session.requests.every(request => request.local && request.method === 'GET'));
-  const report = process.env.BROWSER_SERVER === 'dev' ? '.cache/dev-results.json' : 'docs/v0.1-results.json';
+  const report = process.env.BROWSER_SERVER === 'dev' ? '.cache/dev-results.json' : 'docs/evidence/v0.1-results.json';
   await writeFile(report, JSON.stringify({ results, pageErrors: session.errors,
     requests: session.requests.length, externalRequests: 0, gpuDisabled: true }, null, 2));
   console.log('v0.1 checks passed:', JSON.stringify(results));

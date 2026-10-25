@@ -9,6 +9,7 @@ import { Scatter } from './scatter.js';
 import { ChartStack } from './charts.js';
 import { Projection } from './projection.js';
 import { settings } from './settings.js';
+import { Terms } from './terms.js';
 
 const model = new Dataset();
 let importVersion = 0;
@@ -130,6 +131,7 @@ recordViewer(model, reportError);
 new Scatter(model, reportError);
 new Scatter(model, reportError, 1);
 const projection = new Projection(model, status);
+new Terms(model, projection);
 new ChartStack(model, reportError);
 settings(model, status);
 bindImportExport();

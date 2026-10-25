@@ -27,9 +27,5 @@ record, with bulk assign and clear. Analyses use stable group IDs and an editabl
 ID-to-name dictionary for topic/cluster renaming. New fits do not overwrite prior
 annotation columns. Materialize chosen labels into table columns for export.
 
-1. Feasibility: import fidelity, local assets, Canvas linking, WASM ML and UMAP scale.
-2. Data workflow: import/type review, table, annotation columns/dictionaries and export.
-3. Exploration: query editor, linked views, highlighting and explicit filtering.
-4. Text workflow: field selection, chunking, preprocessing, algorithms and bulk labels.
-
-Each stage ends with a working demo, measured limitations and user feedback.
+Implementation status: [implementation](implementation.md).
+Next working stages: [plan](plan.md). Each stage ends with a working demo and feedback.

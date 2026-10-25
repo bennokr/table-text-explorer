@@ -23,14 +23,21 @@ const stopwords = {
   none: '',
 };
 
+export function stopwordList(config, keepNegation = false) {
+  const negations = new Set(['niet', 'geen', 'nooit', 'not', 'no', 'never']);
+  const base = (stopwords[config.language] ?? '').toLowerCase().split(/\s+/u)
+    .filter(word => !keepNegation || !negations.has(word));
+  const extra = config.stopwords.toLowerCase().split(/[\s,]+/u);
+  return [...new Set([...base, ...extra].filter(Boolean))];
+}
+
 export function payload(model, method) {
   const fields = featureFields(model);
   const rows = model.rows.map(row => Object.fromEntries(fields.map(field => [field.name,
     ['number', 'date'].includes(field.kind) && model.config.mode === 'table'
       ? numberOf(row[field.name], field) : row[field.name] ?? null])));
-  const words = `${stopwords[model.config.language]} ${model.config.stopwords}`.toLowerCase();
   return { rows, fields: fields.map(({ name, kind }) => ({ name, kind })), method, mode: model.config.mode,
-    stopwords: [...new Set(words.split(/[\s,]+/u).filter(Boolean))],
+    stopwords: stopwordList(model.config),
     vectorLanguage: model.config.vectorLanguage, pooling: model.config.pooling,
     combine: model.config.combine, weights: model.config.weights };
 }

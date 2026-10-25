@@ -1,7 +1,9 @@
+> Historical stage notes. See [current implementation](../implementation.md) and [plan](../plan.md).
+
 # Stage 1: feasibility findings
 
 The local static harness uses the provided fixtures. No fixture is uploaded. Raw
-diagnostics and timings are in [feasibility-results.json](feasibility-results.json).
+diagnostics and timings are in [feasibility-results.json](../evidence/feasibility-results.json).
 The browser suite disables WebGPU/WebGL, blocks every non-local request, checks that
 no model is requested before opt-in, and exercises the built bundle rather than Vite
 development modules. Tests use an installed Chromium; other browsers remain untested.

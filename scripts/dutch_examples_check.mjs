@@ -42,7 +42,7 @@ try {
   assert.ok(session.requests.every(request => request.local && request.method === 'GET'));
   const result = { dbrdRows: dbrd.count, bolRows: 1000, bolEmbedded: bol.count,
     pageErrors: 0, externalRequests: 0, gpuDisabled: true };
-  await writeFile('docs/dutch-examples-results.json', JSON.stringify(result, null, 2) + '\n');
+  await writeFile('docs/evidence/dutch-examples-results.json', JSON.stringify(result, null, 2) + '\n');
   console.log(JSON.stringify(result));
 } catch (error) {
   console.error('Status:', await page.locator('#status').textContent());

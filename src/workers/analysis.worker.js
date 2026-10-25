@@ -1,4 +1,5 @@
 import source from './analysis.py?raw';
+import termsSource from './terms.py?raw';
 
 let runtime;
 
@@ -12,6 +13,7 @@ async function initialize(id) {
   self.postMessage({ id, progress: 'Loading scikit-learn…' });
   await python.loadPackage('scikit-learn');
   await python.runPythonAsync(source);
+  await python.runPythonAsync(termsSource);
   runtime = python;
   return python;
 }
@@ -19,11 +21,16 @@ async function initialize(id) {
 self.onmessage = async ({ data: { id, payload } }) => {
   try {
     const python = await initialize(id);
-    self.postMessage({ id, progress: payload.mode === 'prepared' ? `Fitting ${payload.method.toUpperCase()}` : 'Reducing all-record features with SVD' });
+    const functions = { terms_build: 'build_term_index', terms_describe: 'describe_terms', terms_matches: 'matching_terms' };
+    const operation = functions[payload.task] ?? 'run_projection';
+    const message = payload.task ? 'Computing n-gram descriptions' : 'Reducing features / fitting projection';
+    self.postMessage({ id, progress: message });
+    python.globals.set('terms_progress', (message, completed, total) => self.postMessage({ id,
+      progress: { message, completed, total } }));
     const { features, ...parameters } = payload;
     python.globals.set('embedding_values', features ?? null);
     python.globals.set('payload', JSON.stringify(parameters));
-    const result = JSON.parse(await python.runPythonAsync('run_projection(payload)'));
+    const result = JSON.parse(await python.runPythonAsync(`${operation}(payload)`));
     self.postMessage({ id, result });
   } catch (error) {
     self.postMessage({ id, error: String(error.message ?? error) });

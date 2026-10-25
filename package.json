@@ -1,6 +1,6 @@
 {
   "name": "data-explorer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -19,7 +19,10 @@
     "test:words": "node scripts/words_check.mjs",
     "test:words:dev": "BROWSER_SERVER=dev node scripts/words_check.mjs",
     "check": "eslint . && python3 scripts/check_size.py && node scripts/check_size.mjs && uv run --offline --cache-dir .cache/uv ruff check . && uv run --offline --cache-dir .cache/uv ruff format --check .",
-    "feasibility": "node scripts/browser_check.mjs"
+    "feasibility": "node scripts/browser_check.mjs",
+    "test:terms": "uv run --cache-dir .cache/uv --script tests/check_terms.py",
+    "test:terms:browser": "node scripts/terms_check.mjs",
+    "test:terms:dev": "BROWSER_SERVER=dev node scripts/terms_check.mjs"
   },
   "dependencies": {
     "@bokeh/bokehjs": "3.8.0",

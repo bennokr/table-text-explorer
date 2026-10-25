@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';">
   <link rel="icon" href="data:,">
-  <title>Table + text explorer · v0.2</title>
+  <title>Table + text explorer · v0.3</title>
   <link rel="stylesheet" href="/src/style.css">
   <script src="/vendor/bokeh/bokeh.min.js"></script>
   <script src="/vendor/bokeh/bokeh-api.min.js"></script>
 </head>
 <body>
   <nav class="topbar" aria-label="Table operations">
-    <strong>Table + text</strong><span class="version">v0.2</span>
+    <strong>Table + text</strong><span class="version">v0.3</span>
     <button id="import" title="Import a local table" aria-label="Import a local table">↥</button>
     <input id="file" type="file" accept=".csv,.json,.sav,.xlsx" hidden>
     <select id="examples" aria-label="Example dataset" title="Load an example from the local fixtures folder"><option value="">Examples…</option></select>
@@ -46,8 +46,25 @@
       </div>
     </section>
     <section class="panel" aria-label="Chart stack">
-      <header class="panel-head"><h2>Charts</h2><button id="add-chart" title="Add a distribution or two-variable chart" aria-label="Add chart">＋</button></header>
+      <header class="panel-head"><h2>Explore</h2>
+        <button id="show-charts" aria-pressed="true">Charts</button><button id="show-terms" aria-pressed="false">N-grams</button>
+        <button id="add-chart" title="Add a distribution or two-variable chart" aria-label="Add chart">＋</button></header>
       <div id="charts" class="scroll"></div>
+      <div id="terms" class="scroll" hidden>
+        <form id="terms-form"><fieldset id="terms-index-controls"><legend>All-record text index</legend>
+          <details><summary>Text fields</summary><div id="terms-fields"></div></details>
+          <div class="term-controls"><label>N-grams <select id="terms-sizes"><option value="1:3">1–3 words</option><option value="1:1">Words</option><option value="2:2">Bigrams</option><option value="3:3">Trigrams</option><option value="1:2">1–2 words</option></select></label>
+            <label>Stoplist <select id="terms-language"><option value="nl">Dutch · basic</option><option value="en">English · basic</option><option value="none">None</option></select></label></div>
+          <input id="terms-stopwords" aria-label="Additional n-gram stopwords" placeholder="Additional stopwords">
+          <button id="terms-build" type="submit">Build index</button> <small>Up to 20,000 terms per field. Fits all records; brushes reuse the index.</small>
+        </fieldset></form>
+        <div class="term-controls"><select id="terms-scope" aria-label="Subset comparison"><option value="selection">Highlighted vs remaining visible</option><option value="filtered">Filtered vs remaining table</option></select>
+          <select id="terms-ranking" aria-label="N-gram ranking"><option value="contrast">c-TF-IDF contrast</option><option value="ctfidf">c-TF-IDF</option><option value="lift">Document lift</option></select>
+          <label>Min records <input id="terms-support" type="number" min="1" max="20000" value="2" required></label></div>
+        <p id="terms-status" role="status">Choose text fields and build an index.</p>
+        <details class="term-help"><summary>How terms are ranked</summary><p>c-TF-IDF weights phrase frequency within each group by its rarity across both groups. Contrast subtracts the remaining group's weight. Lift compares smoothed record coverage. Minimum support counts records, including empty text in coverage denominators. Keep fields separate; scores are specific to this comparison. Negations are retained by default; additional stopwords can exclude them. Click a phrase for excerpts; highlighting matches is explicit.</p></details>
+        <div id="terms-results"></div>
+      </div>
     </section>
     <section class="panel" aria-label="Table view">
       <header class="panel-head"><h2 id="dataset-name">No table</h2>
