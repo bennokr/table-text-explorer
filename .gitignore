@@ -12,3 +12,11 @@ public/reference/
 public/attribution/
 playwright-report/
 __pycache__/
+dist-feasibility/
+
+public/demos/
+
+# Local source codebooks and metadata derived from private fixtures.
+/Codeboek*.xlsx
+/demo-config/RMC*/
+/demo-config/survey.sav/

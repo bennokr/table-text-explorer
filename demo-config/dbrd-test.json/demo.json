@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "analysis": {
+    "mode": "words",
+    "language": "nl",
+    "vectorLanguage": "nl",
+    "features": [
+      "text"
+    ],
+    "neighbors": 15,
+    "epochs": 150
+  },
+  "views": [
+    {
+      "type": "scatter",
+      "x": "word_count",
+      "y": "character_count"
+    },
+    {
+      "type": "bar",
+      "x": "sentiment"
+    },
+    {
+      "type": "histogram",
+      "x": "word_count"
+    }
+  ]
+}

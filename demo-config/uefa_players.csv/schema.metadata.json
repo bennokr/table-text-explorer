@@ -1,0 +1,84 @@
+{
+  "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
+  "fieldsMatch": "partial",
+  "missingValues": [
+    ""
+  ],
+  "fields": [
+    {
+      "name": "rowNumber",
+      "title": "Row number",
+      "type": "string",
+      "x-role": "identifier"
+    },
+    {
+      "name": "sn",
+      "title": "Short name",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "fn",
+      "title": "First name",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "ln",
+      "title": "Last name",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "no",
+      "title": "Shirt number",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "ps",
+      "title": "Position",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "nt",
+      "title": "Nationality",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "db",
+      "title": "Date of birth",
+      "type": "date"
+    },
+    {
+      "name": "ag",
+      "title": "Age",
+      "type": "number"
+    },
+    {
+      "name": "ht",
+      "title": "Height",
+      "type": "number"
+    },
+    {
+      "name": "go/at",
+      "title": "go/at",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "cb",
+      "title": "Club",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "cn",
+      "title": "Country",
+      "type": "string",
+      "x-measurement": "nominal"
+    }
+  ]
+}

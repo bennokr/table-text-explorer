@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "analysis": {
+    "mode": "words",
+    "language": "nl",
+    "vectorLanguage": "nl",
+    "features": [
+      "pros_text",
+      "cons_text"
+    ],
+    "neighbors": 15,
+    "epochs": 150
+  },
+  "views": [
+    {
+      "type": "scatter",
+      "x": "pro_count",
+      "y": "con_count"
+    },
+    {
+      "type": "histogram",
+      "x": "word_count"
+    }
+  ]
+}

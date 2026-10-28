@@ -1,3 +1,4 @@
+import { scalarColumns } from './table-values.js';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { readSav } from '@irbisadm/statfmt';
@@ -16,11 +17,26 @@ function readCsv(text) {
   return result.data;
 }
 
+function excelDate(cell, date1904) {
+  const parts = XLSX.SSF.parse_date_code(cell.v, { date1904 });
+  if (!parts) { return null; }
+  const value = new Date(Date.UTC(parts.y, parts.m - 1, parts.d, parts.H, parts.M, parts.S, Math.round(parts.u * 1000))).toISOString();
+  const format = cell.z.replace(/"[^"]*"|\\./g, '');
+  return /[hs]/i.test(format) ? value : value.slice(0, 10);
+}
+
 function readExcel(bytes) {
-  const book = XLSX.read(bytes, { cellDates: true });
-  const rows = XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]], { defval: null });
-  return rows.map(row => Object.fromEntries(Object.entries(row).map(([key, value]) =>
-    [key, value instanceof Date ? value.toISOString() : value])));
+  // Excel stores wall-clock serials, not timezone-aware timestamps.
+  const book = XLSX.read(bytes, { cellDates: false, cellNF: true });
+  const sheet = book.Sheets[book.SheetNames[0]];
+  for (const cell of Object.values(sheet)) {
+    if (cell?.t === 'n' && XLSX.SSF.is_date(cell.z)) {
+      cell.v = excelDate(cell, book.Workbook?.WBProps?.date1904);
+      cell.t = 's';
+      delete cell.z;
+    }
+  }
+  return XLSX.utils.sheet_to_json(sheet, { defval: null });
 }
 
 export function parseTable(bytes, name) {
@@ -37,5 +53,5 @@ export function parseTable(bytes, name) {
   if (!Object.hasOwn(readers, extension)) { throw new Error('Choose a CSV, JSON records, SAV or XLSX file.'); }
   const result = readers[extension]();
   if (!result.rows.length) { throw new Error('The table contains no records.'); }
-  return { ...result, name };
+  return { ...result, ...scalarColumns(result.rows), name };
 }

@@ -1,0 +1,360 @@
+{
+  "version": 1,
+  "notice": "Fictional UX-test assumptions, not calibrated real RMC statistics. The original seed workbook is synthetic.",
+  "seed_file": "fixtures/RMC_synthetische_data_20_rijen.xlsx",
+  "schema_file": "demo-config/RMC_synthetische_data_20_rijen.xlsx/schema.metadata.json",
+  "bank_file": "fixtures/rmc-synthetic/text-bank.json",
+  "texts_per_record": [
+    7,
+    6
+  ],
+  "scenarios": {
+    "baseline": {
+      "histogram": {
+        "0": 450,
+        "1": 250,
+        "2": 170,
+        "4": 80,
+        "5": 43,
+        "6": 7
+      }
+    },
+    "spread": {
+      "histogram": {
+        "0": 300,
+        "1": 350,
+        "2": 250,
+        "3": 83,
+        "4": 17
+      }
+    },
+    "concentrated": {
+      "histogram": {
+        "0": 600,
+        "1": 150,
+        "2": 100,
+        "4": 50,
+        "6": 83,
+        "7": 17
+      }
+    }
+  },
+  "profiles": [
+    {
+      "id": "supported",
+      "weight": 45,
+      "focus": [],
+      "background_rate": 0.025,
+      "focus_rate": 0.15,
+      "experience": [
+        45,
+        45,
+        8,
+        2
+      ]
+    },
+    {
+      "id": "communication",
+      "weight": 20,
+      "focus": [
+        "Com"
+      ],
+      "background_rate": 0.06,
+      "focus_rate": 0.55,
+      "experience": [
+        15,
+        35,
+        35,
+        15
+      ]
+    },
+    {
+      "id": "autonomy",
+      "weight": 15,
+      "focus": [
+        "Keu"
+      ],
+      "background_rate": 0.08,
+      "focus_rate": 0.55,
+      "experience": [
+        10,
+        30,
+        40,
+        20
+      ]
+    },
+    {
+      "id": "support",
+      "weight": 15,
+      "focus": [
+        "Sup"
+      ],
+      "background_rate": 0.06,
+      "focus_rate": 0.55,
+      "experience": [
+        15,
+        35,
+        35,
+        15
+      ]
+    },
+    {
+      "id": "difficult",
+      "weight": 5,
+      "focus": [
+        "Dreig",
+        "Verb",
+        "Fys"
+      ],
+      "background_rate": 0.12,
+      "focus_rate": 0.45,
+      "experience": [
+        5,
+        15,
+        40,
+        40
+      ]
+    }
+  ],
+  "field_weights": {
+    "ToelVrgl": 16,
+    "ErvTkst": 7,
+    "ComInfoToel": 5,
+    "ComLuisToel": 4,
+    "ComBeslToel": 3,
+    "ComSeriToel": 3,
+    "ComVrgnToel": 2,
+    "SupAandToel": 3,
+    "SupPrivToel": 3,
+    "SupPijnsToel": 2,
+    "SupGeschToel": 1,
+    "KeuIcToel": 3,
+    "KeuBevalToel": 2,
+    "KeuWeeToel": 2,
+    "FysGeslToel": 0.15,
+    "FysSeksuToel": 0.15,
+    "FysGwldToel": 0.25,
+    "DreigWetToel": 0.25,
+    "DiscrGendToel": 0.35,
+    "DiscrGodToel": 0.35
+  },
+  "positive_questions": [
+    "ComBesl",
+    "ComLuis",
+    "ComSeri",
+    "ComVrgn",
+    "KeuAanw",
+    "KeuWee",
+    "KeuBeval"
+  ],
+  "response_answers": {
+    "ComBeslToel": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      0
+    ],
+    "ComLuisToel": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+    ],
+    "ComSeriToel": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+    ],
+    "ComVrgnToel": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+    ],
+    "ComInfoToel": [
+      1,
+      0,
+      1,
+      1,
+      1,
+      1
+    ],
+    "SupAandToel": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      1
+    ],
+    "SupPijnsToel": [
+      1,
+      1,
+      1,
+      0,
+      1,
+      1
+    ],
+    "SupGeschToel": [
+      0,
+      1,
+      1,
+      1,
+      0,
+      1
+    ],
+    "SupPrivToel": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      1
+    ],
+    "KeuAanwToel": [
+      1,
+      0,
+      1,
+      0,
+      0,
+      1
+    ],
+    "KeuAcceptToel": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      1
+    ],
+    "KeuWeeToel": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+    ],
+    "KeuBevalToel": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+    ],
+    "KeuNietMToel": [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "KeuIcToel": [
+      1,
+      0,
+      1,
+      1,
+      1,
+      1
+    ],
+    "KeuStopToel": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      1
+    ],
+    "DiscrGendToel": [
+      1,
+      0,
+      1,
+      1,
+      1,
+      1
+    ],
+    "DiscrGodToel": [
+      1,
+      0,
+      1,
+      1,
+      1,
+      1
+    ],
+    "DiscrLeeftToel": [
+      1,
+      0,
+      1,
+      1,
+      1,
+      1
+    ],
+    "DiscrOPLToel": [
+      1,
+      0,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "general_pools": {
+    "positive": [
+      0,
+      8,
+      10,
+      12,
+      13,
+      14,
+      15,
+      22,
+      28,
+      31
+    ],
+    "negative": [
+      4,
+      5,
+      11,
+      17
+    ],
+    "mixed": [
+      3,
+      7,
+      9,
+      18,
+      19,
+      24,
+      26,
+      32
+    ],
+    "neutral": [
+      1,
+      2,
+      6,
+      16,
+      20,
+      21,
+      23,
+      25,
+      27,
+      29,
+      30
+    ]
+  },
+  "standalone_general": [
+    20,
+    29
+  ],
+  "additions_file": "fixtures/rmc-synthetic/text-additions.json"
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "analysis": {
+    "mode": "table",
+    "features": [
+      "ag",
+      "ht",
+      "ps",
+      "nt"
+    ],
+    "neighbors": 15,
+    "epochs": 150
+  },
+  "views": [
+    {
+      "type": "scatter",
+      "x": "ht",
+      "y": "ag"
+    },
+    {
+      "type": "bar",
+      "x": "ps"
+    },
+    {
+      "type": "histogram",
+      "x": "ht"
+    }
+  ]
+}

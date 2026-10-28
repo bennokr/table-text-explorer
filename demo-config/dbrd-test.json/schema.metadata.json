@@ -1,0 +1,45 @@
+{
+  "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
+  "fieldsMatch": "partial",
+  "missingValues": [
+    ""
+  ],
+  "fields": [
+    {
+      "name": "review_id",
+      "type": "string",
+      "x-role": "identifier"
+    },
+    {
+      "name": "text",
+      "type": "string",
+      "x-role": "text"
+    },
+    {
+      "name": "sentiment",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "rating",
+      "type": "integer",
+      "x-measurement": "ordinal",
+      "categories": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "categoriesOrdered": true
+    },
+    {
+      "name": "word_count",
+      "type": "number"
+    },
+    {
+      "name": "character_count",
+      "type": "number"
+    }
+  ]
+}

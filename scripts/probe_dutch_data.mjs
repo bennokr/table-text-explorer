@@ -58,5 +58,6 @@ async function crawlfeedsAccess() {
 
 const [bol, head, crawlfeeds] = await Promise.all([testData(), trainingHead(), crawlfeedsAccess()]);
 const report = { bol: { ...bol, trainingHead: head }, crawlfeeds };
-await writeFile('docs/evidence/dutch-data-acquisition.json', JSON.stringify(report, null, 2) + '\n');
+await mkdir('.cache/checks', { recursive: true });
+await writeFile('.cache/checks/dutch-data-acquisition.json', JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(report, null, 2));

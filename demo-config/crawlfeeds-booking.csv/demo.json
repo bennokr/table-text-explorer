@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "analysis": {
+    "mode": "words",
+    "language": "en",
+    "vectorLanguage": "en",
+    "features": [
+      "positive_review_text",
+      "negative_review_text"
+    ],
+    "neighbors": 15,
+    "epochs": 150
+  },
+  "views": [
+    {
+      "type": "scatter",
+      "x": "rating",
+      "y": "average_score"
+    },
+    {
+      "type": "bar",
+      "x": "country"
+    },
+    {
+      "type": "histogram",
+      "x": "rating"
+    }
+  ]
+}

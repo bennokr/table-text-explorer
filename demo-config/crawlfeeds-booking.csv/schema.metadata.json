@@ -1,0 +1,115 @@
+{
+  "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
+  "fieldsMatch": "partial",
+  "missingValues": [
+    "",
+    "\\N"
+  ],
+  "fields": [
+    {
+      "name": "url",
+      "type": "string",
+      "x-role": "identifier"
+    },
+    {
+      "name": "hotel_name",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "hotel_address",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "country",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "average_score",
+      "type": "number"
+    },
+    {
+      "name": "review_title",
+      "type": "string",
+      "x-role": "text"
+    },
+    {
+      "name": "reviewer_name",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "rating",
+      "type": "number"
+    },
+    {
+      "name": "reviewer_country",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "negative_review_text",
+      "type": "string",
+      "x-role": "text"
+    },
+    {
+      "name": "positive_review_text",
+      "type": "string",
+      "x-role": "text"
+    },
+    {
+      "name": "helpful_count",
+      "type": "number"
+    },
+    {
+      "name": "reviewed_at",
+      "type": "datetime"
+    },
+    {
+      "name": "stayed_at",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "tags",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "source",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "source_domain",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "language",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "uniq_id",
+      "type": "string",
+      "x-role": "identifier"
+    },
+    {
+      "name": "scraped_at",
+      "type": "datetime",
+      "format": "%d/%m/%Y %H:%M:%S"
+    },
+    {
+      "name": "_version",
+      "type": "string",
+      "x-measurement": "nominal"
+    },
+    {
+      "name": "_imported_at",
+      "type": "datetime"
+    }
+  ]
+}
