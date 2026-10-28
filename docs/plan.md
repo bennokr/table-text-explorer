@@ -2,6 +2,8 @@
 
 - Choose a project license before a public release. Bundled example/model licenses
   remain separate; the DBRD example has noncommercial and share-alike terms.
+- Separate background-description activity from explicit fit progress/busy state
+  while retaining worker serialization and cancellation guards.
 - Add generic codebook import/review, saved column sets and compact record
   inspection. Preserve source metadata and overrides.
 - Save named brush/query subsets and annotation-label populations, with explicit

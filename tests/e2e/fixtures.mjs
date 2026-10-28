@@ -68,6 +68,7 @@ export async function mapForm(page, mode, method = 'pca') {
 
 export async function finishMap(page) {
   await page.click('#map-submit');
+  await expect(page.locator('#map-dialog')).not.toBeVisible();
   await idle(page);
   await page.locator('.view-card').first().locator('.bk-events').waitFor();
 }

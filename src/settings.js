@@ -17,6 +17,7 @@ class SimilarityMaps {
   constructor(model, projection) {
     this.model = model;
     this.projection = projection;
+    model.on('busy', () => { $('#map-submit').disabled = model.analysisBusy; });
     $('#feature-mode').onchange = () => { featureList(model, this.base); this.name(); };
     $('#field-combine').onchange = combiningControls;
     $('#group-identity').oninput = combiningControls;
