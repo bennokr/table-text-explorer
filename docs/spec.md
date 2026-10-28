@@ -6,19 +6,21 @@ as CSV, JSON records or XLSX. No SAV export or project archive initially.
 
 Use Bokeh Canvas for linked distributions, pairwise visual exploration and 2D maps.
 Brushing highlights records; filtering is explicit. A shared typed Boolean AST drives
-query filtering; incomplete input preserves the last valid AST. Fit on all records
+query highlighting; incomplete input preserves the last valid highlight. Filtering
+requires an explicit action. Fit on all records
 initially, and never refit as a side effect of highlighting or filtering.
 
 Users choose one or multiple text fields and optional chunking. Cluster records.
-Counts/TF-IDF with words/ngrams, SVD, NMF and LDA run in Pyodide/scikit-learn;
-DBSCAN/HDBSCAN accept suitable reduced features or embeddings. LDA uses counts,
-NMF uses nonnegative inputs. UMAP runs in a JS worker; PCA/SVD are fast alternatives.
+Counts/TF-IDF with words/ngrams, SVD and clustering run in Pyodide/scikit-learn.
+HDBSCAN accepts suitable reduced features or embeddings. UMAP runs in a JS worker;
+PCA/SVD are fast alternatives. NMF/LDA/DBSCAN exist only in the historical
+feasibility harness, not the application or current delivery plan.
 Stopword lists are per language and configurable; do not strip stopwords from the
 transformer input by default. Chunk vectors must be aggregated back to record IDs.
 
 Transformer inference uses WASM and requires explicit opt-in before model loading.
-The 118 MB multilingual model also needs its tokenizer; display the total download.
-Prefer a smaller, verified Dutch/static embedding option once suitable weights exist.
+The multilingual model also needs its tokenizer; expose the total download size.
+Verified Dutch/English static embeddings are available as a smaller option.
 Static assets may download, but all assets must also be locally bundlable.
 No records, text, queries, annotations or derived vectors leave the user's machine.
 

@@ -1,22 +1,20 @@
 # Plan
 
-Each stage ends with a working local demo and user feedback.
+- Choose a project license before a public release. Bundled example/model licenses
+  remain separate; the DBRD example has noncommercial and share-alike terms.
+- Add generic codebook import/review, saved column sets and compact record
+  inspection. Preserve source metadata and overrides.
+- Save named brush/query subsets and annotation-label populations, with explicit
+  comparison sets and support for describing several subsets together.
+- Learn shallow, readable rules from phrase and metadata predicates. Tree paths become ANDs;
+  qualifying leaves combine with OR. Show support, precision/recall and held-out
+  evaluation; exclude membership-derived predictors and keep selection/evaluation
+  data separate. Clicking a rule previews its query before explicit filtering.
+- Start with rule covering: show standalone usefulness plus additional coverage of
+  records missed by earlier rules. Boosting combines weighted error-correcting
+  predictors and is harder to explain or faithfully edit as a short filter; defer it.
+- Evaluate result deletion/memory visibility and local workspace save/restore.
+  Add further text models only when a demonstrated task needs them.
 
-1. **Subset descriptions (current stage):** distinctive words, bigrams and trigrams;
-   c-TF-IDF and contrast, record support, and excerpts. Analyze text fields separately.
-   Reuse an explicitly built all-record vocabulary for brushes and query subsets.
-2. **Clustering:** HDBSCAN on prepared features; explicit fits, noise/unassigned records,
-   editable names, reusable subset descriptions, and independent annotation columns.
-3. **Sentence embeddings:** opt-in Transformers.js WASM, Dutch-capable multilingual
-   model, optional chunking, cached per-field vectors and configurable aggregation.
-   Compare representations through the same linked views and descriptions.
-4. **Other text models:** NMF/LDA and additional lexical representations as needed.
-
-Low-priority stretch: descriptive metadata facets (categorical values, booleans,
-missingness, numeric ranges), then shallow decision-tree filter induction. Translate
-rules into the existing filter AST; show support, precision/recall and held-out
-performance. Exclude membership-derived predictors. Preview suggestions before applying.
-
-Shared foundation: a subset plus an explicit comparison set, reusable for brushes,
-queries, cluster IDs and annotation labels. No filter or selection change refits a
-projection. All data and computation remain local; exports stay table-only.
+Work in reviewable stages. Keep all data and computation local; never silently
+refit analyses or overwrite edited names/annotations.
