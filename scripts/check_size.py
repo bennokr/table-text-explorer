@@ -3,7 +3,7 @@
 import ast
 from pathlib import Path
 
-EXCLUDED = {"node_modules", "dist", "vendor", ".cache", ".venv"}
+EXCLUDED = {"node_modules", "dist", "dist-feasibility", "vendor", ".cache", ".venv"}
 
 
 def main():

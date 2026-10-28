@@ -1,12 +1,20 @@
-import { defineConfig } from 'vite';
+import { defineConfig, defaultClientConditions } from 'vite';
 import { fileURLToPath } from 'node:url';
 
-export default defineConfig({
-  resolve: { alias: { 'node:zlib': fileURLToPath(new URL('./feasibility/zlib.js', import.meta.url)) } },
-  worker: { format: 'es' },
-  server: { host: '127.0.0.1' },
-  build: { target: 'esnext', rolldownOptions: { input: {
-    app: fileURLToPath(new URL('./index.html', import.meta.url)),
-    feasibility: fileURLToPath(new URL('./feasibility.html', import.meta.url)),
-  } } },
+export default defineConfig(({ command, mode }) => {
+  const feasibility = mode === 'feasibility';
+  return {
+    publicDir: command === 'serve' || feasibility ? 'public' : '.cache/public-build',
+    resolve: {
+      alias: { 'node:zlib': fileURLToPath(new URL('./src/zlib.js', import.meta.url)) },
+      // ORT's supported external-WASM entry avoids a second bundled runtime binary.
+      conditions: ['onnxruntime-web-use-extern-wasm', ...defaultClientConditions],
+    },
+    worker: { format: 'es' },
+    // Discover worker-only dependencies before analysis, avoiding dev-page reloads.
+    optimizeDeps: { include: ['@huggingface/transformers', 'umap-js', '@irbisadm/statfmt'] },
+    server: { host: '127.0.0.1' },
+    build: { target: 'esnext', outDir: feasibility ? 'dist-feasibility' : 'dist',
+      rolldownOptions: { input: fileURLToPath(new URL(feasibility ? './feasibility.html' : './index.html', import.meta.url)) } },
+  };
 });

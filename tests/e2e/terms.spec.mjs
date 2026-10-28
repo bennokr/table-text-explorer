@@ -1,0 +1,79 @@
+import { test, expect, importRows, records, snapshot, idle, mapForm, finishMap } from './fixtures.mjs';
+
+async function phraseFields(page) {
+  await page.click('#phrase-settings');
+  const picker = page.locator('#terms-fields');
+  await picker.getByRole('button', { name: 'Phrase fields', exact: true }).click();
+  await picker.getByRole('searchbox').fill('notes');
+  await picker.getByRole('checkbox').check();
+  await picker.getByRole('button', { name: 'Done', exact: true }).click();
+  await page.selectOption('#terms-sizes', '1:1');
+  await page.selectOption('#terms-language', 'none');
+  await page.locator('#phrase-form').getByRole('button', { name: 'Apply settings', exact: true }).click();
+}
+
+async function combinedQueries(page) {
+  await expect(page.locator('#terms-results .term-field')).toHaveCount(2, { timeout: 60000 });
+  await expect(page.locator('#description-kind')).toHaveText('Common phrases');
+  await page.click('#terms-options');
+  await expect(page.locator('#terms-ranking option[value=semantic]')).toBeDisabled();
+  await page.selectOption('#terms-display', 'combined');
+  await expect(page.locator('.term-field-legend span')).toHaveText(['text', 'notes']);
+  await page.getByLabel('Cloud view for Selected fields', { exact: true }).uncheck();
+  await expect(page.locator('.term-table thead')).toContainText('Field');
+  await page.getByLabel('Cloud view for Selected fields', { exact: true }).check();
+  const cloud = page.locator('#terms-results .term-cloud[aria-busy=false]');
+  await expect(cloud).toHaveCount(1);
+  await expect(cloud.locator('text[data-term=camera]')).toHaveCount(2);
+  await cloud.locator('text[data-term=camera][data-field=text]').click();
+  await expect(page.locator('#search')).toHaveValue('"text"~"camera"');
+  await expect.poll(async () => (await snapshot(page)).selected.length).toBe(12);
+  await expect(page.locator('#terms-status')).toHaveText(/12 subset \/ 12 comparison/);
+  await expect(page.locator('.term-field-legend span')).toHaveCount(2);
+  await conjoinPhrase(page);
+  await page.selectOption('#terms-ranking', 'balanced');
+  await expect(page.locator('#description-kind')).toHaveText('Balanced splits');
+  await page.selectOption('#terms-scope', 'all');
+  await expect(page.locator('#terms-status')).toHaveText(/24 subset \/ 0 comparison/);
+  await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toHaveCount(1);
+  await page.click('#filter-selection');
+  await page.selectOption('#terms-scope', 'visible');
+  await expect(page.locator('#terms-status')).toHaveText(/12 subset \/ 0 comparison/);
+  await page.click('#clear-filters');
+}
+
+async function conjoinPhrase(page) {
+  await page.locator('.term-cloud[aria-busy=false] text[data-term=battery][data-field=notes]').click();
+  await expect(page.locator('#search')).toHaveValue('("text"~"camera" AND "notes"~"battery")');
+  await expect.poll(async () => (await snapshot(page)).selected.length).toBe(12);
+}
+
+async function semanticAndClusters(page) {
+  await mapForm(page, 'words');
+  await page.selectOption('#field-combine', 'concat');
+  await finishMap(page);
+  await expect(page.locator('#terms-ranking option[value=semantic]')).not.toBeDisabled();
+  await page.selectOption('#terms-ranking', 'semantic');
+  await expect(page.locator('#terms-embedding')).toBeVisible();
+  await expect(page.locator('#description-kind')).toHaveText('Semantic splits');
+  await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toHaveCount(1);
+  await page.selectOption('#terms-ranking', 'auto');
+  await page.click('#cluster');
+  await page.selectOption('#cluster-method', 'minibatch');
+  await page.fill('#cluster-count', '2');
+  await page.click('#cluster-submit');
+  await idle(page);
+  await page.selectOption('#terms-scope', { index: 4 });
+  await expect(page.locator('#terms-results details[data-group-id]')).toHaveCount(2);
+  await expect(page.locator('.term-field-legend')).toHaveCount(2);
+  await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toHaveCount(2);
+}
+
+test('phrases: whole-dataset clouds, field-specific combined queries, splits and cluster clouds', async ({ app }) => {
+  const { page, models } = app;
+  await importRows(page, records.map((row, id) => ({ ...row, notes: records[(id + 12) % 24].text })));
+  await phraseFields(page);
+  await combinedQueries(page);
+  await semanticAndClusters(page);
+  expect(models).toEqual([]);
+});

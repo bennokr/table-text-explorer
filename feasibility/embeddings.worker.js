@@ -3,7 +3,8 @@ import { env, pipeline } from '@huggingface/transformers';
 env.allowRemoteModels = false;
 env.allowLocalModels = true;
 env.localModelPath = '/vendor/models/';
-env.backends.onnx.wasm.wasmPaths = '/vendor/ort/';
+// Absolute URLs keep Vite's dev importer from adding ?import to public assets.
+env.backends.onnx.wasm.wasmPaths = new URL('/vendor/ort/', self.location.origin).href;
 env.backends.onnx.wasm.numThreads = 1;
 
 self.onmessage = async ({ data }) => {

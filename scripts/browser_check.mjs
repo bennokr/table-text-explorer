@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 
 const origin = 'http://127.0.0.1:4173';
-const server = spawn('node', ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1',
+const server = spawn('node', ['node_modules/vite/bin/vite.js', 'preview', '--mode', 'feasibility', '--host', '127.0.0.1',
   '--port', '4173', '--strictPort'], { stdio: 'pipe' });
 let browser;
 const requests = [];
@@ -95,8 +95,8 @@ try {
   const result = { report, selection, errors, beforeOptIn,
     network: { requests: requests.length, external: requests.filter(request => !request.local),
       nonGet: requests.filter(request => request.method !== 'GET') } };
-  await mkdir('docs', { recursive: true });
-  await writeFile('docs/evidence/feasibility-results.json', JSON.stringify(result, null, 2));
+  await mkdir('.cache/checks', { recursive: true });
+  await writeFile('.cache/checks/feasibility-results.json', JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result, null, 2));
   validate(report);
   assert.deepEqual(errors, []);
