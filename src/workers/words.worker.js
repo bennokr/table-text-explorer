@@ -17,11 +17,16 @@ async function loadModel(language, report) {
   return loaded;
 }
 
-async function fieldVectors(payload, field, model, report) {
-  const key = JSON.stringify([payload.pooling, payload.stopwords, payload.rows.map(row => row[field])]);
-  if (cache.get(field)?.key === key) { return cache.get(field); }
+function wordDocuments(payload, field) {
+  if (payload.documents) { return payload.documents[field]; }
   const stopwords = new Set(payload.stopwords);
-  const documents = payload.rows.map(row => tokens(row[field], stopwords));
+  return payload.rows.map(row => tokens(row[field], stopwords));
+}
+
+async function fieldVectors(payload, field, model, report) {
+  const documents = wordDocuments(payload, field);
+  const key = JSON.stringify([payload.pooling, documents]);
+  if (cache.get(field)?.key === key) { return cache.get(field); }
   const idf = payload.pooling === 'tfidf' ? inverseFrequency(documents) : new Map();
   const values = new Float32Array(payload.rows.length * model.dimensions);
   let matched = 0, total = 0;

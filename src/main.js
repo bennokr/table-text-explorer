@@ -1,48 +1,48 @@
+import { tableColumns } from './table-columns.js';
+import { demoSettings } from './demo-settings.js';
 import { $, options } from './dom.js';
 import { Dataset } from './state.js';
 import { importTable, importExample, exportTable, cancelImport } from './importers.js';
-import { status, progress, complete } from './status.js';
-import { parseQuery } from './query.js';
+import { status, progress, complete, analysisControls } from './status.js';
+import { bindSearch } from './search.js';
 import { TableView } from './table.js';
 import { recordViewer } from './record.js';
-import { Scatter } from './scatter.js';
-import { ChartStack } from './charts.js';
+import { Views } from './views.js';
+import { Analysis } from './analysis.js';
+import { layout } from './layout.js';
+import { diagnostics } from './diagnostics.js';
 import { Projection } from './projection.js';
 import { settings } from './settings.js';
 import { Terms } from './terms.js';
+import { Clustering } from './clustering.js';
+import { renderResults } from './results-ui.js';
+import { PhraseSettings } from './phrase-settings.js';
+import { runtimeStatus } from './runtime-status.js';
+import { bindHelp } from './help.js';
 
 const model = new Dataset();
 let importVersion = 0;
+const exampleFiles = new Map();
 
 const reportError = error => complete(error.message ?? String(error), true);
-
-function exampleSettings() {
-  const presets = new Map([
-    ['crawlfeeds-booking.csv', ['en', ['positive_review_text', 'negative_review_text']]],
-    ['dbrd-test.json', ['nl', ['text']]],
-    ['bol-absa-preview.json', ['nl', ['pros_text', 'cons_text']]],
-  ]);
-  const [language, features] = presets.get(model.name) ?? [];
-  if (!features || !features.every(name => model.fields.some(field => field.name === name))) { return; }
-  model.configure({ ...model.config, mode: 'words', language, vectorLanguage: language, features });
-}
 
 function summary() {
   $('#dataset-name').textContent = model.name ?? 'No table';
   $('#counts').textContent = `${model.visible.length.toLocaleString()} / ${model.rows.length.toLocaleString()} records · ${model.selected.size} highlighted`;
   $('#filter-selection').disabled = !model.selected.size;
-  for (const id of ['export', 'add-chart', 'new-annotation']) {
+  for (const id of ['export', 'add-chart', 'new-annotation', 'clear-selection']) {
     $(`#${id}`).disabled = !model.rows.length;
   }
-  $('#fit').disabled = !model.rows.length || $('#scatter-panel').getAttribute('aria-busy') === 'true';
-  $('#fit-secondary').disabled = $('#fit').disabled;
+  $('#column-types').disabled = !model.rows.length || model.analysisBusy;
+  $('#analysis-inputs').disabled = model.rows.length < 2 || model.analysisBusy;
+  $('#cancel').hidden = !model.analysisBusy;
 }
 
 async function load(action) {
   const version = ++importVersion;
   cancelImport();
   projection.cancel();
-  projection.busy(true);
+  analysis.busy(true);
   $('#cancel').hidden = true;
   progress({ message: 'Reading table locally' });
   try {
@@ -54,10 +54,11 @@ async function load(action) {
     await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
     if (version !== importVersion) { return; }
     model.load(table);
-    exampleSettings();
-    complete(`${table.name} · ${model.rows.length} records, ${model.fields.length} columns · data axes`);
+    demoSettings(model, table.demo);
+    const ignored = table.ignoredFields?.length ? ` · ${table.ignoredFields.length} structured columns ignored` : '';
+    complete(`${table.name} · ${model.rows.length} records, ${model.fields.length} columns${ignored} · data axes`);
   } catch (error) { if (version === importVersion) { reportError(error); } }
-  finally { if (version === importVersion) { projection.busy(false); summary(); } }
+  finally { if (version === importVersion) { analysis.busy(false); summary(); } }
 }
 
 function bindImportExport() {
@@ -69,9 +70,12 @@ function bindImportExport() {
   };
   $('#examples').onchange = () => {
     const name = $('#examples').value;
-    if (name) { load(() => importExample(name, progress)); }
+    if (name) { load(() => importExample(name, progress, exampleFiles.get(name))); }
   };
-  $('#export').onclick = () => $('#export-dialog').showModal();
+  $('#export').onclick = () => {
+    renderResults(model);
+    $('#export-dialog').showModal();
+  };
   $('#export-form').onsubmit = event => {
     event.preventDefault();
     const format = $('#export-format').value;
@@ -85,72 +89,36 @@ function bindImportExport() {
   };
 }
 
-function bindSearch() {
-  let timeout;
-  const apply = () => {
-    try {
-      const parsed = parseQuery($('#search').value, model.fields);
-      model.query = parsed.test;
-      model.ast = parsed.ast;
-      $('#search').removeAttribute('aria-invalid');
-      model.refresh();
-      status('Search applied · existing projections unchanged.');
-    } catch (error) {
-      $('#search').setAttribute('aria-invalid', 'true');
-      status(`${error.message} Keeping the last valid search.`, true);
-    }
-  };
-  $('#search').oninput = () => { clearTimeout(timeout); timeout = setTimeout(apply, 180); };
-  $('#search').onkeydown = event => {
-    if (event.key === 'Enter') { clearTimeout(timeout); apply(); }
-  };
-  $('#filter-selection').onclick = () => { model.pinned = new Set(model.selected); model.refresh(); };
-  $('#clear-filters').onclick = () => {
-    clearTimeout(timeout);
-    $('#search').value = '';
-    $('#search').removeAttribute('aria-invalid');
-    model.pinned = null;
-    model.query = () => true;
-    model.ast = null;
-    model.refresh();
-    status('Filters cleared · existing projections unchanged.');
-  };
-  $('#clear-selection').onclick = () => model.select([], model.active);
-}
-
 async function examples() {
   try {
     const response = await fetch('/examples.json');
     const files = response.ok ? await response.json() : [];
+    for (const file of files) { exampleFiles.set(file.name, file); }
     options($('#examples'), [['', 'Examples…'], ...files.map(file => [file.name, file.name])]);
   } catch { status('Import a local file to start.'); }
 }
 
+tableColumns(model);
 new TableView(model, $('#table-scroll'));
 recordViewer(model, reportError);
-new Scatter(model, reportError);
-new Scatter(model, reportError, 1);
-const projection = new Projection(model, status);
-new Terms(model, projection);
-new ChartStack(model, reportError);
-settings(model, status);
+const analysis = new Analysis(model, progress);
+const projection = new Projection(model, analysis);
+const openProjectionSettings = settings(model, projection, status);
+new Views(model, reportError, openProjectionSettings);
+runtimeStatus(analysis.workers);
+new PhraseSettings(model, analysis);
+analysis.workers.warmup();
+analysisControls(model);
+new Terms(model, analysis);
+new Clustering(model, analysis);
+layout();
+bindHelp();
+$('#analysis-inputs').onclick = openProjectionSettings;
+$('#cancel').onclick = () => { projection.cancel(); complete('Analysis cancelled. Existing fits retained.'); };
 bindImportExport();
-bindSearch();
-for (const type of ['data', 'view', 'selection', 'schema']) { model.on(type, summary); }
+bindSearch(model, analysis);
+for (const type of ['data', 'view', 'selection', 'schema', 'busy']) { model.on(type, summary); }
 summary();
 examples();
 
-// Read-only diagnostics for browser tests; no complete records are exposed here.
-window.explorer = {
-  snapshot: () => ({ rows: model.rows.length, visible: model.visible.length,
-    selected: [...model.selected], active: model.active,
-    fields: model.fields.map(({ name, kind, unique }) => ({ name, kind, cardinality: unique.length })),
-    projection: model.coordinates?.method ?? 'axes', fittedRows: model.coordinates?.x.values.length ?? 0,
-    coordinates: model.coordinates?.x.values.slice(0, 4),
-    projections: model.projections?.map(value => value && ({ method: value.method ?? 'axes',
-      count: value.count, coordinates: value.x.values.slice(0, 4), config: value.config,
-      dimensions: value.dimensions, coverage: value.coverage })),
-    progress: { visible: !$('#task-progress').hidden, value: $('#task-progress').value,
-      determinate: $('#task-progress').hasAttribute('value'), message: $('#status').textContent },
-    busy: Boolean(projection.workers.pending), revision: model.revision }),
-};
+diagnostics(model, analysis);

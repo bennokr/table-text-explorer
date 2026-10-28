@@ -1,7 +1,12 @@
-import { numberOf } from './schema.js';
+import { temporal } from './dates.js';
+import { missing, numberOf } from './schema.js';
+import { fieldDescription } from './field-metadata.js';
+import { descriptionEnabled, groupName } from './group-vectors.js';
+
+export const isEmbeddingMode = mode => ['words', 'sentences'].includes(mode);
 
 export function featureCandidates(model) {
-  return model.fields.filter(field => model.config.mode !== 'table'
+  return model.fields.filter(field => !field.derived).filter(field => model.config.mode !== 'table'
     ? field.storage === 'string' && !field.identifier
     : field.kind !== 'empty' && field.kind !== 'text' && !field.identifier);
 }
@@ -25,19 +30,47 @@ const stopwords = {
 
 export function stopwordList(config, keepNegation = false) {
   const negations = new Set(['niet', 'geen', 'nooit', 'not', 'no', 'never']);
-  const base = (stopwords[config.language] ?? '').toLowerCase().split(/\s+/u)
+  const base = config.language.split(',').flatMap(language => (stopwords[language] ?? '').toLowerCase().split(/\s+/u))
     .filter(word => !keepNegation || !negations.has(word));
   const extra = config.stopwords.toLowerCase().split(/[\s,]+/u);
   return [...new Set([...base, ...extra].filter(Boolean))];
 }
 
+function featureDescriptor(field, config) {
+  const descriptor = { name: field.name, kind: field.kind };
+  if (config.mode === 'sentences' && descriptionEnabled(config)) {
+    descriptor.description = fieldDescription(field);
+  }
+  if (config.mode === 'sentences' && config.combine === 'group-mean') { descriptor.group = groupName(field, config.fieldGroups); }
+  return descriptor;
+}
+
+export function featureSettings(model, method) {
+  const fields = featureFields(model);
+  const lexical = ['text', 'words'].includes(model.config.mode);
+  return { revision: model.revision, sentence: { model: model.config.sentenceModel ?? 'multilingual', chunking: model.config.sentenceChunking,
+    size: model.config.sentenceChunkSize, overlap: model.config.sentenceOverlap },
+    fields: fields.map(field => featureDescriptor(field, model.config)), method, mode: model.config.mode,
+    stopwords: lexical ? stopwordList(model.phraseConfig ?? model.config, true) : [],
+    phrases: lexical ? model.phraseConfig ?? null : null, vectorLanguage: model.config.vectorLanguage,
+    pooling: model.config.pooling, combine: model.config.combine, weights: model.config.weights,
+    includeDescriptions: descriptionEnabled(model.config), groupIdentity: model.config.groupIdentity };
+}
+
+export function featureKey(model) {
+  const revisions = featureFields(model).map(field => model.fieldRevisions.get(field.name) ?? 0);
+  return JSON.stringify([model.schemaRevision, revisions, featureSettings(model, 'prepare')]);
+}
+
+function featureValue(value, field, mode) {
+  if (missing(value, field)) { return null; }
+  if (mode === 'table' && (field.kind === 'number' || temporal(field))) { return numberOf(value, field); }
+  return value;
+}
+
 export function payload(model, method) {
   const fields = featureFields(model);
   const rows = model.rows.map(row => Object.fromEntries(fields.map(field => [field.name,
-    ['number', 'date'].includes(field.kind) && model.config.mode === 'table'
-      ? numberOf(row[field.name], field) : row[field.name] ?? null])));
-  return { rows, fields: fields.map(({ name, kind }) => ({ name, kind })), method, mode: model.config.mode,
-    stopwords: stopwordList(model.config),
-    vectorLanguage: model.config.vectorLanguage, pooling: model.config.pooling,
-    combine: model.config.combine, weights: model.config.weights };
+    featureValue(row[field.name], field, model.config.mode)])));
+  return { ...featureSettings(model, method), rows };
 }

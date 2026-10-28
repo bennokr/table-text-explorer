@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { comparisonSets } from '../src/term-view.js';
 import { stopwordList } from '../src/features.js';
+import { phraseSettings, retainPhraseSettings } from '../src/phrase-config.js';
+import { Dataset } from '../src/state.js';
 
 test('subset descriptions use disjoint comparisons and intersect selections with visible records', () => {
   const model = { rows: Array(6).fill({}), visible: [4, 1, 3], selected: new Set([0, 1, 4]) };
@@ -14,4 +16,16 @@ test('inspector retains built-in negations but respects explicit additional stop
   assert.ok(!stopwordList({ language: 'nl', stopwords: '' }, true).includes('niet'));
   assert.ok(stopwordList({ language: 'nl', stopwords: 'NIET,prima' }, true).includes('niet'));
   assert.ok(stopwordList({ language: 'nl', stopwords: '' }).includes('niet'));
+});
+
+test('independent map columns do not change the retained shared phrase selection', () => {
+  const model = new Dataset();
+  model.load({ name: 'shared', rows: [{ text: 'first text', notes: 'other text' }] });
+  const original = phraseSettings(model);
+  retainPhraseSettings(model);
+  model.configure({ ...model.config, mode: 'sentences', features: ['notes'] });
+  assert.deepEqual(phraseSettings(model), original);
+  const saved = model.phraseConfig;
+  retainPhraseSettings(model);
+  assert.strictEqual(model.phraseConfig, saved);
 });

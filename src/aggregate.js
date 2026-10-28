@@ -3,7 +3,7 @@ import { categorical, categoryLabel, keyOf, missing, numberOf } from './schema.j
 function categories(rows, field) {
   const counts = new Map();
   for (const row of rows) {
-    const value = row[field.name], key = keyOf(value);
+    const value = row[field.name], key = keyOf(value, field);
     const entry = counts.get(key) ?? { key, label: categoryLabel(value, field), count: 0 };
     entry.count += 1;
     counts.set(key, entry);
@@ -13,7 +13,7 @@ function categories(rows, field) {
   const codes = new Map(top.map((entry, index) => [entry.key, index]));
   if (entries.length > 29) { top.push({ label: 'Other', key: null }); }
   return { labels: top.map(entry => entry.label),
-    codes: rows.map(row => codes.get(keyOf(row[field.name])) ?? top.length - 1) };
+    codes: rows.map(row => codes.get(keyOf(row[field.name], field)) ?? top.length - 1) };
 }
 
 function histogram(rows, field) {

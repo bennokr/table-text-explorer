@@ -1,3 +1,4 @@
+import { temporal } from './dates.js';
 import { $, display, element, glyph } from './dom.js';
 import { numberOf } from './schema.js';
 
@@ -9,6 +10,7 @@ export const previewRows = (model, enabled) => enabled && model.selected.size
 export class TableView {
   constructor(model, container) {
     this.model = model;
+    this.fields = model.fields;
     this.container = container;
     this.start = -1;
     this.table = element('table', { class: 'data-table', 'aria-label': 'Records' });
@@ -27,6 +29,7 @@ export class TableView {
       this.rebuild();
     });
     model.on('schema', () => this.rebuild());
+    model.on('table-columns', () => this.rebuild());
     model.on('view', () => { this.container.scrollTop = 0; this.render(true); });
     model.on('selection', () => {
       if ($('#preview-selection').checked) { this.container.scrollTop = 0; }
@@ -34,12 +37,17 @@ export class TableView {
     });
     $('#preview-selection').onchange = () => { this.container.scrollTop = 0; this.render(true); };
     model.on('annotation', () => this.render(true));
-    new ResizeObserver(() => this.render(true)).observe(container);
+    new ResizeObserver(() => {
+      cancelAnimationFrame(this.resizeFrame);
+      this.resizeFrame = requestAnimationFrame(() => this.render(true));
+    }).observe(container);
   }
 
   rebuild() {
+    const chosen = this.model.tableColumns;
+    this.fields = this.model.fields.filter(field => chosen === null || chosen.includes(field.name));
     const header = element('tr', {}, [element('th', { text: '#' })]);
-    for (const field of this.model.fields) {
+    for (const field of this.fields) {
       const button = glyph(field.name, `Sort by ${field.name} · ${field.kind}`, () => this.sort(field));
       header.append(element('th', { title: field.label ?? field.name }, [button,
         element('small', { text: field.kind })]));
@@ -53,7 +61,7 @@ export class TableView {
     this.sortField = field.name;
     const { rows } = this.model;
     this.model.sort = (a, b) => {
-      if (['number', 'date'].includes(field.kind)) {
+      if ((field.kind === 'number' || temporal(field))) {
         const x = numberOf(rows[a][field.name], field), y = numberOf(rows[b][field.name], field);
         if (Number.isNaN(x)) { return Number.isNaN(y) ? a - b : 1; }
         if (Number.isNaN(y)) { return -1; }
@@ -84,7 +92,7 @@ export class TableView {
   }
 
   spacer(height) {
-    const cell = element('td', { colspan: this.model.fields.length + 1 });
+    const cell = element('td', { colspan: this.fields.length + 1 });
     cell.style.height = `${height}px`;
     return element('tr', { class: 'spacer', 'aria-hidden': 'true' }, [cell]);
   }
@@ -94,7 +102,7 @@ export class TableView {
     const selected = this.model.selected.has(id);
     return element('tr', { 'data-id': id, tabindex: '0',
       class: selected && !$('#preview-selection').checked ? 'selected' : '', 'aria-selected': String(selected) },
-    [element('th', { text: id + 1, scope: 'row' }), ...this.model.fields.map(field =>
+    [element('th', { text: id + 1, scope: 'row' }), ...this.fields.map(field =>
       element('td', { text: display(row[field.name]), title: display(row[field.name]) }))]);
   }
 

@@ -1,7 +1,13 @@
-import { element, display } from './dom.js';
+import { $, element, display } from './dom.js';
 import { phraseCloud } from './phrase-cloud.js';
+import { displayFields, fieldColor } from './term-display.js';
+import { descriptionTable, descriptionTooltip } from './term-table.js';
 
 export function comparisonSets(model, scope) {
+  if (scope === 'all') { return { subset: model.rows.map((_, id) => id), comparison: [] }; }
+  if (scope === 'visible' || (scope === 'selection' && !model.selected.size)) {
+    return { subset: model.visible, comparison: [] };
+  }
   if (scope === 'filtered') {
     const visible = new Set(model.visible);
     return { subset: model.visible, comparison: model.rows.flatMap((_, id) => visible.has(id) ? [] : [id]) };
@@ -10,64 +16,81 @@ export function comparisonSets(model, scope) {
     comparison: model.visible.filter(id => !model.selected.has(id)) };
 }
 
-function excerpt(text, phrase = '') {
-  const normalized = text.toLocaleLowerCase();
-  const position = Math.max(0, normalized.indexOf(phrase.toLocaleLowerCase()));
-  const start = Math.max(0, position - 80);
-  return `${start ? '…' : ''}${text.slice(start, start + 320)}${text.length > start + 320 ? '…' : ''}`;
+function excerpt(text) {
+  return `${text.slice(0, 320)}${text.length > 320 ? '…' : ''}`;
 }
 
-function examples(model, field, ids, phrase) {
+function examples(model, field, ids) {
   return element('ul', { class: 'term-excerpts' }, ids.map(id => element('li', {}, [
     element('button', { type: 'button', text: `Record ${id + 1}`, title: 'Show the full record without changing the subset',
       onclick: () => model.select([...model.selected], id) }),
-    document.createTextNode(` ${excerpt(display(model.rows[id][field]), phrase)}`),
+    document.createTextNode(` ${excerpt(display(model.rows[id][field]))}`),
   ])));
 }
 
-const coverage = (count, total) => `${count} · ${total ? Math.round(100 * count / total) : 0}%`;
-const score = value => value.toPrecision(3);
-
-const headers = ['Phrase', 'Subset', 'Rest', 'c-TF-IDF', 'Δ', 'Lift'];
-
-function termCounts(term, comparison) {
-  return [coverage(term.support, term.subsetSize), comparison ? coverage(term.rest, term.restSize) : '—',
-    score(term.ctfidf), comparison ? score(term.contrast) : '—', comparison ? `${(2 ** term.lift).toPrecision(3)}×` : '—'];
+function fieldLegend(fields) {
+  return element('div', { class: 'term-field-legend', 'aria-label': 'Phrase fields' }, fields.map((field, index) =>
+    element('span', { text: field.name, style: `color: ${fieldColor(index)}`,
+      title: field.kind === 'facets' ? `${field.population} scored records, including missing values`
+        : `${field.textRecords ?? 0} records with usable text · ${field.population ?? 0} scored` })));
 }
 
-function termRow(term, show, comparison) {
-  return element('tr', { 'data-term': term.phrase }, [element('td', {}, [element('button', {
-    type: 'button', text: term.phrase, title: 'Show matching excerpts', onclick: () => show(term) })]),
-  ...termCounts(term, comparison).map(text => element('td', { text }))]);
+function facetHeading(field, toggle) {
+  const counts = field.combined ? `${field.vocabulary} predicates` : `${field.vocabulary} predicates · ${field.population} scored`;
+  return element('header', {}, [element('h3', { text: field.label ?? field.name, title: field.name }),
+    element('small', { text: counts,
+      title: 'All records count, including missing values. Up to 50 values and four fixed quantile ranges per field.' }),
+    element('label', {}, [toggle, document.createTextNode('Cloud')])]);
 }
 
-function fieldView(field, result, model, highlight, views) {
+function fieldHeading(field, toggle) {
+  if (field.kind === 'facets') { return facetHeading(field, toggle); }
+  const coverage = field.combined ? 'Field-specific phrases; colors identify fields'
+    : `${field.textRecords ?? 0} records with usable text · ${field.population ?? 0} scored`;
+  return element('header', {}, [element('h3', { text: field.name }),
+    element('small', { text: field.combined ? `${field.vocabulary.toLocaleString()} indexed terms`
+      : `${field.textRecords ?? 0} text records · ${field.population ?? 0} scored`, title: coverage }),
+    element('label', {}, [toggle, document.createTextNode('Cloud')])]);
+}
+
+function fieldExtras(field, model) {
+  if (field.combined) { return [fieldLegend(field.fields)]; }
+  if (field.kind === 'facets') { return []; }
+  const representatives = element('details', {}, [element('summary', { text: 'Representative records' }),
+    examples(model, field.name, field.representatives ?? [])]);
+  return [representatives];
+}
+
+function fieldView(field, result, model, activate, views) {
   const comparison = result.comparison > 0;
-  const preview = element('div');
-  const show = term => preview.replaceChildren(
-    element('strong', { text: term.phrase }), element('button', { type: 'button', text: 'Highlight matches',
-      onclick: () => highlight(field.name, term.phrase) }), examples(model, field.name, term.examples, term.phrase));
-  const table = element('table', { class: 'term-table' }, [element('thead', {}, [element('tr', {},
-    headers.map(text => element('th', { text })))]),
-  element('tbody', {}, field.terms.map(term => termRow(term, show, comparison)))]);
+  const facets = field.kind === 'facets';
+  const show = term => activate(term.field ?? field.name, term.phrase, term.predicate);
+  const table = descriptionTable(field, result, show);
   const packed = phraseCloud(field.terms, result.ranking ?? 'contrast',
-    term => termCounts(term, comparison).map((value, index) => `${headers[index + 1]}: ${value}`).join(' · '), show);
+    term => descriptionTooltip({ ...term, field: term.field ?? field.name }, comparison, result.ranking), show);
   const toggle = element('input', { type: 'checkbox', 'aria-label': `Cloud view for ${field.name}` });
-  toggle.checked = views.get(field.name) ?? false;
-  toggle.onchange = () => { views.set(field.name, toggle.checked); table.hidden = toggle.checked; packed.hidden = !toggle.checked; };
+  const viewKey = facets ? `facets:${field.name}` : field.name;
+  toggle.checked = views.get(viewKey) ?? true;
+  toggle.onchange = () => { views.set(viewKey, toggle.checked); table.hidden = toggle.checked; packed.hidden = !toggle.checked; };
   table.hidden = toggle.checked;
   packed.hidden = !toggle.checked;
-  const heading = element('header', {}, [element('h3', { text: field.name }),
-    element('small', { text: `${field.vocabulary.toLocaleString()} indexed terms` }),
-    element('label', {}, [toggle, document.createTextNode('Cloud')])]);
-  const representatives = element('details', {}, [element('summary', { text: 'Representative records' }),
-    examples(model, field.name, field.representatives, '')]);
-  return element('section', { class: 'term-field', 'data-field': field.name }, [heading, representatives,
+  const heading = fieldHeading(field, toggle);
+  return element('section', { class: 'term-field', 'data-field': field.name }, [heading,
+    ...fieldExtras(field, model),
     ...(field.terms.length ? [table, packed] : [element('p', {
-      text: 'No terms meet the current support and ranking. Try a larger subset or lower minimum support.' })]), preview]);
+      text: 'No predicates meet the current support and ranking. Try a larger subset or lower minimum support.' })])]);
 }
 
-export function renderTerms(container, result, model, highlight, views = new Map()) {
+export function clearTerms(container) {
   for (const node of container.querySelectorAll('.term-cloud')) { node.dispose(); }
-  container.replaceChildren(...result.fields.map(field => fieldView(field, result, model, highlight, views)));
+  container.replaceChildren();
+}
+
+export function renderTerms(container, result, model, activate, views = new Map()) {
+  clearTerms(container);
+  const fields = displayFields(result.fields, $('#terms-display').value === 'combined');
+  const facets = displayFields((result.facets ?? []).filter(field => field.terms.length), $('#terms-display').value === 'combined')
+    .map(field => ({ ...field, kind: 'facets', ...(field.combined ? { name: 'Metadata facets' } : {}) }));
+  container.replaceChildren(...[...fields, ...facets].map(field => fieldView(field, result, model, activate, views)));
+  if (!fields.length && !facets.length) { container.append(element('p', { text: 'No predicates meet these settings. Choose fields or lower minimum support.' })); }
 }

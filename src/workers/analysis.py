@@ -3,10 +3,12 @@
 import json
 
 import numpy as np
+from scipy.sparse import hstack
 from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.feature_extraction import DictVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.preprocessing import StandardScaler
+from text_indexes import get_text_index
 
 embedding_values = None  # Replaced by the worker bridge for each request.
 
@@ -15,7 +17,7 @@ def table_features(data):
     records = [{} for _ in data["rows"]]
     for field in data["fields"]:
         name = field["name"]
-        if field["kind"] in {"number", "date"}:
+        if field["kind"] in {"number", "date", "datetime"}:
             values = np.array([row.get(name) for row in data["rows"]], dtype=float)
             finite = np.isfinite(values)
             median = float(np.median(values[finite])) if finite.any() else 0.0
@@ -29,15 +31,11 @@ def table_features(data):
 
 
 def text_features(data):
-    names = [field["name"] for field in data["fields"]]
-    texts = [" ".join(str(row.get(name) or "") for name in names) for row in data["rows"]]
-    vectorizer = TfidfVectorizer(
-        stop_words=data["stopwords"] or None,
-        ngram_range=(1, 2),
-        max_features=5000,
-        sublinear_tf=True,
-    )
-    return vectorizer.fit_transform(texts)
+    entry = get_text_index(data["indexId"])
+    matrices = [field["matrix"] for field in entry["fields"].values() if field is not None]
+    if not matrices:
+        raise ValueError("No usable phrases. Change phrase counting settings.")
+    return TfidfTransformer(sublinear_tf=True).fit_transform(hstack(matrices, format="csr"))
 
 
 def project(data):
@@ -45,7 +43,7 @@ def project(data):
         return coordinates(np.asarray(embedding_values.to_py(), dtype=np.float32), data["method"])
     if len(data["rows"]) < 2 or not data["fields"]:
         raise ValueError("Choose at least one feature and import at least two records.")
-    if data["mode"] == "words":
+    if data["mode"] in {"words", "sentences"}:
         matrix = np.asarray(embedding_values.to_py(), dtype=np.float32).reshape(
             -1, data["dimensions"]
         )

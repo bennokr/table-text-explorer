@@ -1,33 +1,54 @@
-import { $, options } from './dom.js';
+import { temporal } from './dates.js';
 import { B, dimension, figure, linkRecords, palette, PlotHost, ticks } from './plot.js';
-import { categorical, keyOf } from './schema.js';
+import { keyOf } from './schema.js';
 import { hoverData } from './scatter-hover.js';
+import { axisCoordinates } from './view-config.js';
 
-const axisType = axis => axis.field?.kind === 'date' ? 'datetime' : 'linear';
+const axisType = axis => temporal(axis.field) ? 'datetime' : 'linear';
+
+function embeddingCoverage(coordinates) {
+  const matched = coordinates.coverage.reduce((sum, field) => sum + field.matched, 0);
+  const total = coordinates.coverage.reduce((sum, field) => sum + field.total, 0);
+  const unit = coordinates.config.mode === 'sentences' ? 'tokens covered' : 'words recognized';
+  return total ? ` · ${Math.round(100 * matched / total)}% ${unit}` : '';
+}
 
 export class Scatter {
-  constructor(model, reportError, slot = 0) {
+  constructor(model, config, container, reportError) {
     this.model = model;
-    this.slot = slot;
-    this.host = new PlotHost($(slot ? '#scatter-secondary' : '#scatter'), reportError);
-    model.on('coordinates', () => this.render());
-    model.on('view', () => this.filter());
-    model.on('data', () => this.colors());
-    model.on('schema', () => { this.colors(); this.paint(); });
-    model.on('annotation', () => this.paint());
-    $('#color').addEventListener('change', () => this.paint());
+    this.config = config;
+    this.host = new PlotHost(container, reportError);
+    this.cleanup = [model.on('view', () => this.filter()),
+      model.on('results', () => this.refresh()),
+      model.on('annotation', () => this.refresh())];
+    this.render();
   }
 
-  colors() {
-    const fields = this.model.fields.filter(field => categorical(field) && field.unique.length <= 30);
-    options($('#color'), [['', 'None'], ...fields.map(field => [field.name, field.name])], $('#color').value);
+  refresh() {
+    if (!this.source) { return; }
+    if (this.config.type === 'scatter') {
+      this.coordinates = axisCoordinates(this.model, this.config);
+      const x = dimension(this.coordinates.x.values, this.coordinates.x.field);
+      const y = dimension(this.coordinates.y.values, this.coordinates.y.field);
+      this.source.data = { ...this.source.data, x: x.values, y: y.values };
+      if (x.labels) { ticks(this.figure.xaxes[0], x.labels); }
+      if (y.labels) { ticks(this.figure.yaxes[0], y.labels); }
+    }
+    this.paint();
+    this.filter();
   }
 
   colorValues() {
-    const name = $('#color').value;
-    const keys = [...new Set(this.model.rows.map(row => keyOf(row[name])))];
+    const name = this.config.color;
+    const field = this.model.fields.find(field => field.name === name);
+    const result = this.model.results.get(field?.derived);
+    if (result) {
+      const colors = new Map(result.rowIds.map((id, index) => [id, result.groups[result.labels[index]].color]));
+      return this.model.rows.map((_, id) => colors.get(id) ?? '#cccccc');
+    }
+    const keys = [...new Set(this.model.rows.map(row => keyOf(row[name], field)))];
     const colors = new Map(keys.map((key, index) => [key, palette[index % palette.length]]));
-    return this.model.rows.map(row => name ? colors.get(keyOf(row[name])) : palette[0]);
+    return this.model.rows.map(row => name ? colors.get(keyOf(row[name], field)) : palette[0]);
   }
 
   paint() {
@@ -43,16 +64,8 @@ export class Scatter {
   }
 
   render() {
-    const coordinates = this.model.projections?.[this.slot];
-    if (coordinates === this.coordinates) { return; }
+    const coordinates = this.config.type === 'scatter' ? axisCoordinates(this.model, this.config) : this.model.resultFor(this.config);
     this.coordinates = coordinates;
-    this.unlink?.();
-    this.source = null;
-    this.mask = null;
-    this.host.destroy();
-    const label = $(`#projection-info-${this.slot}`);
-    label.textContent = this.description(coordinates);
-    label.title = label.textContent;
     if (!coordinates) { return; }
     const x = dimension(coordinates.x.values, coordinates.x.field);
     const y = dimension(coordinates.y.values, coordinates.y.field);
@@ -61,6 +74,7 @@ export class Scatter {
       ...hover.data, color: this.colorValues() } });
     this.mask = new B.BooleanFilter({ booleans: this.model.rows.map(() => true) });
     const plot = this.plot(coordinates, x, y, hover.tooltips);
+    this.figure = plot;
     this.unlink = linkRecords(this.source, this.model);
     this.filter();
     this.host.show(plot);
@@ -84,16 +98,19 @@ export class Scatter {
     return plot;
   }
 
-  description(coordinates) {
+  destroy() {
+    this.unlink?.();
+    this.cleanup.forEach(remove => remove());
+    this.host.destroy();
+  }
+
+  description(coordinates = this.coordinates) {
     if (!coordinates) { return 'Choose settings, then fit this view.'; }
     if (!coordinates.fitted) { return 'Data axes'; }
     const config = coordinates.config;
     const fields = config.features?.map(name => `${name} ×${config.weights[name] ?? 1}`).join(', ') || 'Automatic columns';
     const mode = config.mode === 'words' ? `${config.vectorLanguage.toUpperCase()} vectors · ${config.pooling} · ${config.combine}` : config.mode;
     const missing = this.model.rows.length - coordinates.count;
-    const matched = coordinates.coverage.reduce((sum, field) => sum + field.matched, 0);
-    const total = coordinates.coverage.reduce((sum, field) => sum + field.total, 0);
-    const coverage = total ? ` · ${Math.round(100 * matched / total)}% words recognized` : '';
-    return `${coordinates.method.toUpperCase()} · ${mode} · ${fields} · ${missing} unembedded${coverage}`;
+    return `${coordinates.method.toUpperCase()} · ${mode} · ${fields} · ${missing} unembedded${embeddingCoverage(coordinates)}`;
   }
 }

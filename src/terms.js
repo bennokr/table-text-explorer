@@ -1,190 +1,204 @@
-import { $, element } from './dom.js';
-import { featureCandidates, featureFields, stopwordList } from './features.js';
-import { comparisonSets, renderTerms } from './term-view.js';
+import { phrasePredicate } from './query-predicates.js';
+import { FacetIndex } from './facet-index.js';
+import { phraseSettings } from './phrase-config.js';
+import { bindTermSettings, refreshDescriptionControls } from './term-settings.js';
+import { termIndexState } from './term-settings.js';
+import { $ } from './dom.js';
+import { renderTerms, clearTerms } from './term-view.js';
+import { descriptionQuery, refreshEmbeddingChoices, withEmbeddings } from './term-request.js';
 import { complete, progress } from './status.js';
+import { clusterScopes, renderGroups, groupDescriptionStatus } from './cluster-descriptions.js';
 
 export class Terms {
   version = 0;
-  sequence = 0;
   indexId = null;
   running = false;
   intent = null;
   views = new Map();
 
-  constructor(model, projection) {
+  constructor(model, analysis) {
     this.model = model;
-    this.projection = projection;
-    this.workers = projection.workers;
-    $('#show-terms').onclick = () => this.tab(true);
-    $('#show-charts').onclick = () => this.tab(false);
-    $('#terms-form').onsubmit = event => {
-      event.preventDefault();
-      this.invalidate('Waiting to build the all-record index…');
-      this.intent = 'build';
-      this.drain();
-    };
-    $('#terms-form').oninput = () => {
-      this.custom = true;
-      this.invalidate('Text settings changed. Build the index again.');
-      this.signature = this.signatureKey();
-    };
-    for (const id of ['terms-scope', 'terms-ranking', 'terms-support', 'terms-deduplicate']) {
+    this.analysis = analysis;
+    this.workers = analysis.workers;
+    this.facets = new FacetIndex(model);
+    this.lastSelection = model.selected;
+    bindTermSettings();
+    model.on('phrase-settings', () => this.fields());
+    model.on('text-index', () => { if (!this.running) { this.adopt(); } });
+    // Resume after the previous job's finally block has restored its controls.
+    model.on('busy', () => { if (!model.analysisBusy) { queueMicrotask(() => this.drain()); } });
+    for (const id of ['terms-content', 'terms-scope', 'terms-ranking', 'terms-embedding', 'terms-support', 'terms-deduplicate', 'terms-tree-comparison']) {
       $(`#${id}`).oninput = () => this.describe();
     }
-    model.on('data', () => { this.custom = false; this.fields(); });
+    $('#terms-display').oninput = () => { if (this.result) { this.render(this.result); } };
+    model.on('results', () => refreshEmbeddingChoices(model));
+    model.on('data', () => { this.lastSelection = model.selected; this.fields(); });
     model.on('schema', () => this.fields());
-    for (const event of ['selection', 'view']) { model.on(event, () => this.describe()); }
+    model.on('annotation', () => this.describe());
+    model.on('config', () => this.fields());
+    model.on('view', () => this.describe());
+    model.on('selection', () => this.selectionChanged());
     this.workers.addEventListener('idle', () => this.drain());
     this.workers.addEventListener('reset', event => {
       if (this.running) { complete(event.detail, true); }
       this.invalidate('Build an n-gram index to inspect subsets.');
-      this.projection.busy(false);
+      this.analysis.busy(false);
     });
+    clusterScopes(model, () => this.describe());
+    refreshEmbeddingChoices(model);
     this.fields();
   }
 
-  tab(terms) {
-    $('#terms').hidden = !terms;
-    $('#charts').hidden = terms;
-    $('#add-chart').hidden = terms;
-    $('#show-terms').setAttribute('aria-pressed', String(terms));
-    $('#show-charts').setAttribute('aria-pressed', String(!terms));
-    if (terms) { this.describe(); this.drain(); }
+  selectionChanged() {
+    const selected = this.model.selected;
+    if (selected.size === this.lastSelection.size && [...selected].every(id => this.lastSelection.has(id))) { return; }
+    this.lastSelection = selected;
+    const scope = $('#terms-scope');
+    if (this.model.results.get(scope.value)?.kind === 'clustering') {
+      scope.value = 'selection';
+      scope.dispatchEvent(new Event('input', { bubbles: true }));
+    } else { this.describe(); }
   }
 
   fields() {
-    const config = { ...this.model.config, mode: 'text',
-      features: this.model.config.mode === 'table' ? null : this.model.config.features };
-    const selected = this.custom ? this.selectedFields() : featureFields({ fields: this.model.fields, config }).map(field => field.name);
-    const fields = featureCandidates({ fields: this.model.fields, config }).filter(field => !field.annotation);
-    $('#terms-fields').replaceChildren(...fields.map(field => element('label', {}, [element('input', {
-      type: 'checkbox', name: 'term-field', value: field.name, ...(selected.includes(field.name) ? { checked: '' } : {}) }),
-    document.createTextNode(field.name)])));
-    if (!this.custom) {
-      $('#terms-language').value = this.model.config.language;
-      $('#terms-stopwords').value = this.model.config.stopwords;
-    }
-    const signature = this.signatureKey();
-    if (signature !== this.signature) { this.invalidate('Choose text fields and build an index.'); }
+    const signature = JSON.stringify([this.model.revision, this.build()]);
+    if (signature !== this.signature) { this.invalidate('Preparing phrase descriptions…'); }
     this.signature = signature;
-    $('#terms-build').disabled = !this.model.rows.length;
-  }
-
-  selectedFields() {
-    return [...$('#terms-fields').querySelectorAll('input:checked')].map(input => input.value);
-  }
-
-  signatureKey() {
-    return JSON.stringify([this.model.revision, this.selectedFields(), this.stopwords(), $('#terms-sizes').value]);
-  }
-
-  stopwords() {
-    return stopwordList({ language: $('#terms-language').value, stopwords: $('#terms-stopwords').value }, true);
+    this.adopt();
+    this.describe();
   }
 
   invalidate(message) {
     this.version += 1;
     this.indexId = null;
+    this.analysis.textIndexes.activeId = null;
     this.intent = null;
     this.last = null;
-    $('#terms-results').replaceChildren();
-    $('#terms-status').textContent = message;
-    $('#terms-index-controls').disabled = false;
+    this.result = null;
+    clearTerms($('#terms-results'));
+    this.message(message);
+    this.indexState(false);
+  }
+
+  indexState(ready) { termIndexState(ready, Boolean(this.model.rows.length)); }
+
+  adopt() {
+    const entry = this.analysis.textIndexes.get(this.build());
+    if (!entry || this.indexId === entry.indexId) { return; }
+    this.indexId = entry.indexId;
+    this.analysis.textIndexes.activeId = entry.indexId;
+    this.indexState(true);
+    this.message('All-record text index ready.');
+    this.describe();
+  }
+
+  message(text) {
+    $('#terms-status').textContent = text;
+    $('#terms-index-status').textContent = text;
+    $('#terms-empty').textContent = text;
   }
 
   query() {
-    const support = Number($('#terms-support').value);
-    if (!Number.isInteger(support) || support < 1) { throw new Error('Minimum support must be a positive record count.'); }
-    return { indexId: this.indexId, ...comparisonSets(this.model, $('#terms-scope').value),
-      support, ranking: $('#terms-ranking').value, deduplicate: $('#terms-deduplicate').checked };
+    return { ...descriptionQuery(this.model, this.indexId), facetKey: this.facets.key };
   }
 
   describe() {
-    if (!this.indexId || $('#terms').hidden) { return; }
-    this.intent = 'describe';
+    if ($('#terms').hidden || !this.model.rows.length) { return; }
+    refreshDescriptionControls();
+    refreshEmbeddingChoices(this.model);
+    const phrases = $('#terms-content').value !== 'facets' && this.build().fields.length;
+    this.intent = phrases && !this.indexId ? 'build' : 'describe';
     clearTimeout(this.timer);
     this.timer = setTimeout(() => this.drain(), 180);
   }
 
-  build() {
-    const fields = this.selectedFields();
-    if (!fields.length) { throw new Error('Choose at least one text field.'); }
-    return { task: 'terms_build', indexId: `${this.model.revision}:${++this.sequence}`,
-      sizes: $('#terms-sizes').value.split(':').map(Number), stopwords: this.stopwords(), rows: this.model.rows.length,
-      columns: fields.map(name => ({ name, texts: this.model.rows.map(row => row[name] ?? '') })) };
-  }
+  build() { return phraseSettings(this.model); }
 
   next() {
     const intent = this.intent;
     this.intent = null;
-    if (intent === 'build') { return { payload: this.build(), type: 'build' }; }
-    const payload = { ...this.query(), task: 'terms_describe' };
+    if (intent === 'build') {
+      if (!this.build().fields.length) { throw new Error('Choose at least one text field.'); }
+      return { payload: this.build(), type: 'build' };
+    }
+    const payload = { ...this.query(), task: 'descriptions_describe' };
     if (!payload.subset.length) {
       this.last = null;
-      $('#terms-results').replaceChildren();
-      $('#terms-status').textContent = 'Highlight records, or choose filtered rows as the subset.';
+      clearTerms($('#terms-results'));
+      this.message('Highlight records, or choose filtered rows as the subset.');
       complete('No highlighted records to describe.');
       return null;
     }
     const key = JSON.stringify(payload);
-    if (key === this.last && typeof intent === 'string') { return null; }
-    if (typeof intent === 'object') { return { payload: { ...payload, ...intent, task: 'terms_matches' }, type: 'matches', key }; }
+    if (key === this.last) { return null; }
+    if (payload.content !== 'phrases') { payload.facets = this.facets.request(this.workers.epoch); }
     return { payload, type: 'describe', key };
   }
 
   async drain() {
     if (this.running || !this.intent || $('#terms').hidden) { return; }
-    if (this.workers.pending || $('#scatter-panel').getAttribute('aria-busy') === 'true') {
-      $('#terms-status').textContent = 'Waiting for the current analysis…';
+    if (this.workers.pending || this.model.analysisBusy) {
+      this.message('Waiting for the current analysis…');
       return;
     }
     try { const job = this.next(); if (job) { await this.execute(job); } }
-    catch (error) { $('#terms-status').textContent = error.message; }
+    catch (error) { this.message(error.message); }
   }
 
   async execute(job) {
     const version = this.version;
+    const revision = this.model.revision;
+    const epoch = this.workers.epoch;
     this.running = true;
-    this.projection.busy(true);
-    $('#terms-index-controls').disabled = true;
+    this.analysis.busy(true);
     try {
-      const result = await this.workers.run('python', job.payload, update => {
+      const report = update => {
         progress(update);
-        $('#terms-status').textContent = typeof update === 'string' ? update : update.message;
-      });
+        this.message(typeof update === 'string' ? update : update.message);
+      };
+      const result = job.type === 'build'
+        ? await this.analysis.textIndexes.ensure(job.payload, report)
+        : await this.workers.run('python', withEmbeddings(this.model, job.payload), report);
+      this.facets.accept(job.payload.facets, epoch);
       if (version === this.version) { this.finish(job, result); }
     } catch (error) {
       if (version === this.version) { complete(error.message, true); throw error; }
     } finally {
       this.running = false;
-      if (version === this.version) { this.projection.busy(false); }
-      $('#terms-index-controls').disabled = false;
+      if (revision === this.model.revision && epoch === this.workers.epoch) { this.analysis.busy(false); }
       if (this.intent) { setTimeout(() => this.drain(), 0); }
     }
   }
 
+  render(result) {
+    this.result = result;
+    const usePredicate = (field, phrase, predicate) => {
+      this.model.querySuggestion = predicate ?? phrasePredicate(field, phrase);
+      this.model.emit('description-query');
+    };
+    if (result.groups) { renderGroups($('#terms-results'), result.groups, this.model, usePredicate, this.views); }
+    else { renderTerms($('#terms-results'), result, this.model, usePredicate, this.views); }
+  }
+
   finish(job, result) {
     if (job.type === 'build') {
-      this.indexId = job.payload.indexId;
+      this.indexId = result.indexId;
+      this.analysis.textIndexes.activeId = result.indexId;
+      this.indexState(true);
       this.last = null;
-      $('#terms-status').textContent = `Indexed ${this.model.rows.length} records. Highlight a subset.`;
+      this.message(`Indexed ${this.model.rows.length} records.`);
       complete('All-record n-gram index ready.');
       this.describe();
       return;
     }
-    const key = JSON.stringify({ ...this.query(), task: 'terms_describe' });
+    const key = JSON.stringify({ ...this.query(), task: 'descriptions_describe' });
     if (key !== job.key) { complete('Updating the subset description…'); this.describe(); return; }
-    if (job.type === 'matches') {
-      this.model.select(result.ids);
-      complete(`Highlighted ${result.ids.length} exact n-gram matches.`);
-      return;
-    }
     this.last = key;
-    renderTerms($('#terms-results'), result, this.model, (field, phrase) => {
-      this.intent = { field, phrase };
-      this.drain();
-    }, this.views);
-    $('#terms-status').textContent = `${result.subset} subset / ${result.comparison} comparison records${result.comparison ? '' : ' · no comparison; subset scores only'}`;
-    complete('N-gram description updated. Projection fits unchanged.');
+    this.render(result);
+    const phrasesOnly = this.query().content === 'phrases';
+    $('#description-kind').textContent = ({ frequency: phrasesOnly ? 'Common phrases' : 'Common predicates', balanced: 'Balanced splits', semantic: 'Semantic splits' })[this.query().ranking]
+      ?? (phrasesOnly ? 'Distinctive phrases' : 'Distinctive predicates');
+    this.message(result.groups ? groupDescriptionStatus(result.groups) : `${result.subset} subset / ${result.comparison} comparison records${result.comparison ? '' : ' · no comparison; subset scores only'}`);
+    complete('Subset description updated. Similarity maps unchanged.');
   }
 }

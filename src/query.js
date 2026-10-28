@@ -1,7 +1,7 @@
 import { missing, numberOf } from './schema.js';
 
 function tokenize(input) {
-  const pattern = /\s*(>=|<=|!=|[():=<>]|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s():=<>!"']+)\s*/gy;
+  const pattern = /\s*(>=|<=|!=|[():=<>~]|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s():=<>~!"']+)\s*/gy;
   const tokens = [];
   let cursor = 0;
   while (cursor < input.trimEnd().length) {
@@ -15,6 +15,9 @@ function tokenize(input) {
 }
 
 function unquote(value) {
+  if (value.startsWith('"')) {
+    try { return JSON.parse(value); } catch { /* Retain existing permissive escaping. */ }
+  }
   if (/^["']/.test(value)) { return value.slice(1, -1).replace(/\\([\\"'])/g, '$1'); }
   return value;
 }
@@ -53,7 +56,7 @@ class Parser {
       if (this.take() !== ')') { throw new Error('Close the parenthesis.'); }
       return expression;
     }
-    if ([':', '=', '!=', '>', '>=', '<', '<='].includes(this.peek())) { return this.term(token); }
+    if ([':', '~', '=', '!=', '>', '>=', '<', '<='].includes(this.peek())) { return this.term(token); }
     return { kind: 'term', field: null, op: ':', value: unquote(token) };
   }
 
@@ -63,7 +66,9 @@ class Parser {
     if (!value || ['(', ')', 'AND', 'OR'].includes(value.toUpperCase())) {
       throw new Error('Expected a value after the field operator.');
     }
-    return { kind: 'term', field: unquote(token), op, value: unquote(value) };
+    const term = { kind: 'term', field: unquote(token), op, value: unquote(value) };
+    if (op !== '~' && /^["']null["']$/i.test(value)) { term.literal = true; }
+    return term;
   }
 }
 
@@ -79,14 +84,16 @@ function textComparison(value, term) {
   const needle = term.value.toLocaleLowerCase();
   const text = missing(value) ? '' : String(value).toLocaleLowerCase();
   if (term.op === '!=') { return text !== needle; }
+  if (term.op === '=') { return text === needle; }
   if (needle.endsWith('*')) { return text.split(/\s+/u).some(word => word.startsWith(needle.slice(0, -1))); }
-  return term.op === '=' ? text === needle : text.includes(needle);
+  return text.includes(needle);
 }
 
 function compare(value, term, field) {
-  if (term.value.toLowerCase() === 'null' && term.field) {
-    return term.op === '!=' ? !missing(value) : missing(value);
+  if (term.value.toLowerCase() === 'null' && term.field && !term.literal && term.op !== '~') {
+    return term.op === '!=' ? !missing(value, field) : missing(value, field);
   }
+  if (missing(value, field)) { return false; }
   if (['>', '>=', '<', '<='].includes(term.op)) { return numericComparison(value, term, field); }
   return textComparison(value, term);
 }
@@ -100,28 +107,36 @@ function resolveField(name, fields) {
   return matches[0];
 }
 
-function compile(node, fields) {
+function compile(node, fields, context) {
   if (node.kind === 'and') {
-    const left = compile(node.left, fields), right = compile(node.right, fields);
+    const left = compile(node.left, fields, context), right = compile(node.right, fields, context);
     return row => left(row) && right(row);
   }
   if (node.kind === 'or') {
-    const left = compile(node.left, fields), right = compile(node.right, fields);
+    const left = compile(node.left, fields, context), right = compile(node.right, fields, context);
     return row => left(row) || right(row);
   }
-  if (node.kind === 'not') { const child = compile(node.child, fields); return row => !child(row); }
+  if (node.kind === 'not') { const child = compile(node.child, fields, context); return row => !child(row); }
+  return compileTerm(node, fields, context);
+}
+
+function compileTerm(node, fields, context) {
   if (node.field === null) { return row => Object.values(row).some(value => compare(value, node, null)); }
   const field = resolveField(node.field, fields);
+  if (node.op === '~') {
+    if (!context?.phrase) { throw new Error('Exact phrase queries require prepared matches.'); }
+    return context.phrase(field, node.value);
+  }
   if (['>', '>=', '<', '<='].includes(node.op) && !Number.isFinite(numberOf(node.value, field))) {
     throw new Error(`Expected a numeric or date value for ${field.name}.`);
   }
   return row => compare(row[field.name], node, field);
 }
 
-export function parseQuery(input, fields) {
+export function parseQuery(input, fields, context) {
   if (!input.trim()) { return { ast: null, test: () => true }; }
   const parser = new Parser(input);
   const ast = parser.or();
   if (parser.position !== parser.tokens.length) { throw new Error('Unexpected closing parenthesis.'); }
-  return { ast, test: compile(ast, fields) };
+  return { ast, test: compile(ast, fields, context) };
 }

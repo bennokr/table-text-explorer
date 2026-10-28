@@ -16,7 +16,8 @@ function svgElement(tag, attributes) {
 
 function phraseText(word, tooltip, show) {
   const text = svgElement('text', { x: word.x, y: word.y, 'font-size': word.size,
-    'text-anchor': 'middle', role: 'button', tabindex: 0, 'aria-label': word.text, 'data-term': word.text });
+    'text-anchor': 'middle', role: 'button', tabindex: 0, 'aria-label': word.term.field ? `${word.term.field}: ${word.text}` : word.text,
+    'data-term': word.text, ...(word.term.color ? { style: `fill: ${word.term.color}`, 'data-field': word.term.field } : {}) });
   text.textContent = word.text;
   const title = svgElement('title', {});
   title.textContent = tooltip(word.term);
@@ -33,13 +34,15 @@ function paint(root, words, placed, width, { tooltip, show }) {
   const bottom = Math.max(0, ...placed.map(word => word.y + word.y1)) + 3;
   const svg = svgElement('svg', { width, height: bottom - top, viewBox: `${-width / 2} ${top} ${width} ${bottom - top}` });
   svg.append(...placed.map(word => phraseText(word, tooltip, show)));
-  const packed = new Set(placed.map(word => word.text));
-  const missing = words.filter(word => !packed.has(word.text));
+  const packed = new Set(placed.map(word => word.term));
+  const missing = words.filter(word => !packed.has(word.term));
   root.replaceChildren(svg);
   if (missing.length) {
     root.append(element('small', { text: 'More phrases:' }), element('div', { class: 'cloud-overflow' },
       missing.map(word => element('button', { type: 'button', text: word.text, 'data-term': word.text,
-        title: tooltip(word.term), onclick: () => show(word.term) }))));
+        title: tooltip(word.term), style: `color: ${word.term.color ?? 'inherit'}`,
+        'aria-label': word.term.field ? `${word.term.field}: ${word.text}` : word.text,
+        onclick: () => show(word.term) }))));
   }
   root.setAttribute('aria-busy', 'false');
 }
@@ -54,7 +57,7 @@ function fitWords(words, width) {
 }
 
 export function phraseCloud(terms, ranking, tooltip, show) {
-  const root = element('div', { class: 'term-cloud', 'aria-busy': 'true', text: 'Preparing cloud…', 'aria-label': 'Phrase cloud; sizes use a logarithmic ranking scale within this field' });
+  const root = element('div', { class: 'term-cloud', 'aria-busy': 'true', text: 'Preparing cloud…', 'aria-label': 'Phrase cloud; sizes use a logarithmic ranking scale within this cloud' });
   const words = cloudWords(terms, ranking);
   let layout, lastWidth = 0;
   const pack = (width, attempt = 0) => {

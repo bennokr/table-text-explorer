@@ -1,7 +1,10 @@
+import { defaultConfig } from './default-config.js';
 import { inferSchema } from './schema.js';
+import { Results } from './results.js';
 
 export class Dataset extends EventTarget {
   rows = [];
+  tableColumns = null;
   fields = [];
   visible = [];
   selected = new Set();
@@ -10,9 +13,16 @@ export class Dataset extends EventTarget {
   query = () => true;
   pinned = null;
   revision = 0;
-  config = { categoryLimit: 50, overrides: {}, mode: 'table', language: 'nl',
-    features: null, stopwords: '', neighbors: 15, epochs: 150,
-    vectorLanguage: 'nl', pooling: 'mean', combine: 'mean', weights: {} };
+  schemaRevision = 0;
+  fieldRevisions = new Map();
+  views = [];
+  viewSequence = 0;
+  analysisViewId = null;
+  results = new Results();
+  analysisBusy = false;
+  fittingViewId = null;
+  fitProgress = null;
+  config = defaultConfig();
 
   emit(type) { this.dispatchEvent(new Event(type)); }
   on(type, callback) {
@@ -23,19 +33,28 @@ export class Dataset extends EventTarget {
   load({ rows, metadata = {}, name }) {
     this.rows = rows.map(row => Object.assign(Object.create(null), row));
     this.metadata = metadata;
+    this.tableColumns = null;
+    this.config = defaultConfig();
     this.name = name;
     this.revision += 1;
+    this.fieldRevisions.clear();
     this.fields = inferSchema(this.rows, metadata, { categoryLimit: this.config.categoryLimit });
     this.config.overrides = {};
     this.config.features = null;
+    this.phraseConfig = null;
     this.annotations.clear();
     this.selected = new Set();
     this.active = rows.length ? 0 : null;
     this.query = () => true;
     this.pinned = null;
     this.sort = null;
-    this.coordinates = null;
-    this.projections = [null, null];
+    this.views = [];
+    this.viewSequence = 0;
+    this.analysisViewId = null;
+    this.fittingViewId = null;
+    this.fitProgress = null;
+    this.results = new Results();
+    this.ast = null;
     this.config.weights = {};
     this.visible = rows.map((_, index) => index);
     this.emit('data');
@@ -58,16 +77,41 @@ export class Dataset extends EventTarget {
   }
 
   configure(config) {
+    const schemaChanged = config.categoryLimit !== this.config.categoryLimit ||
+      JSON.stringify(config.overrides) !== JSON.stringify(this.config.overrides);
     this.config = config;
-    this.fields = inferSchema(this.rows, this.metadata, config);
+    if (!schemaChanged) { this.emit('config'); return; }
+    this.schemaRevision += 1;
+    const derived = this.fields.filter(field => field.derived);
+    const originals = this.rows.map(row => Object.fromEntries(Object.entries(row)
+      .filter(([name]) => !derived.some(field => field.name === name))));
+    this.fields = [...inferSchema(originals, this.metadata, config), ...derived];
     this.fields = this.fields.map(field => this.annotations.has(field.name)
       ? { ...field, kind: 'categorical', annotation: true } : field);
     this.emit('schema');
     this.refresh();
   }
 
+  nextViewId() { this.viewSequence += 1; return `view-${this.viewSequence}`; }
+
+  resultFor(view) { return this.results.get(view.resultId); }
+
+  resultsChanged({ valuesChanged = true } = {}) {
+    if (valuesChanged) {
+      for (const field of this.fields.filter(field => field.derived)) {
+        const values = this.rows.map(row => row[field.name]);
+        field.unique = [...new Set(values.filter(value => value !== null))];
+        field.missing = values.filter(value => value === null).length;
+      }
+    }
+    this.emit('results');
+    if (valuesChanged) { this.refresh(); }
+  }
+
   annotate(name, ids, label) {
+    if (!this.annotations.has(name)) { throw new Error('Choose an annotation column.'); }
     for (const id of ids) { this.rows[id][name] = label || null; }
+    this.fieldRevisions.set(name, (this.fieldRevisions.get(name) ?? 0) + 1);
     const field = this.fields.find(field => field.name === name);
     field.unique = [...new Set(this.rows.map(row => row[name]).filter(value => value !== null))];
     field.missing = this.rows.filter(row => row[name] === null).length;
@@ -75,14 +119,16 @@ export class Dataset extends EventTarget {
     this.refresh();
   }
 
-  addAnnotation(name) {
+  addAnnotation(name, assignments = new Map()) {
     if (!name.trim() || this.fields.some(field => field.name === name)) {
       throw new Error('Choose a new, nonempty column name.');
     }
-    for (const row of this.rows) { Object.defineProperty(row, name, { value: null,
+    for (const [id, row] of this.rows.entries()) { Object.defineProperty(row, name, { value: assignments.get(id) || null,
       enumerable: true, writable: true, configurable: true }); }
     this.annotations.add(name);
-    this.fields.push({ name, kind: 'categorical', unique: [], missing: this.rows.length,
+    this.fieldRevisions.set(name, 1);
+    this.fields.push({ name, kind: 'categorical', unique: [...new Set(this.rows.map(row => row[name]).filter(Boolean))],
+      missing: this.rows.filter(row => row[name] === null).length,
       identifier: false, storage: 'string', valueLabels: [], annotation: true });
     this.emit('schema');
     this.refresh();
