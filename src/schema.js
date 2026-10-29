@@ -8,7 +8,7 @@ export const isIdentifier = name => /(^id$|^row.?number$|^resp?no$|_id$)/i.test(
 function numeric(values) {
   return values.every(value => typeof value === 'number' ||
     (typeof value === 'string' && /^[-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?$/i.test(value)
-      && !/^0\d+/.test(value))) && values.every(value => Number.isFinite(Number(value)));
+      && !/^[-+]?0\d/.test(value))) && values.every(value => Number.isFinite(Number(value)));
 }
 
 function sequential(values, unique) {

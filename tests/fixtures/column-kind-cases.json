@@ -47,6 +47,17 @@
    "why": "007 must not become 7"
   },
   {
+   "name": "signed leading zeros",
+   "values": [
+    "-007",
+    "-008",
+    "+009",
+    "-010"
+   ],
+   "kind": "text",
+   "why": "the sign does not make 007 a number"
+  },
+  {
    "name": "version numbers",
    "values": [
     "1.2.3",
