@@ -78,7 +78,10 @@ with the existing lexical and embedding tokenizers. Zero and false remain values
 Explicit metadata and user type overrides precede inference. Otherwise sparse
 strings and sentence-like text are not assumed categorical just because they have
 few distinct values. Repeated short labels and small integer code sets can still
-be categorical. Empty and constant are observed properties independent of a declared
+be categorical, with separate limits by data type: `categoryLimit` for text (default 50,
+also used for columns with value labels) and `numericCategoryLimit` for numbers (default 8).
+The cases both limits are tested against live in `tests/fixtures/column-kind-cases.json`;
+table-interface runs a copy of the same file. Empty and constant are observed properties independent of a declared
 type. Heuristics cannot identify every numeric code without metadata.
 
 Datetime inference accepts validated ISO dates/times, a space instead of T, and UTC

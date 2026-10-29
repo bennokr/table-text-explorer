@@ -15,6 +15,7 @@ function fieldTable(model) {
 export function columnTypes(model, status) {
   $('#column-types').onclick = () => {
     $('#category-limit').value = model.config.categoryLimit;
+    $('#numeric-category-limit').value = model.config.numericCategoryLimit;
     fieldTable(model);
     $('#column-types-dialog').showModal();
   };
@@ -22,7 +23,8 @@ export function columnTypes(model, status) {
     event.preventDefault();
     const overrides = Object.fromEntries([...$('#field-types').querySelectorAll('select')]
       .filter(select => !select.disabled && select.value).map(select => [select.dataset.field, select.value]));
-    model.configure({ ...model.config, categoryLimit: Number($('#category-limit').value), overrides });
+    model.configure({ ...model.config, categoryLimit: Number($('#category-limit').value),
+      numericCategoryLimit: Number($('#numeric-category-limit').value), overrides });
     $('#column-types-dialog').close();
     status('Column types applied. Original values and fitted similarity maps are preserved.');
   };

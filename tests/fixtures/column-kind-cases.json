@@ -1,0 +1,430 @@
+{
+ "description": "Column kind cases shared by table-text-explorer and table-interface. Keep both copies identical; each project tests its inference against them. 'values' may be {cycle,length} to repeat a list.",
+ "cases": [
+  {
+   "name": "plain numbers",
+   "values": [
+    1.5,
+    2.25,
+    3,
+    4.5,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "kind": "number",
+   "why": "distinct numbers are numeric"
+  },
+  {
+   "name": "numeric text",
+   "values": [
+    "10",
+    "2.5",
+    "-3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "1e2"
+   ],
+   "kind": "number",
+   "why": "numeric strings with sign, decimal and exponent"
+  },
+  {
+   "name": "leading zeros are identifiers",
+   "values": [
+    "00123",
+    "00456",
+    "00789",
+    "01000"
+   ],
+   "kind": "text",
+   "why": "007 must not become 7"
+  },
+  {
+   "name": "version numbers",
+   "values": [
+    "1.2.3",
+    "1.2.4",
+    "2.0.0",
+    "2.1.0"
+   ],
+   "kind": "text",
+   "why": "more than one dot is not a number"
+  },
+  {
+   "name": "lone punctuation",
+   "values": [
+    ".",
+    "-",
+    "x",
+    "y"
+   ],
+   "kind": "text",
+   "why": "'.' and '-' are not numbers"
+  },
+  {
+   "name": "missing markers are ignored",
+   "values": [
+    "\\N",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11"
+   ],
+   "kind": "number",
+   "why": "\\N and empty cells do not count"
+  },
+  {
+   "name": "ISO dates",
+   "values": [
+    "2021-01-31",
+    "2020-12-01",
+    "2019-02-28",
+    "2022-07-04"
+   ],
+   "kind": "date",
+   "why": "valid calendar dates"
+  },
+  {
+   "name": "ISO date and time",
+   "values": [
+    "2021-01-31 10:15:00",
+    "2020-12-01T09:00:00Z",
+    "2019-02-28 23:59:59"
+   ],
+   "kind": "datetime",
+   "why": "a time part makes it a datetime"
+  },
+  {
+   "name": "dotted dates",
+   "values": [
+    "27.01.1989",
+    "01.12.1990"
+   ],
+   "kind": "date",
+   "why": "day.month.year is unambiguous"
+  },
+  {
+   "name": "slash dates are not guessed",
+   "values": [
+    "01/02/2020",
+    "03/04/2020",
+    "05/06/2020"
+   ],
+   "kind": "text",
+   "why": "day/month order is ambiguous without a declared format"
+  },
+  {
+   "name": "impossible date",
+   "values": [
+    "2021-02-30",
+    "2021-01-01"
+   ],
+   "kind": "text",
+   "why": "calendar validation"
+  },
+  {
+   "name": "booleans",
+   "values": [
+    true,
+    false,
+    true,
+    false
+   ],
+   "kind": "boolean",
+   "why": "typed booleans"
+  },
+  {
+   "name": "repeated short labels",
+   "values": {
+    "cycle": [
+     "A",
+     "B"
+    ],
+    "length": 8
+   },
+   "kind": "categorical",
+   "why": "two labels repeated"
+  },
+  {
+   "name": "all distinct text",
+   "values": [
+    "alpha",
+    "beta",
+    "gamma",
+    "delta",
+    "epsilon",
+    "zeta",
+    "eta",
+    "theta",
+    "iota",
+    "kappa"
+   ],
+   "kind": "text",
+   "why": "no repetition is no evidence"
+  },
+  {
+   "name": "repeated prose",
+   "values": {
+    "cycle": [
+     "This is a long review sentence that clearly is not a category label at all, however many times it repeats.",
+     "Another long sentence of free text that repeats but remains prose and not a label either."
+    ],
+    "length": 8
+   },
+   "kind": "text",
+   "why": "sentence-like text is never categorical"
+  },
+  {
+   "name": "small integer codes",
+   "values": [
+    1,
+    2,
+    1,
+    2,
+    1,
+    2,
+    3,
+    1
+   ],
+   "kind": "categorical",
+   "why": "few repeated integer codes"
+  },
+  {
+   "name": "sequential integers",
+   "values": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+   ],
+   "kind": "number",
+   "why": "1..n is a row counter, not categories"
+  },
+  {
+   "name": "decimals are not codes",
+   "values": [
+    0.5,
+    1.5,
+    0.5,
+    1.5,
+    0.5,
+    1.5
+   ],
+   "kind": "number",
+   "why": "non-integers are measurements"
+  },
+  {
+   "name": "empty column",
+   "values": [
+    null,
+    "",
+    null
+   ],
+   "kind": "empty",
+   "why": "nothing observed"
+  },
+  {
+   "name": "12 numeric values among 120 rows",
+   "values": {
+    "cycle": [
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21
+    ],
+    "length": 120
+   },
+   "kind": "number",
+   "why": "above the default numeric limit of 8"
+  },
+  {
+   "name": "12 numeric values with a raised numeric limit",
+   "values": {
+    "cycle": [
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21
+    ],
+    "length": 120
+   },
+   "kind": "categorical",
+   "why": "per-type limit applies to numbers",
+   "config": {
+    "numericCategoryLimit": 12
+   }
+  },
+  {
+   "name": "12 numeric values with a raised text limit only",
+   "values": {
+    "cycle": [
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21
+    ],
+    "length": 120
+   },
+   "kind": "number",
+   "why": "the text limit does not apply to numbers",
+   "config": {
+    "categoryLimit": 50,
+    "numericCategoryLimit": 8
+   }
+  },
+  {
+   "name": "12 text values among 120 rows",
+   "values": {
+    "cycle": [
+     "v00",
+     "v01",
+     "v02",
+     "v03",
+     "v04",
+     "v05",
+     "v06",
+     "v07",
+     "v08",
+     "v09",
+     "v10",
+     "v11"
+    ],
+    "length": 120
+   },
+   "kind": "categorical",
+   "why": "10% share and under the default text limit of 50"
+  },
+  {
+   "name": "12 text values with a lowered text limit",
+   "values": {
+    "cycle": [
+     "v00",
+     "v01",
+     "v02",
+     "v03",
+     "v04",
+     "v05",
+     "v06",
+     "v07",
+     "v08",
+     "v09",
+     "v10",
+     "v11"
+    ],
+    "length": 120
+   },
+   "kind": "text",
+   "why": "per-type limit applies to text",
+   "config": {
+    "categoryLimit": 10
+   }
+  },
+  {
+   "name": "12 text values with a lowered numeric limit only",
+   "values": {
+    "cycle": [
+     "v00",
+     "v01",
+     "v02",
+     "v03",
+     "v04",
+     "v05",
+     "v06",
+     "v07",
+     "v08",
+     "v09",
+     "v10",
+     "v11"
+    ],
+    "length": 120
+   },
+   "kind": "categorical",
+   "why": "the numeric limit does not apply to text",
+   "config": {
+    "numericCategoryLimit": 2
+   }
+  },
+  {
+   "name": "labelled numeric codes",
+   "values": {
+    "cycle": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ],
+    "length": 120
+   },
+   "kind": "categorical",
+   "why": "value labels are evidence for either type",
+   "metadata": {
+    "valueLabels": [
+     {
+      "value": 1,
+      "label": "One"
+     }
+    ]
+   }
+  }
+ ]
+}

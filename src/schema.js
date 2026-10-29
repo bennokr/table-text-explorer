@@ -26,43 +26,52 @@ function stringCategory(values, count) {
   return count < values.length && (count <= 8 || count / values.length <= 0.1);
 }
 
-function categoryEvidence(values, base) {
+// Low-cardinality text is far more likely to be categorical than low-cardinality numbers,
+// so each data type has its own limit. Value labels count as evidence for either.
+export const defaultLimits = Object.freeze({ text: 50, number: 8 });
+
+export function categoryLimits(config = {}) {
+  return { text: config.categoryLimit ?? defaultLimits.text,
+    number: config.numericCategoryLimit ?? defaultLimits.number };
+}
+
+function categoryEvidence(values, base, limits) {
   const count = base.unique.length;
-  if (base.valueLabels.length) { return true; }
+  if (base.valueLabels.length) { return count <= limits.text; }
   if (numeric(values)) {
-    return values.every(value => Number.isInteger(Number(value))) && count <= 8 && count < values.length;
+    return values.every(value => Number.isInteger(Number(value))) && count <= limits.number
+      && count < values.length;
   }
-  return stringCategory(values, count);
+  return count <= limits.text && stringCategory(values, count);
 }
 
-function lowCardinality(values, base, limit) {
-  return !base.identifier && !sequential(values, base.unique) && base.unique.length <= limit
-    && categoryEvidence(values, base);
+function lowCardinality(values, base, limits) {
+  return !base.identifier && !sequential(values, base.unique) && categoryEvidence(values, base, limits);
 }
 
-function kindOf(values, base, limit) {
+function kindOf(values, base, limits) {
   if (base.kind) { return base.kind; }
   if (!values.length) { return 'empty'; }
   if (values.every(value => typeof value === 'boolean')) { return 'boolean'; }
   const dates = dateKind(values);
   if (dates) { return dates; }
-  if (lowCardinality(values, base, limit)) { return 'categorical'; }
+  if (lowCardinality(values, base, limits)) { return 'categorical'; }
   return numeric(values) ? 'number' : 'text';
 }
 
-export function inferField(name, rows, metadata, limit) {
+export function inferField(name, rows, metadata, limits = categoryLimits()) {
   const values = rows.map(row => row[name]).filter(value => !missing(value, metadata));
   const unique = [...new Map(values.map(value => [keyOf(value), value])).values()];
   const base = { ...metadata, name, unique, missing: rows.length - values.length, identifier: metadata?.identifier ?? isIdentifier(name),
     empty: !values.length, constant: unique.length === 1,
     storage: typeof values[0], label: metadata?.label, valueLabels: metadata?.valueLabels ?? [] };
-  return { ...base, kind: kindOf(values, base, limit) };
+  return { ...base, kind: kindOf(values, base, limits) };
 }
 
 export function inferSchema(rows, metadata = {}, config = {}) {
   const names = [...new Set(rows.flatMap(row => Object.keys(row)))];
   return names.map(name => {
-    const field = inferField(name, rows, metadata[name], config.categoryLimit ?? 50);
+    const field = inferField(name, rows, metadata[name], categoryLimits(config));
     const kind = config.overrides && Object.hasOwn(config.overrides, name) ? config.overrides[name] : field.kind;
     return { ...field, kind };
   });

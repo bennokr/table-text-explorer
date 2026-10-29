@@ -17,7 +17,7 @@ Highlight records, create an annotation column and assign a label, then download
 
 Type overrides change interpretation, never the original cell values.
 
-Inference recognizes numeric values, repeated categories, booleans, dates and datetimes. Column metadata such as labels, missing codes and declared types provides additional evidence. Columns identified as IDs are excluded from ordinary feature selection; sequential numeric values otherwise remain numeric. Metadata groups can initialize [grouped text means](combining.md#variable-groups).
+Inference recognizes numeric values, repeated categories, booleans, dates and datetimes. Repeated text is far more likely to be a category than repeated numbers, so Column types sets two limits: text columns are categorical up to 50 distinct values by default (and when those repeat), numeric columns only up to 8. Column metadata such as labels, missing codes and declared types provides additional evidence. Columns identified as IDs are excluded from ordinary feature selection; sequential numeric values otherwise remain numeric. Metadata groups can initialize [grouped text means](combining.md#variable-groups).
 
 ## Exports
 

@@ -177,7 +177,8 @@
   <dialog id="column-types-dialog" aria-labelledby="column-types-title"><form id="column-types-form">
     <h2 id="column-types-title">Column types</h2>
     <fieldset><legend>Type inference and overrides</legend>
-      <label>Maximum categorical cardinality <input id="category-limit" type="number" min="2" max="100" required></label>
+      <label>Text categories: at most <input id="category-limit" type="number" min="2" max="100" required> distinct values</label>
+      <label>Numeric categories: at most <input id="numeric-category-limit" type="number" min="2" max="100" required> distinct values</label>
       <button type="button" class="help-hint" data-help="data#column-types">?</button>
       <div class="types-scroll"><table><thead><tr><th>Column</th><th>Type override</th><th>Unique</th><th>Missing</th></tr></thead><tbody id="field-types"></tbody></table></div>
     </fieldset>
