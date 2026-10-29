@@ -1,3 +1,4 @@
+import { withBase } from '../base.js';
 import densitySource from './density.py?raw';
 import source from './analysis.py?raw';
 import termsSource from './terms.py?raw';
@@ -24,9 +25,9 @@ async function initialize(id) {
   ready(id, { python: 'loading' });
   self.postMessage({ id, progress: 'Loading local Python runtime…' });
   // Absolute URLs keep Vite from treating this public asset as a source import.
-  const url = new URL('/vendor/pyodide/pyodide.mjs', self.location.origin).href;
+  const url = new URL(withBase('vendor/pyodide/pyodide.mjs'), self.location.origin).href;
   const { loadPyodide } = await import(/* @vite-ignore */ url);
-  const python = await loadPyodide({ indexURL: '/vendor/pyodide/' });
+  const python = await loadPyodide({ indexURL: withBase('vendor/pyodide/') });
   ready(id, { python: 'loaded', sklearn: 'loading' });
   self.postMessage({ id, progress: 'Loading scikit-learn…' });
   await python.loadPackage('scikit-learn');

@@ -1,3 +1,4 @@
+import { withBase } from '../base.js';
 import { env, pipeline, Tensor, mean_pooling } from '@huggingface/transformers';
 import { SentenceEncoder } from '../sentence-encoder.js';
 import { sentenceModelFor } from '../sentence-models.js';
@@ -5,9 +6,9 @@ import { inferSentences } from '../sentence-inference.js';
 
 env.allowRemoteModels = false;
 env.allowLocalModels = true;
-env.localModelPath = '/vendor/models/';
+env.localModelPath = withBase('vendor/models/');
 // Absolute URLs keep Vite's dev importer from adding ?import to public assets.
-env.backends.onnx.wasm.wasmPaths = new URL('/vendor/ort/', self.location.origin).href;
+env.backends.onnx.wasm.wasmPaths = new URL(withBase('vendor/ort/'), self.location.origin).href;
 env.backends.onnx.wasm.numThreads = 1;
 
 let encoder, extractor, activeModel;
