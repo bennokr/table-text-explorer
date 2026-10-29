@@ -1,5 +1,5 @@
 {
- "description": "Column kind cases shared by table-text-explorer and table-interface. Keep both copies identical; each project tests its inference against them. 'values' may be {cycle,length} to repeat a list.",
+ "description": "Column kind cases for the inference in linked-codebook, which table-text-explorer uses. The cases without 'config' or 'metadata' are also in the conformance suite of linked-codebook. 'values' may be {cycle,length} to repeat a list.",
  "cases": [
   {
    "name": "plain numbers",

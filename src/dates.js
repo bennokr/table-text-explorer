@@ -36,8 +36,3 @@ export function dateNumber(value, format) {
   if (!dotted) { return declaredDate(value, format); }
   return calendar(Number(dotted[3]), Number(dotted[2]), Number(dotted[1]));
 }
-
-export function dateKind(values) {
-  if (!values.every(value => Number.isFinite(dateNumber(value)))) { return null; }
-  return values.some(value => /[T ]\d\d:/.test(value)) ? 'datetime' : 'date';
-}

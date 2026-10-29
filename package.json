@@ -41,6 +41,7 @@
     "@irbisadm/statfmt": "0.1.1",
     "d3-cloud": "1.2.9",
     "fflate": "0.8.3",
+    "linked-codebook": "https://bennokr.github.io/linked-codebook/linked-codebook-0.3.1.tgz",
     "papaparse": "5.5.3",
     "pyodide": "0.29.0",
     "umap-js": "1.4.0",

@@ -1,30 +1,10 @@
-import { dateNumber, dateKind, temporal } from './dates.js';
+import { inferColumn } from 'linked-codebook';
+import { dateNumber, temporal } from './dates.js';
 
 export const missing = (value, field) => value === null || value === undefined || value === '' || value === '\\N'
   || Boolean(field?.missingValues?.some(code => String(value) === String(code.value ?? code)));
 export const keyOf = (value, field) => missing(value, field) ? 'missing:' : `${typeof value}:${String(value)}`;
 export const isIdentifier = name => /(^id$|^row.?number$|^resp?no$|_id$)/i.test(name);
-
-function numeric(values) {
-  return values.every(value => typeof value === 'number' ||
-    (typeof value === 'string' && /^[-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?$/i.test(value)
-      && !/^[-+]?0\d/.test(value))) && values.every(value => Number.isFinite(Number(value)));
-}
-
-function sequential(values, unique) {
-  return values.length > 8 && unique.length === values.length &&
-    values.every((value, index) => Number(value) === index + Number(values[0]));
-}
-
-function prose(value) {
-  const text = String(value);
-  return text.length > 80 || /[\r\n]/.test(text) || text.trim().split(/\s+/u).length > 7;
-}
-
-function stringCategory(values, count) {
-  if (values.length < 3 || values.some(prose)) { return false; }
-  return count < values.length && (count <= 8 || count / values.length <= 0.1);
-}
 
 // Low-cardinality text is far more likely to be categorical than low-cardinality numbers,
 // so each data type has its own limit. Value labels count as evidence for either.
@@ -35,28 +15,16 @@ export function categoryLimits(config = {}) {
     number: config.numericCategoryLimit ?? defaultLimits.number };
 }
 
-function categoryEvidence(values, base, limits) {
-  const count = base.unique.length;
-  if (base.valueLabels.length) { return count <= limits.text; }
-  if (numeric(values)) {
-    return values.every(value => Number.isInteger(Number(value))) && count <= limits.number
-      && count < values.length;
-  }
-  return count <= limits.text && stringCategory(values, count);
-}
-
-function lowCardinality(values, base, limits) {
-  return !base.identifier && !sequential(values, base.unique) && categoryEvidence(values, base, limits);
-}
-
+// The rules that decide the kind of a column live in linked-codebook. A column is a boolean, a date
+// or a datetime by its datatype, and categorical or numeric by its level.
 function kindOf(values, base, limits) {
   if (base.kind) { return base.kind; }
   if (!values.length) { return 'empty'; }
-  if (values.every(value => typeof value === 'boolean')) { return 'boolean'; }
-  const dates = dateKind(values);
-  if (dates) { return dates; }
-  if (lowCardinality(values, base, limits)) { return 'categorical'; }
-  return numeric(values) ? 'number' : 'text';
+  const options = { identifier: base.identifier, labelled: base.valueLabels.length > 0, limits };
+  const { datatype, level } = inferColumn(values, options);
+  if (['boolean', 'date', 'datetime'].includes(datatype)) { return datatype; }
+  if (level === 'categorical') { return 'categorical'; }
+  return level === 'numerical' ? 'number' : 'text';
 }
 
 export function inferField(name, rows, metadata, limits = categoryLimits()) {
