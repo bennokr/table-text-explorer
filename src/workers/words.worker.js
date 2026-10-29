@@ -1,3 +1,4 @@
+import { withBase } from '../base.js';
 import { tokens, normalize, poolWords, inverseFrequency, combineFields, weightOf } from '../word-vectors.js';
 import { asset } from './assets.js';
 
@@ -6,7 +7,7 @@ const cache = new Map();
 
 async function loadModel(language, report) {
   if (loaded?.language === language) { return loaded; }
-  const base = `/vendor/vectors/${language}`;
+  const base = withBase(`vendor/vectors/${language}`);
   const read = name => asset(`${base}/${name}`, counts => report({ message: `Loading ${language.toUpperCase()} word vectors`, ...counts }));
   const manifest = JSON.parse(new TextDecoder().decode(await read('manifest.json')));
   const words = JSON.parse(new TextDecoder().decode(await read('words.json')));

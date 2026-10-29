@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 export default defineConfig(({ command, mode }) => {
   const feasibility = mode === 'feasibility';
   return {
+    // GitHub Pages serves project sites below /<repository>/; local builds stay at '/'.
+    base: process.env.BASE_PATH ?? '/',
     publicDir: command === 'serve' || feasibility ? 'public' : '.cache/public-build',
     resolve: {
       alias: { 'node:zlib': fileURLToPath(new URL('./src/zlib.js', import.meta.url)) },

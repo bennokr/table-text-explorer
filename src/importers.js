@@ -1,3 +1,4 @@
+import { withBase } from './base.js';
 import { schemaMetadata } from './field-metadata.js';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
@@ -14,7 +15,7 @@ export async function importTable(file, progress) {
 }
 
 export async function importExample(name, progress, example) {
-  const response = await fetch(`/fixtures/${encodeURIComponent(name)}`);
+  const response = await fetch(withBase(`fixtures/${encodeURIComponent(name)}`));
   if (!response.ok) { throw new Error('Example is unavailable. Run npm run build to refresh fixtures.'); }
   const bytes = await readBytes(response, counts => progress({ message: 'Reading example', ...counts }));
   const table = await importer.run('import', { bytes, name }, progress);
@@ -41,7 +42,7 @@ export function exportTable(model, format, scope) {
 }
 
 async function readDescriptor(path) {
-  const response = await fetch(path);
+  const response = await fetch(withBase(path));
   if (!response.ok) { throw new Error(`Example metadata is unavailable: ${path}`); }
   return response.json();
 }

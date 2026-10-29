@@ -1,3 +1,4 @@
+import { withBase } from './base.js';
 import { tableColumns } from './table-columns.js';
 import { demoSettings } from './demo-settings.js';
 import { $, options } from './dom.js';
@@ -91,7 +92,7 @@ function bindImportExport() {
 
 async function examples() {
   try {
-    const response = await fetch('/examples.json');
+    const response = await fetch(withBase('examples.json'));
     const files = response.ok ? await response.json() : [];
     for (const file of files) { exampleFiles.set(file.name, file); }
     options($('#examples'), [['', 'Examples…'], ...files.map(file => [file.name, file.name])]);
