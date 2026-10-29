@@ -15,7 +15,7 @@ export class Results {
   list(kind) { return [...this.items.values()].filter(item => !kind || item.kind === kind); }
 }
 
-export function uniqueColumn(model, suggested) {
+function uniqueColumn(model, suggested) {
   let name = suggested, suffix = 2;
   while (model.fields.some(field => field.name === name)) { name = `${suggested} ${suffix++}`; }
   return name;

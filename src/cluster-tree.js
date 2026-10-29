@@ -30,7 +30,7 @@ export function treeParents(result) {
   return parents;
 }
 
-export function cutTree(result, count) {
+function cutTree(result, count) {
   const active = new Set([result.rowIds.length * 2 - 2]);
   for (let node = result.rowIds.length * 2 - 2; active.size < count; node -= 1) {
     if (!active.delete(node)) { continue; }

@@ -45,7 +45,7 @@ function featureDescriptor(field, config) {
   return descriptor;
 }
 
-export function featureSettings(model, method) {
+function featureSettings(model, method) {
   const fields = featureFields(model);
   const lexical = ['text', 'words'].includes(model.config.mode);
   return { revision: model.revision, sentence: { model: model.config.sentenceModel ?? 'multilingual', chunking: model.config.sentenceChunking,

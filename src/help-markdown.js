@@ -1,7 +1,7 @@
 // Deliberately small Markdown subset for bundled, authored help. HTML is escaped.
-export const escapeHelp = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+const escapeHelp = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
   .replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-export const helpAnchor = text => text.toLowerCase().replace(/[^a-z0-9]+/gu, '-').replace(/^-|-$/gu, '');
+const helpAnchor = text => text.toLowerCase().replace(/[^a-z0-9]+/gu, '-').replace(/^-|-$/gu, '');
 
 function inlineToken(token) {
   if (token.startsWith('`')) { return `<code>${escapeHelp(token.slice(1, -1))}</code>`; }

@@ -1,5 +1,5 @@
 // Combined presentation keeps every (field, phrase) predicate independent.
-export const fieldColors = ['#3979a5', '#b65b16', '#548039', '#9154a0', '#bd4657', '#267f80', '#856817', '#6659ae'];
+const fieldColors = ['#3979a5', '#b65b16', '#548039', '#9154a0', '#bd4657', '#267f80', '#856817', '#6659ae'];
 export const populationRankings = new Set(['frequency', 'balanced', 'semantic']);
 
 export function fieldColor(index) {

@@ -2,7 +2,7 @@ import { $, options } from './dom.js';
 import { comparisonSets } from './term-view.js';
 import { clusterComparison } from './cluster-descriptions.js';
 
-export function embeddingChoices(model) {
+function embeddingChoices(model) {
   return model.results.list('representation').filter(result => result.embeddings && result.embeddingDimensions);
 }
 

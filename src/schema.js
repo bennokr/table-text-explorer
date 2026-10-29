@@ -4,7 +4,7 @@ import { dateNumber, temporal } from './dates.js';
 export const missing = (value, field) => value === null || value === undefined || value === '' || value === '\\N'
   || Boolean(field?.missingValues?.some(code => String(value) === String(code.value ?? code)));
 export const keyOf = (value, field) => missing(value, field) ? 'missing:' : `${typeof value}:${String(value)}`;
-export const isIdentifier = name => /(^id$|^row.?number$|^resp?no$|_id$)/i.test(name);
+const isIdentifier = name => /(^id$|^row.?number$|^resp?no$|_id$)/i.test(name);
 
 // Low-cardinality text is far more likely to be categorical than low-cardinality numbers,
 // so each data type has its own limit. Value labels count as evidence for either.
@@ -27,7 +27,7 @@ function kindOf(values, base, limits) {
   return level === 'numerical' ? 'number' : 'text';
 }
 
-export function inferField(name, rows, metadata, limits = categoryLimits()) {
+function inferField(name, rows, metadata, limits = categoryLimits()) {
   const values = rows.map(row => row[name]).filter(value => !missing(value, metadata));
   const unique = [...new Map(values.map(value => [keyOf(value), value])).values()];
   const base = { ...metadata, name, unique, missing: rows.length - values.length, identifier: metadata?.identifier ?? isIdentifier(name),

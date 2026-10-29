@@ -18,7 +18,7 @@ export function readFieldOptions() {
   return { weights: { ...draft.weights }, fieldGroups: { ...draft.fieldGroups } };
 }
 
-export function refreshFieldSummary() {
+function refreshFieldSummary() {
   readFieldOptions();
   const changed = fields.filter(field => weightOf(draft.weights, field.name) !== 1).length;
   $('#weights-summary').textContent = changed ? `Field weights · ${changed} customized` : 'Field weights · Equal weights';

@@ -4,8 +4,8 @@
   remain separate; the DBRD example has noncommercial and share-alike terms.
 - Separate background-description activity from explicit fit progress/busy state
   while retaining worker serialization and cancellation guards.
-- Add generic codebook import/review, saved column sets and compact record
-  inspection. Preserve source metadata and overrides.
+- Add saved column sets and compact record inspection. Preserve source metadata
+  and overrides (codebook import is in `docs/codebook-profile.md`).
 - Save named brush/query subsets and annotation-label populations, with explicit
   comparison sets and support for describing several subsets together.
 - Learn shallow, readable rules from phrase and metadata predicates. Tree paths become ANDs;
