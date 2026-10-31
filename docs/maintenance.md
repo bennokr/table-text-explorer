@@ -40,8 +40,9 @@ ignored `.cache/e2e/`; enable traces with `E2E_TRACE=1`.
 (or manually). The repository's Pages source must be set to **GitHub Actions**. The build
 sets `BASE_PATH=/<repository>/`; code resolves runtime URLs through `src/base.js`, so
 never hard-code root-absolute asset paths. Only approved public examples are published.
-CI runs unit tests, ESLint and the bundle check; Python lint, browser journeys and
-pretrained-model assets are not part of it. `npm ci --ignore-scripts` skips the native
+CI runs `npm run check` (ESLint, size budgets, ruff check and format; it first runs
+`uv sync --cache-dir .cache/uv` because the script calls `uv run --offline`), the unit
+tests and the bundle check; browser journeys and pretrained-model assets are not part of it. `npm ci --ignore-scripts` skips the native
 `onnxruntime-node` download, which only the optional offline Node probe uses.
 
 ## Readability budgets

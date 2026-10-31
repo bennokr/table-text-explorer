@@ -26,8 +26,12 @@ jobs:
       # onnxruntime-node's install script downloads a native binary that only the
       # offline Node probe needs; the browser app uses the WASM build.
       - run: npm ci --ignore-scripts
+      - uses: astral-sh/setup-uv@v6
+      # `npm run check` runs ruff through `uv run --offline`, so fill the uv cache first.
+      - run: uv sync --cache-dir .cache/uv
+      # ESLint, size budgets, ruff check and ruff format --check, as AGENTS.md documents.
+      - run: npm run check
       - run: npm test
-      - run: npx eslint .
       - run: node scripts/prepare_assets.mjs
       - name: Build for the project site path
         run: npm run build
