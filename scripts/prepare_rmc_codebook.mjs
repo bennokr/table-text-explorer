@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import * as XLSX from 'xlsx';
+import { profileOf, schemaOf, workbookOf } from './migrate_schema.mjs';
 
 const directory = 'demo-config/RMC_synthetische_data_20_rijen.xlsx';
 const source = 'Codeboek RMC_aangepast22-10.xlsx';
@@ -80,41 +81,16 @@ function applyReview() {
   }
 }
 
-function spreadsheetField(field) {
-  return { name: field.name, title: field.title, description: field.description ?? '', type: field.type,
-    measurement: field['x-measurement'] ?? '', role: field['x-role'] ?? '', group: field['x-group'],
-    categoriesOrdered: field.categoriesOrdered ?? '', minimum: field.constraints?.minimum,
-    maximum: field.constraints?.maximum, pattern: field.constraints?.pattern,
-    sourceSheet: field['x-source'].sheet, sourceRow: field['x-source'].row };
-}
-
-function spreadsheet(schema) {
-  const workbook = XLSX.utils.book_new();
-  const definitions = schema.fields.map(spreadsheetField);
-  const values = schema.fields.flatMap(field => (field.categories ?? field['x-valueLabels'] ?? []).map((item, order) =>
-    ({ field: field.name, value: String(item.value), label: item.label ?? '', order: order + 1, is_missing: false, closed: Boolean(field.categories) })));
-  const sheets = { Fields: definitions, Values: values,
-    Missing: [{ field: '*', value: '', label: 'Empty' }],
-    Groups: [...new Set(schema.fields.map(field => field['x-group']))].map(id => ({ id, title: id })),
-    Dataset: [{ key: 'profile', value: 'data-explorer-codebook/1' }, { key: 'source', value: source }, { key: 'primaryKey', value: 'ResPno' }],
-    Review: review.notes.map(note => ({ note })) };
-  for (const [name, rows] of Object.entries(sheets)) {
-    const sheet = XLSX.utils.json_to_sheet(rows);
-    sheet['!cols'] = Object.keys(rows[0] ?? {}).map(key => ({ wch: ['title', 'note'].includes(key) ? 65 : 22 }));
-    XLSX.utils.book_append_sheet(workbook, sheet, name);
-  }
-  return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx', compression: true });
-}
-
 for (const sheet of book.SheetNames) { sheetFields(sheet); }
 applyReview();
 const definitions = [...fields.values()];
 for (const [index, field] of definitions.entries()) {
   if (field.name.endsWith('Toel')) { field.description = `Toelichting: ${definitions[index - 2].title.trim()}`; }
 }
-const schema = { $schema: 'https://datapackage.org/profiles/2.0/tableschema.json', fieldsMatch: 'partial',
-  primaryKey: ['ResPno'], missingValues: [''], fields: definitions,
-  'x-source': { filename: source, sha256: createHash('sha256').update(bytes).digest('hex') }, 'x-reviewNotes': review.notes };
-await writeFile(`${directory}/schema.metadata.json`, JSON.stringify(schema, null, 2) + '\n');
-await writeFile(`${directory}/codebook.xlsx`, spreadsheet(schema));
+const schema = { primaryKey: ['ResPno'], fields: definitions };
+const profile = profileOf(schema);
+const output = { ...schemaOf(profile), 'x-source': { filename: source, sha256: createHash('sha256').update(bytes).digest('hex') },
+  'x-reviewNotes': review.notes };
+await writeFile(`${directory}/schema.metadata.json`, JSON.stringify(output, null, 2) + '\n');
+await writeFile(`${directory}/codebook.xlsx`, workbookOf(profile));
 console.log(`Prepared ${fields.size} RMC variable definitions, JSON and spreadsheet profile; no records included.`);

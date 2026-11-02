@@ -79,7 +79,7 @@ in the prepared-feature cache key and are saved in `inputFields` with exported
 representations/maps, so later metadata edits do not change a fitted result.
 Legacy `description-mean` recipes still run, and reopen as a mean plus the context
 checkbox. Grouped means normalize weighted field means per group and give available
-groups equal weight. Group names come from `x-group` metadata, with map-specific
+groups equal weight. Group names come from the `group` of the field's metadata (`x-linked-codebook.group` in a codebook), with map-specific
 overrides and an explicit Other fields fallback. A 0–100% identity fraction mixes
 normalized shared and concatenated group vectors with square-root scales. Endpoint
 vectors omit unused components; all-empty rows stay excluded. Identity preserves

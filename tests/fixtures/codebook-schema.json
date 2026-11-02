@@ -3,26 +3,29 @@
   "fieldsMatch": "partial",
   "fields": [
     {
-      "name": "record_id",
-      "title": "Record ID",
       "type": "string",
-      "x-role": "identifier"
-    },
-    {
-      "name": "score",
-      "title": "Score",
-      "type": "number",
-      "x-group": "Measurements",
-      "constraints": {
-        "minimum": 0,
-        "maximum": 100
+      "title": "Record ID",
+      "name": "record_id",
+      "x-linked-codebook": {
+        "identifying": true
       }
     },
     {
-      "name": "status",
-      "title": "Status",
+      "type": "number",
+      "title": "Score",
+      "name": "score",
+      "constraints": {
+        "minimum": 0,
+        "maximum": 100
+      },
+      "x-linked-codebook": {
+        "group": "Measurements"
+      }
+    },
+    {
       "type": "integer",
-      "x-measurement": "nominal",
+      "title": "Status",
+      "name": "status",
       "categories": [
         {
           "value": 1,
@@ -32,61 +35,58 @@
           "value": 2,
           "label": "Closed"
         }
-      ]
+      ],
+      "x-linked-codebook": {
+        "level": "nominal",
+        "values": [
+          {
+            "code": "1",
+            "label": "Open"
+          },
+          {
+            "code": "2",
+            "label": "Closed"
+          }
+        ],
+        "closed": true
+      }
     },
     {
-      "name": "notes",
-      "title": "Notes",
-      "description": "Free-text notes about the record",
       "type": "string",
-      "x-role": "text",
-      "x-group": "Text"
+      "description": "Free-text notes about the record",
+      "title": "Notes",
+      "name": "notes",
+      "x-linked-codebook": {
+        "group": "Text"
+      }
     },
     {
-      "name": "timestamp",
+      "type": "datetime",
       "title": "Recorded at",
-      "type": "datetime"
+      "name": "timestamp"
     },
     {
-      "name": "level",
-      "title": "Level",
       "type": "integer",
-      "x-measurement": "ordinal",
-      "x-valueLabels": [
-        {
-          "value": 1,
-          "label": "Low"
-        },
-        {
-          "value": 5,
-          "label": "High"
-        }
-      ]
+      "title": "Level",
+      "name": "level",
+      "x-linked-codebook": {
+        "level": "ordinal",
+        "values": [
+          {
+            "code": "1",
+            "label": "Low"
+          },
+          {
+            "code": "5",
+            "label": "High"
+          }
+        ]
+      }
     },
     {
-      "name": "active",
+      "type": "boolean",
       "title": "Active",
-      "type": "boolean"
+      "name": "active"
     }
-  ],
-  "missingValues": [
-    {
-      "value": "",
-      "label": "Empty"
-    }
-  ],
-  "primaryKey": [
-    "record_id"
-  ],
-  "x-groups": [
-    {
-      "id": "Measurements",
-      "title": "Measurements"
-    },
-    {
-      "id": "Text",
-      "title": "Text"
-    }
-  ],
-  "x-reviewNotes": []
+  ]
 }

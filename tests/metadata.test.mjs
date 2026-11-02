@@ -15,7 +15,7 @@ const example = 'docs/examples/codebook';
 test('public codebook example preserves declared types, labels and empty text columns', async () => {
   const schema = JSON.parse(await readFile(`${example}/schema.metadata.json`, 'utf8'));
   const book = XLSX.read(await readFile(`${example}/codebook.xlsx`));
-  const fields = XLSX.utils.sheet_to_json(book.Sheets.Fields);
+  const fields = XLSX.utils.sheet_to_json(book.Sheets.Columns);
   assert.deepEqual(fields.map(field => field.name), schema.fields.map(field => field.name));
   const metadata = schemaMetadata(schema);
   assert.equal(fieldDescription(metadata.notes), 'Free-text notes about the record');
@@ -33,7 +33,7 @@ test('public codebook example preserves declared types, labels and empty text co
 
 test('schemas keep native labels and separate incomplete label dictionaries from closed categories', () => {
   const base = { status: { valueLabels: [{ value: 1, label: 'First' }], measure: 1 } };
-  const metadata = schemaMetadata({ fields: [{ name: 'status', title: 'Status', 'x-measurement': 'nominal' }] }, base);
+  const metadata = schemaMetadata({ fields: [{ name: 'status', title: 'Status', 'x-linked-codebook': { level: 'nominal' } }] }, base);
   assert.deepEqual(metadata.status.valueLabels, base.status.valueLabels);
   assert.equal(metadata.status.kind, 'categorical');
 });
@@ -94,7 +94,7 @@ test('spreadsheet profile converts back to equivalent field interpretations and 
 });
 
 test('spreadsheet profile reads the public codebook into exactly the pinned Table Schema', async () => {
-  // Pins every x- extension the app reads (see docs/maintenance.md, "Codebook reader"); a new reader must reproduce it.
+  // Pins every field property and linked-codebook slot the app reads (see docs/maintenance.md, "Codebook reader"); a new reader must reproduce it.
   const pinned = JSON.parse(await readFile('tests/fixtures/codebook-schema.json', 'utf8'));
   assert.deepEqual(JSON.parse(JSON.stringify(readCodebook(await readFile(`${example}/codebook.xlsx`)))), pinned);
 });
@@ -102,10 +102,38 @@ test('spreadsheet profile reads the public codebook into exactly the pinned Tabl
 test('codebooks reject missing, blank and duplicate names rather than silently losing fields', () => {
   for (const fields of [[{ title: 'No name' }], [{ name: ' ' }], [{ name: 'score' }, { name: 'score' }]]) {
     const book = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(fields), 'Fields');
+    XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(fields), 'Columns');
     const bytes = XLSX.write(book, { type: 'buffer', bookType: 'xlsx' });
-    assert.throws(() => readCodebook(bytes), /Field names must be nonempty strings and unique/u);
+    assert.throws(() => readCodebook(bytes, { onWarning() {} }), /name is required|no columns found|listed twice/u);
   }
+});
+
+function workbook(sheets) {
+  const book = XLSX.utils.book_new();
+  for (const [name, rows] of Object.entries(sheets)) { XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(rows), name); }
+  return XLSX.write(book, { type: 'buffer', bookType: 'xlsx' });
+}
+
+test('cells whose type does not match their header are reported by sheet, row and header', () => {
+  const bytes = workbook({
+    Columns: [['name', 'minimum', 'identifying', 'colour'], ['a', '5', 1, 'x']],
+    Values: [['column', 'code', 'label'], ['a', 7, 'Seven'], ['a', '08', 'Eight']],
+  });
+  const warnings = [];
+  const schema = readCodebook(bytes, { onWarning: message => warnings.push(message) });
+  assert.deepEqual(warnings, [
+    'Columns header colour is not used',
+    'Columns row 2, minimum: "5" is text but this header takes a number',
+    'Columns row 2, identifying: 1 is a number; use TRUE or FALSE',
+    'Values row 2, code: 7 is a number but this header takes text; write it as text so that leading zeros survive',
+  ]);
+  assert.equal(schema.fields[0].constraints.minimum, 5);
+  assert.throws(() => readCodebook(bytes, { strict: true }), /4 warnings/u);
+});
+
+test('codebook cells that cannot be read name the sheet and row', () => {
+  const bytes = workbook({ Columns: [['name', 'datatype'], ['a', 'strng']] });
+  assert.throws(() => readCodebook(bytes), /Columns row 2, datatype: 'strng' is not one of/u);
 });
 
 test('Excel dates and timestamps preserve their calendar and time distinction', () => {

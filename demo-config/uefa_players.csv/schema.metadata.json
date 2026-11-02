@@ -1,84 +1,101 @@
 {
   "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
   "fieldsMatch": "partial",
-  "missingValues": [
-    ""
-  ],
   "fields": [
     {
-      "name": "rowNumber",
+      "type": "string",
       "title": "Row number",
-      "type": "string",
-      "x-role": "identifier"
+      "name": "rowNumber",
+      "x-linked-codebook": {
+        "identifying": true
+      }
     },
     {
-      "name": "sn",
+      "type": "string",
       "title": "Short name",
-      "type": "string",
-      "x-measurement": "nominal"
+      "name": "sn",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
-      "name": "fn",
+      "type": "string",
       "title": "First name",
-      "type": "string",
-      "x-measurement": "nominal"
+      "name": "fn",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
-      "name": "ln",
+      "type": "string",
       "title": "Last name",
-      "type": "string",
-      "x-measurement": "nominal"
+      "name": "ln",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
-      "name": "no",
+      "type": "string",
       "title": "Shirt number",
-      "type": "string",
-      "x-measurement": "nominal"
+      "name": "no",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
-      "name": "ps",
+      "type": "string",
       "title": "Position",
-      "type": "string",
-      "x-measurement": "nominal"
+      "name": "ps",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
-      "name": "nt",
+      "type": "string",
       "title": "Nationality",
-      "type": "string",
-      "x-measurement": "nominal"
+      "name": "nt",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
-      "name": "db",
+      "type": "date",
       "title": "Date of birth",
-      "type": "date"
+      "name": "db"
     },
     {
-      "name": "ag",
+      "type": "number",
       "title": "Age",
-      "type": "number"
+      "name": "ag"
     },
     {
-      "name": "ht",
+      "type": "number",
       "title": "Height",
-      "type": "number"
+      "name": "ht"
     },
     {
-      "name": "go/at",
+      "type": "string",
       "title": "go/at",
-      "type": "string",
-      "x-measurement": "nominal"
+      "name": "go/at",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
-      "name": "cb",
+      "type": "string",
       "title": "Club",
-      "type": "string",
-      "x-measurement": "nominal"
+      "name": "cb",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
-      "name": "cn",
-      "title": "Country",
       "type": "string",
-      "x-measurement": "nominal"
+      "title": "Country",
+      "name": "cn",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     }
   ]
 }

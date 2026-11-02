@@ -5,7 +5,7 @@ export function descriptionEnabled(config) {
 }
 
 export function groupName(field, overrides = {}) {
-  return String(overrides[field.name] ?? field['x-group'] ?? field.group ?? '').trim() || 'Other fields';
+  return String(overrides[field.name] ?? field.group ?? '').trim() || 'Other fields';
 }
 
 function vectorGroups(fields) {

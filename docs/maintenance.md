@@ -64,34 +64,20 @@ written rationale here; function and module limits stay unchanged.
 
 ## Codebook reader
 
-`src/codebook-profile.js` (`readCodebook`) reads the XLSX codebook (sheets Fields, Values, Missing, Dataset,
-Groups, Review) into a Table Schema with `x-` extensions. Only `scripts/convert_codebook.mjs` and the tests call
-it; the app reads the resulting `schema.metadata.json` files through `schemaMetadata`. The extensions it relies on:
-`x-measurement`, `x-role`, `x-group`, `x-valueLabels` and `categories` (`field-metadata.js`, `group-vectors.js`,
-`variable-options.js`), plus `missingValues`, `primaryKey`, `constraints`, `x-groups` and `x-reviewNotes`.
+`src/codebook-profile.js` (`readCodebook`) opens the XLSX codebook, checks every cell against the type its header
+expects (loud warnings, or an error with `strict`), and hands the cells to linked-codebook (`fromTables`, then
+`toFrictionless`). Only `scripts/convert_codebook.mjs` and the tests call it; the app reads the resulting
+`schema.metadata.json` files through `schemaMetadata`, which takes `level`, `group`, `identifying` and the label
+dictionary from the field property `x-linked-codebook`. `tests/fixtures/codebook-schema.json` pins the output.
 
-Assessment on 2026-11-02 (linked-codebook 0.7.0): the reader was not replaced, because no route through
-`parse`/`toFrictionless` reproduces it.
-
-- There is no XLSX reader to reuse. `parse` reads DSV JSON-LD and `fromRedcap` reads REDCap CSV, so an
-  XLSX-to-`Profile` step would be new code in any case.
-- `toFrictionless` writes different keys. `x-measurement` becomes `x-linked-codebook.level`, `x-valueLabels` becomes
-  `x-linked-codebook.values` with `closed` false, a missing code keeps its label only in `values`, a closed category
-  without a label becomes a bare value (which `fieldMetadata` does not treat as a label), and `year` has no
-  `Datatype`.
-- A `Profile` has no slot for `x-role` (identifier, text), `x-group` and the Groups sheet, `constraints`, `format`,
-  `primaryKey`, `fieldsMatch` or the Review notes, so they would be lost or need a sidecar.
-- Probe, with a best-effort XLSX-to-`Profile` mapping on `docs/examples/codebook` and `toFrictionless`: two of the
-  seven fields change meaning in `schemaMetadata`. `record_id` is no longer an identifier (`x-role` and `primaryKey` are
-  gone) and `level` becomes a number with no value labels. The other five keep kind, identifier flag and labels.
-
-Effort for a safe swap is one to two days: the XLSX-to-`Profile` reader (about 60 lines), moving the three consumers
-and the five committed `schema.metadata.json` files (four in `demo-config/`, one in `docs/examples/codebook/`) to
-`x-linked-codebook`, a roles and groups sidecar because the `Profile` has none, and roughly 100 more statements in the
-JavaScript budget (10125 of 10200 are used). The gain is small: the reader stays and a mapping layer is added.
-If the goal is interoperability, add a one-way `profileOf(schema)` that feeds `build` or `toSssom` and leave
-`readCodebook` alone. `tests/metadata.test.mjs` pins the reader's full output in
-`tests/fixtures/codebook-schema.json`; a replacement must reproduce that file, or each difference must be documented.
+History: on 2026-11-02 a swap was assessed as not worth it with linked-codebook 0.7.0 (no table format, no slots for
+groups, identifiers or limits, different extension keys). linked-codebook 0.9.0 added the slots `group`, `identifying`,
+`minimum`, `maximum` and `format` and a table format whose sheets follow the model; the reader and its sheet parsing
+(about 100 lines of statements) were replaced by the call. What the profile cannot hold is gone: the field role
+`text`/`code` (the app only used `identifier`), the Groups sheet titles, `primaryKey` (a primary key column is now
+`identifying`), the Review notes and the per-field `pattern` constraint. The five committed `schema.metadata.json`
+files were converted with `scripts/migrate_schema.mjs`. `scripts/prepare_rmc_codebook.mjs` (private data) now writes
+through the same helper; it was not run, because its source files are not available here.
 
 ## Sentence model preparation
 

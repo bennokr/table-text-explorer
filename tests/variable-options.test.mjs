@@ -3,9 +3,9 @@ import test from 'node:test';
 import { variableOptions, findVariables, variableGroups, selectionSummary } from '../src/variable-options.js';
 
 const variables = variableOptions([
-  { name: 'a', label: 'Café visits', kind: 'number', missing: 2, 'x-group': 'Activity' },
-  { name: 'b', label: 'Free description', kind: 'text', missing: 9, 'x-group': 'Notes' },
-  { name: 'c', label: 'Other visits', kind: 'number', missing: 0, 'x-group': 'Activity' },
+  { name: 'a', label: 'Café visits', kind: 'number', missing: 2, group: 'Activity' },
+  { name: 'b', label: 'Free description', kind: 'text', missing: 9, group: 'Notes' },
+  { name: 'c', label: 'Other visits', kind: 'number', missing: 0, group: 'Activity' },
 ], 10);
 
 test('variable search combines names, descriptions and groups with independent type/selection filters', () => {

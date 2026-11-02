@@ -1,29 +1,28 @@
 {
   "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
   "fieldsMatch": "partial",
-  "missingValues": [
-    ""
-  ],
   "fields": [
     {
+      "type": "string",
       "name": "review_id",
-      "type": "string",
-      "x-role": "identifier"
+      "x-linked-codebook": {
+        "identifying": true
+      }
     },
     {
-      "name": "text",
       "type": "string",
-      "x-role": "text"
+      "name": "text"
     },
     {
+      "type": "string",
       "name": "sentiment",
-      "type": "string",
-      "x-measurement": "nominal"
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
-      "name": "rating",
       "type": "integer",
-      "x-measurement": "ordinal",
+      "name": "rating",
       "categories": [
         1,
         2,
@@ -31,15 +30,36 @@
         4,
         5
       ],
-      "categoriesOrdered": true
+      "categoriesOrdered": true,
+      "x-linked-codebook": {
+        "level": "ordinal",
+        "values": [
+          {
+            "code": "1"
+          },
+          {
+            "code": "2"
+          },
+          {
+            "code": "3"
+          },
+          {
+            "code": "4"
+          },
+          {
+            "code": "5"
+          }
+        ],
+        "closed": true
+      }
     },
     {
-      "name": "word_count",
-      "type": "number"
+      "type": "number",
+      "name": "word_count"
     },
     {
-      "name": "character_count",
-      "type": "number"
+      "type": "number",
+      "name": "character_count"
     }
   ]
 }

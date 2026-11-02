@@ -3,40 +3,43 @@
 Variable semantics use [Frictionless Table Schema 2](https://datapackage.org/standard/table-schema/).
 The `.metadata.json` suffix is a naming convention: these files are Table Schema,
 not CSVW. Standard properties include fields, logical types, titles, descriptions,
-categories, categoriesOrdered, missingValues, constraints and primaryKey.
-Application extensions are explicit: `x-role` (identifier, code, text),
-`x-measurement` (nominal, ordinal), `x-group`, `x-unit`, `x-concept_uri`,
-`x-valueLabels` (a partial label dictionary), `x-source` and `x-reviewNotes`.
-A label dictionary does not imply that other values are invalid. Closed category
-lists use the standard categories property. Original cell values remain preserved.
+categories, categoriesOrdered, missingValues and constraints. Everything else comes from
+[linked-codebook](https://github.com/bennokr/linked-codebook) and sits under the field property
+`x-linked-codebook`: `level` (nominal, ordinal, ...), `group`, `identifying`, `unit`, `variable`
+(a concept IRI), `values` (a label dictionary; with `closed` it is also written as `categories`) and
+`mappings`. A label dictionary does not imply that other values are invalid. Original cell values remain preserved.
 
-## Spreadsheet profile v1
+## Spreadsheet profile
 
-This is a documented application profile, not a standard XLSX serialization of
-Frictionless. All sheets have a single header row, no merged cells or JSON cells.
-Only Fields is required. Blank properties mean unspecified; field names match exactly.
+The workbook is the linked-codebook table format (see section 12 of its specification). All sheets have a single
+header row, no merged cells or JSON cells. Only Columns is required. Blank cells mean unspecified; names match
+exactly.
 
 | Sheet | Columns |
 | --- | --- |
-| Fields | name; optional title, description, type, format, measurement, role, group, unit, concept_uri, categoriesOrdered, minimum, maximum, pattern |
-| Values | field, value; optional label, order, is_missing, closed |
-| Missing | field (`*` for table defaults), value, optional label |
-| Groups | id, title; optional parent, order |
-| Dataset | key, value; primaryKey may have one row per key column |
-| Review | note |
+| Columns | name; optional label, description, datatype, format, level, unit, unit_iri, variable, source, closed, missing_low, missing_high, completeness, applies_when, minimum, maximum, group, identifying |
+| Values | column, code; optional label, description, missing |
+| Mappings | column, match_type, object_id; optional code, object_label, confidence, provenance, retrieved_at, reviewer_id, description |
+| Dataset | key, value: title, description, identifier, license, citation, access_rights, landing_page, rows |
 
-Use actual Excel booleans for categoriesOrdered, is_missing and closed. Order controls
-category display, not the numeric magnitude of its code. `closed=false` creates
-x-valueLabels rather than categories. Missing codes are strings, matched before
-numeric conversion. Format codes as Text in Excel to preserve leading zeros.
-Fields.type controls conversion of category codes; only integer/number/year codes
-are converted to numbers. Use type=string for identifiers with leading zeros.
-Source sheet/row columns in the RMC example are human review aids.
+`closed` belongs to the column: when true, Values lists every allowed code and becomes `categories`; when false or blank
+it is a label dictionary. A code that means no value is a Values row with `missing` set (a row with no label is an
+unlabelled missing code). There is no Missing sheet; blank cells are always missing. The order of the codes is the
+order of the rows. Use actual Excel booleans for closed, missing and identifying. Format codes as Text in Excel to
+preserve leading zeros. Datatype controls conversion of category codes: only integer/number codes become numbers.
+
+The workbook is opened here, not in linked-codebook, and every cell is checked against the type its header expects.
+A number where text is expected (Excel drops leading zeros), a date, a number stored as text, or a number where a
+boolean is expected is reported as `codebook warning: <sheet> row <n>, <header>: ...`; `--strict` turns the warnings
+into an error. Headers of the earlier workbook (`type`, `role`, `measurement`, `title`, the Missing, Groups and Review
+sheets) are reported as unused. The earlier `x-role` text/code, the Groups titles, `primaryKey` (now `identifying`) and
+the review notes have no place in the profile. `node scripts/migrate_schema.mjs old.json new.json [codebook.xlsx]`
+converts a Table Schema written with the earlier extensions.
 
 Convert an edited workbook without any network access:
 
 ```
-node scripts/convert_codebook.mjs input-codebook.xlsx output.metadata.json
+node scripts/convert_codebook.mjs input-codebook.xlsx output.metadata.json [--strict]
 ```
 
 A small, invented example is available as [Table Schema JSON](examples/codebook/schema.metadata.json)
