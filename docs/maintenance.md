@@ -36,8 +36,8 @@ ignored `.cache/e2e/`; enable traces with `E2E_TRACE=1`.
 
 ## GitHub Pages
 
-`.github/workflows/pages.yml` tests, builds and deploys `dist/` on pushes to `main`
-(or manually). The repository's Pages source must be set to **GitHub Actions**. The build
+`.github/workflows/pages.yml` checks, tests and builds on every branch push and deploys `dist/` on pushes
+to `main` (or manually). The repository's Pages source must be set to **GitHub Actions**. The build
 sets `BASE_PATH=/<repository>/`; code resolves runtime URLs through `src/base.js`, so
 never hard-code root-absolute asset paths. Only approved public examples are published.
 CI runs `npm run check` (ESLint, size budgets, ruff check and format; it first runs
@@ -61,6 +61,37 @@ focused regression coverage. Existing worker, cache and dialog paths are reused;
 these additions introduce no UI framework. Prefer deleting obsolete paths and
 splitting responsibilities over compressing code. Any future increase needs a
 written rationale here; function and module limits stay unchanged.
+
+## Codebook reader
+
+`src/codebook-profile.js` (`readCodebook`) reads the XLSX codebook (sheets Fields, Values, Missing, Dataset,
+Groups, Review) into a Table Schema with `x-` extensions. Only `scripts/convert_codebook.mjs` and the tests call
+it; the app reads the resulting `schema.metadata.json` files through `schemaMetadata`. The extensions it relies on:
+`x-measurement`, `x-role`, `x-group`, `x-valueLabels` and `categories` (`field-metadata.js`, `group-vectors.js`,
+`variable-options.js`), plus `missingValues`, `primaryKey`, `constraints`, `x-groups` and `x-reviewNotes`.
+
+Assessment on 2026-11-02 (linked-codebook 0.7.0): the reader was not replaced, because no route through
+`parse`/`toFrictionless` reproduces it.
+
+- There is no XLSX reader to reuse. `parse` reads DSV JSON-LD and `fromRedcap` reads REDCap CSV, so an
+  XLSX-to-`Profile` step would be new code in any case.
+- `toFrictionless` writes different keys. `x-measurement` becomes `x-linked-codebook.level`, `x-valueLabels` becomes
+  `x-linked-codebook.values` with `closed` false, a missing code keeps its label only in `values`, a closed category
+  without a label becomes a bare value (which `fieldMetadata` does not treat as a label), and `year` has no
+  `Datatype`.
+- A `Profile` has no slot for `x-role` (identifier, text), `x-group` and the Groups sheet, `constraints`, `format`,
+  `primaryKey`, `fieldsMatch` or the Review notes, so they would be lost or need a sidecar.
+- Probe, with a best-effort XLSX-to-`Profile` mapping on `docs/examples/codebook` and `toFrictionless`: two of the
+  seven fields change meaning in `schemaMetadata`. `record_id` is no longer an identifier (`x-role` and `primaryKey` are
+  gone) and `level` becomes a number with no value labels. The other five keep kind, identifier flag and labels.
+
+Effort for a safe swap is one to two days: the XLSX-to-`Profile` reader (about 60 lines), moving the three consumers
+and the five committed `schema.metadata.json` files (four in `demo-config/`, one in `docs/examples/codebook/`) to
+`x-linked-codebook`, a roles and groups sidecar because the `Profile` has none, and roughly 100 more statements in the
+JavaScript budget (10125 of 10200 are used). The gain is small: the reader stays and a mapping layer is added.
+If the goal is interoperability, add a one-way `profileOf(schema)` that feeds `build` or `toSssom` and leave
+`readCodebook` alone. `tests/metadata.test.mjs` pins the reader's full output in
+`tests/fixtures/codebook-schema.json`; a replacement must reproduce that file, or each difference must be documented.
 
 ## Sentence model preparation
 

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
+  "fieldsMatch": "partial",
+  "fields": [
+    {
+      "name": "record_id",
+      "title": "Record ID",
+      "type": "string",
+      "x-role": "identifier"
+    },
+    {
+      "name": "score",
+      "title": "Score",
+      "type": "number",
+      "x-group": "Measurements",
+      "constraints": {
+        "minimum": 0,
+        "maximum": 100
+      }
+    },
+    {
+      "name": "status",
+      "title": "Status",
+      "type": "integer",
+      "x-measurement": "nominal",
+      "categories": [
+        {
+          "value": 1,
+          "label": "Open"
+        },
+        {
+          "value": 2,
+          "label": "Closed"
+        }
+      ]
+    },
+    {
+      "name": "notes",
+      "title": "Notes",
+      "description": "Free-text notes about the record",
+      "type": "string",
+      "x-role": "text",
+      "x-group": "Text"
+    },
+    {
+      "name": "timestamp",
+      "title": "Recorded at",
+      "type": "datetime"
+    },
+    {
+      "name": "level",
+      "title": "Level",
+      "type": "integer",
+      "x-measurement": "ordinal",
+      "x-valueLabels": [
+        {
+          "value": 1,
+          "label": "Low"
+        },
+        {
+          "value": 5,
+          "label": "High"
+        }
+      ]
+    },
+    {
+      "name": "active",
+      "title": "Active",
+      "type": "boolean"
+    }
+  ],
+  "missingValues": [
+    {
+      "value": "",
+      "label": "Empty"
+    }
+  ],
+  "primaryKey": [
+    "record_id"
+  ],
+  "x-groups": [
+    {
+      "id": "Measurements",
+      "title": "Measurements"
+    },
+    {
+      "id": "Text",
+      "title": "Text"
+    }
+  ],
+  "x-reviewNotes": []
+}

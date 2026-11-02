@@ -93,6 +93,12 @@ test('spreadsheet profile converts back to equivalent field interpretations and 
   }
 });
 
+test('spreadsheet profile reads the public codebook into exactly the pinned Table Schema', async () => {
+  // Pins every x- extension the app reads (see docs/maintenance.md, "Codebook reader"); a new reader must reproduce it.
+  const pinned = JSON.parse(await readFile('tests/fixtures/codebook-schema.json', 'utf8'));
+  assert.deepEqual(JSON.parse(JSON.stringify(readCodebook(await readFile(`${example}/codebook.xlsx`)))), pinned);
+});
+
 test('codebooks reject missing, blank and duplicate names rather than silently losing fields', () => {
   for (const fields of [[{ title: 'No name' }], [{ name: ' ' }], [{ name: 'score' }, { name: 'score' }]]) {
     const book = XLSX.utils.book_new();

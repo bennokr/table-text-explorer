@@ -20,9 +20,12 @@
   Vendor/generated files and dependencies are excluded. Raise budgets only with a written
   explanation in docs/maintenance.md; do not add per-file bypasses.
 - The feasibility harness is temporary evidence, not the finished application.
-- CI (`.github/workflows/pages.yml`) runs `npm run check` and `npm test` before building. Locally, run
+- CI (`.github/workflows/pages.yml`) runs `npm run check` and `npm test` before building, on every branch push; only
+  `main` (or a manual run) deploys. Locally, run
   `uv sync --cache-dir .cache/uv` once so the offline `ruff` calls in `npm run check` find the pinned version.
 - `linked-codebook` is a URL tarball in `package.json` (currently 0.7.0); bump it there, run `npm test`
   (the shared case fixture is `tests/fixtures/column-kind-cases.json`) and read its `docs/changelog.md`.
-- Known debt: `src/codebook-profile.js` reads the XLSX codebook into a Table Schema by hand. linked-codebook's
-  `toFrictionless` only writes Table Schema from a Profile, so replacing the reader needs an XLSX-to-Profile step.
+- Known debt: `src/codebook-profile.js` reads the XLSX codebook into a Table Schema by hand. Replacing it with
+  linked-codebook was assessed and rejected (no XLSX reader, different extension keys, no `Profile` slot for roles,
+  groups, constraints or primary keys); see "Codebook reader" in docs/maintenance.md. The reader's output is pinned by
+  `tests/fixtures/codebook-schema.json`.
