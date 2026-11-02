@@ -33,8 +33,7 @@ A number where text is expected (Excel drops leading zeros), a date, a number st
 boolean is expected is reported as `codebook warning: <sheet> row <n>, <header>: ...`; `--strict` turns the warnings
 into an error. Headers of the earlier workbook (`type`, `role`, `measurement`, `title`, the Missing, Groups and Review
 sheets) are reported as unused. The earlier `x-role` text/code, the Groups titles, `primaryKey` (now `identifying`) and
-the review notes have no place in the profile. `node scripts/migrate_schema.mjs old.json new.json [codebook.xlsx]`
-converts a Table Schema written with the earlier extensions.
+the review notes have no place in the profile.
 
 Convert an edited workbook without any network access:
 
@@ -48,9 +47,8 @@ identifier, category labels, a partial ordinal dictionary, numeric bounds, text,
 boolean and datetime columns. The converter and ordinary tests need no private files.
 
 Local RMC profiles may exist under `demo-config/RMC_synthetische_data_20_rijen.xlsx/`.
-They and the original source workbook are ignored, not distributed. The local
-`scripts/prepare_rmc_codebook.mjs` adapter additionally needs that directory's
-review.json; source-owner review is necessary before using its inferred definitions.
+They and the original source workbook are ignored, not distributed. A private workbook written for the earlier
+profile has to be rewritten in the format above (see the header list) before it can be read.
 
 ## Demo loading
 

@@ -76,8 +76,8 @@ groups, identifiers or limits, different extension keys). linked-codebook 0.9.0 
 (about 100 lines of statements) were replaced by the call. What the profile cannot hold is gone: the field role
 `text`/`code` (the app only used `identifier`), the Groups sheet titles, `primaryKey` (a primary key column is now
 `identifying`), the Review notes and the per-field `pattern` constraint. The five committed `schema.metadata.json`
-files were converted with `scripts/migrate_schema.mjs`. `scripts/prepare_rmc_codebook.mjs` (private data) now writes
-through the same helper; it was not run, because its source files are not available here.
+files and the example workbook were converted once and the converter was deleted; `scripts/prepare_rmc_codebook.mjs`,
+the private-data adapter for the earlier profile, was deleted with it.
 
 ## Sentence model preparation
 
