@@ -1,0 +1,92 @@
+{
+  "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
+  "fieldsMatch": "partial",
+  "fields": [
+    {
+      "type": "string",
+      "title": "Record ID",
+      "name": "record_id",
+      "x-linked-codebook": {
+        "identifying": true
+      }
+    },
+    {
+      "type": "number",
+      "title": "Score",
+      "name": "score",
+      "constraints": {
+        "minimum": 0,
+        "maximum": 100
+      },
+      "x-linked-codebook": {
+        "group": "Measurements"
+      }
+    },
+    {
+      "type": "integer",
+      "title": "Status",
+      "name": "status",
+      "categories": [
+        {
+          "value": 1,
+          "label": "Open"
+        },
+        {
+          "value": 2,
+          "label": "Closed"
+        }
+      ],
+      "x-linked-codebook": {
+        "level": "nominal",
+        "values": [
+          {
+            "code": "1",
+            "label": "Open"
+          },
+          {
+            "code": "2",
+            "label": "Closed"
+          }
+        ],
+        "closed": true
+      }
+    },
+    {
+      "type": "string",
+      "description": "Free-text notes about the record",
+      "title": "Notes",
+      "name": "notes",
+      "x-linked-codebook": {
+        "group": "Text"
+      }
+    },
+    {
+      "type": "datetime",
+      "title": "Recorded at",
+      "name": "timestamp"
+    },
+    {
+      "type": "integer",
+      "title": "Level",
+      "name": "level",
+      "x-linked-codebook": {
+        "level": "ordinal",
+        "values": [
+          {
+            "code": "1",
+            "label": "Low"
+          },
+          {
+            "code": "5",
+            "label": "High"
+          }
+        ]
+      }
+    },
+    {
+      "type": "boolean",
+      "title": "Active",
+      "name": "active"
+    }
+  ]
+}

@@ -58,7 +58,7 @@ test('prefixes, field groups, identity and weights are independent; compatible c
 
 test('metadata groups and map-specific overrides enter feature keys and exported input descriptors', () => {
   const data = new Dataset();
-  data.load({ name: 'groups', rows: [{ a: 'yes', b: 'no' }], metadata: { a: { 'x-group': 'Context' } } });
+  data.load({ name: 'groups', rows: [{ a: 'yes', b: 'no' }], metadata: { a: { group: 'Context' } } });
   data.configure({ ...data.config, mode: 'sentences', features: ['a', 'b'], combine: 'group-mean', includeDescriptions: true });
   assert.equal(groupName(data.fields[0]), 'Context');
   assert.equal(payload(data, 'prepare').fields[1].group, 'Other fields');
@@ -66,5 +66,5 @@ test('metadata groups and map-specific overrides enter feature keys and exported
   data.config.fieldGroups = { a: 'Custom' };
   assert.notEqual(featureKey(data), original);
   assert.equal(payload(data, 'prepare').fields[0].group, 'Custom');
-  assert.equal(data.fields[0]['x-group'], 'Context');
+  assert.equal(data.fields[0].group, 'Context');
 });

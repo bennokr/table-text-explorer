@@ -5,10 +5,10 @@ export function descriptionEnabled(config) {
 }
 
 export function groupName(field, overrides = {}) {
-  return String(overrides[field.name] ?? field['x-group'] ?? field.group ?? '').trim() || 'Other fields';
+  return String(overrides[field.name] ?? field.group ?? '').trim() || 'Other fields';
 }
 
-export function vectorGroups(fields) {
+function vectorGroups(fields) {
   const groups = new Map();
   fields.forEach((field, index) => {
     const name = groupName(field);
@@ -19,7 +19,7 @@ export function vectorGroups(fields) {
   return [...groups.values()];
 }
 
-export function groupSettings(payload, dimensions) {
+function groupSettings(payload, dimensions) {
   const groups = vectorGroups(payload.fields);
   const identity = payload.groupIdentity ?? 0.2;
   if (!Number.isFinite(identity) || identity < 0 || identity > 1) {
@@ -29,7 +29,7 @@ export function groupSettings(payload, dimensions) {
   return { groups, identity, dimensions: dimensions * blocks };
 }
 
-export function combineGroups(vectors, weights, settings) {
+function combineGroups(vectors, weights, settings) {
   const grouped = settings.groups.map(group => combineFields(group.indices.map(index => vectors[index]),
     group.indices.map(index => weights[index]), 'mean'));
   const shared = combineFields(grouped, grouped.map(() => 1), 'mean');
@@ -42,7 +42,7 @@ export function combineGroups(vectors, weights, settings) {
   return normalize(result);
 }
 
-export function aggregationRecipe(settings) {
+function aggregationRecipe(settings) {
   return { method: 'group-mean', identity: settings.identity,
     groups: settings.groups.map(({ name, fields }) => ({ name, fields })),
     weighting: 'Field weights within groups; equal available-group weights across groups',

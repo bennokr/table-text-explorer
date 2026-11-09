@@ -2,7 +2,7 @@ import { $, element } from './dom.js';
 import { resultExport } from './results.js';
 import { complete } from './status.js';
 
-export function downloadResult(result) {
+function downloadResult(result) {
   const url = URL.createObjectURL(resultExport(result));
   const anchor = element('a', { href: url, download: `${result.name.replace(/[^\p{L}\p{N}_-]/gu, '_')}.json` });
   anchor.click();

@@ -38,7 +38,7 @@ export class Dataset extends EventTarget {
     this.name = name;
     this.revision += 1;
     this.fieldRevisions.clear();
-    this.fields = inferSchema(this.rows, metadata, { categoryLimit: this.config.categoryLimit });
+    this.fields = inferSchema(this.rows, metadata, this.config);
     this.config.overrides = {};
     this.config.features = null;
     this.phraseConfig = null;
@@ -78,6 +78,7 @@ export class Dataset extends EventTarget {
 
   configure(config) {
     const schemaChanged = config.categoryLimit !== this.config.categoryLimit ||
+      config.numericCategoryLimit !== this.config.numericCategoryLimit ||
       JSON.stringify(config.overrides) !== JSON.stringify(this.config.overrides);
     this.config = config;
     if (!schemaChanged) { this.emit('config'); return; }

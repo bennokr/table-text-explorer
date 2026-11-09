@@ -36,12 +36,13 @@ ignored `.cache/e2e/`; enable traces with `E2E_TRACE=1`.
 
 ## GitHub Pages
 
-`.github/workflows/pages.yml` tests, builds and deploys `dist/` on pushes to `main`
-(or manually). The repository's Pages source must be set to **GitHub Actions**. The build
+`.github/workflows/pages.yml` checks, tests and builds on every branch push and deploys `dist/` on pushes
+to `main` (or manually). The repository's Pages source must be set to **GitHub Actions**. The build
 sets `BASE_PATH=/<repository>/`; code resolves runtime URLs through `src/base.js`, so
 never hard-code root-absolute asset paths. Only approved public examples are published.
-CI runs unit tests, ESLint and the bundle check; Python lint, browser journeys and
-pretrained-model assets are not part of it. `npm ci --ignore-scripts` skips the native
+CI runs `npm run check` (ESLint, size budgets, ruff check and format; it first runs
+`uv sync --cache-dir .cache/uv` because the script calls `uv run --offline`), the unit
+tests and the bundle check; browser journeys and pretrained-model assets are not part of it. `npm ci --ignore-scripts` skips the native
 `onnxruntime-node` download, which only the optional offline Node probe uses.
 
 ## Readability budgets
@@ -60,6 +61,23 @@ focused regression coverage. Existing worker, cache and dialog paths are reused;
 these additions introduce no UI framework. Prefer deleting obsolete paths and
 splitting responsibilities over compressing code. Any future increase needs a
 written rationale here; function and module limits stay unchanged.
+
+## Codebook reader
+
+`src/codebook-profile.js` (`readCodebook`) opens the XLSX codebook, checks every cell against the type its header
+expects (loud warnings, or an error with `strict`), and hands the cells to linked-codebook (`fromTables`, then
+`toFrictionless`). Only `scripts/convert_codebook.mjs` and the tests call it; the app reads the resulting
+`schema.metadata.json` files through `schemaMetadata`, which takes `level`, `group`, `identifying` and the label
+dictionary from the field property `x-linked-codebook`. `tests/fixtures/codebook-schema.json` pins the output.
+
+History: on 2026-11-02 a swap was assessed as not worth it with linked-codebook 0.7.0 (no table format, no slots for
+groups, identifiers or limits, different extension keys). linked-codebook 0.9.0 added the slots `group`, `identifying`,
+`minimum`, `maximum` and `format` and a table format whose sheets follow the model; the reader and its sheet parsing
+(about 100 lines of statements) were replaced by the call. What the profile cannot hold is gone: the field role
+`text`/`code` (the app only used `identifier`), the Groups sheet titles, `primaryKey` (a primary key column is now
+`identifying`), the Review notes and the per-field `pattern` constraint. The five committed `schema.metadata.json`
+files and the example workbook were converted once and the converter was deleted; `scripts/prepare_rmc_codebook.mjs`,
+the private-data adapter for the earlier profile, was deleted with it.
 
 ## Sentence model preparation
 

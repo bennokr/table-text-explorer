@@ -2,7 +2,7 @@
 export function variableOptions(fields, recordCount) {
   return fields.map(field => ({ id: field.name, label: field.name,
     description: [field.label ?? field.title, field.description].filter(Boolean).join(' · '),
-    type: field.kind, group: field['x-group'] ?? '',
+    type: field.kind, group: field.group ?? '',
     nonMissing: recordCount - field.missing, missing: field.missing }));
 }
 

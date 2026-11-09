@@ -1,7 +1,7 @@
 import { categoryLabel, missing } from './schema.js';
 import { featureFields } from './features.js';
 
-export function hoverFields(model, coordinates) {
+function hoverFields(model, coordinates) {
   if (!coordinates.fitted) {
     return [coordinates.x.field, coordinates.y.field].filter(Boolean);
   }

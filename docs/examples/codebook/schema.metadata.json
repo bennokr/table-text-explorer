@@ -1,34 +1,31 @@
 {
   "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
   "fieldsMatch": "partial",
-  "primaryKey": [
-    "record_id"
-  ],
-  "missingValues": [
-    ""
-  ],
   "fields": [
     {
-      "name": "record_id",
-      "title": "Record ID",
       "type": "string",
-      "x-role": "identifier"
+      "title": "Record ID",
+      "name": "record_id",
+      "x-linked-codebook": {
+        "identifying": true
+      }
     },
     {
-      "name": "score",
-      "title": "Score",
       "type": "number",
+      "title": "Score",
+      "name": "score",
       "constraints": {
         "minimum": 0,
         "maximum": 100
       },
-      "x-group": "Measurements"
+      "x-linked-codebook": {
+        "group": "Measurements"
+      }
     },
     {
-      "name": "status",
-      "title": "Status",
       "type": "integer",
-      "x-measurement": "nominal",
+      "title": "Status",
+      "name": "status",
       "categories": [
         {
           "value": 1,
@@ -38,41 +35,58 @@
           "value": 2,
           "label": "Closed"
         }
-      ]
+      ],
+      "x-linked-codebook": {
+        "level": "nominal",
+        "values": [
+          {
+            "code": "1",
+            "label": "Open"
+          },
+          {
+            "code": "2",
+            "label": "Closed"
+          }
+        ],
+        "closed": true
+      }
     },
     {
-      "name": "notes",
-      "title": "Notes",
-      "description": "Free-text notes about the record",
       "type": "string",
-      "x-role": "text",
-      "x-group": "Text"
+      "description": "Free-text notes about the record",
+      "title": "Notes",
+      "name": "notes",
+      "x-linked-codebook": {
+        "group": "Text"
+      }
     },
     {
-      "name": "timestamp",
+      "type": "datetime",
       "title": "Recorded at",
-      "type": "datetime"
+      "name": "timestamp"
     },
     {
-      "name": "level",
-      "title": "Level",
       "type": "integer",
-      "x-measurement": "ordinal",
-      "x-valueLabels": [
-        {
-          "value": 1,
-          "label": "Low"
-        },
-        {
-          "value": 5,
-          "label": "High"
-        }
-      ]
+      "title": "Level",
+      "name": "level",
+      "x-linked-codebook": {
+        "level": "ordinal",
+        "values": [
+          {
+            "code": "1",
+            "label": "Low"
+          },
+          {
+            "code": "5",
+            "label": "High"
+          }
+        ]
+      }
     },
     {
-      "name": "active",
+      "type": "boolean",
       "title": "Active",
-      "type": "boolean"
+      "name": "active"
     }
   ]
 }

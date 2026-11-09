@@ -1,115 +1,134 @@
 {
   "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
   "fieldsMatch": "partial",
-  "missingValues": [
-    "",
-    "\\N"
-  ],
   "fields": [
     {
+      "type": "string",
       "name": "url",
-      "type": "string",
-      "x-role": "identifier"
+      "x-linked-codebook": {
+        "identifying": true
+      }
     },
     {
+      "type": "string",
       "name": "hotel_name",
-      "type": "string",
-      "x-measurement": "nominal"
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
+      "type": "string",
       "name": "hotel_address",
-      "type": "string",
-      "x-measurement": "nominal"
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
+      "type": "string",
       "name": "country",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "number",
+      "name": "average_score"
+    },
+    {
       "type": "string",
-      "x-measurement": "nominal"
+      "name": "review_title"
     },
     {
-      "name": "average_score",
-      "type": "number"
-    },
-    {
-      "name": "review_title",
       "type": "string",
-      "x-role": "text"
-    },
-    {
       "name": "reviewer_name",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "number",
+      "name": "rating"
+    },
+    {
       "type": "string",
-      "x-measurement": "nominal"
-    },
-    {
-      "name": "rating",
-      "type": "number"
-    },
-    {
       "name": "reviewer_country",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
       "type": "string",
-      "x-measurement": "nominal"
+      "name": "negative_review_text"
     },
     {
-      "name": "negative_review_text",
       "type": "string",
-      "x-role": "text"
+      "name": "positive_review_text"
     },
     {
-      "name": "positive_review_text",
-      "type": "string",
-      "x-role": "text"
+      "type": "number",
+      "name": "helpful_count"
     },
     {
-      "name": "helpful_count",
-      "type": "number"
-    },
-    {
-      "name": "reviewed_at",
-      "type": "datetime"
-    },
-    {
-      "name": "stayed_at",
-      "type": "string",
-      "x-measurement": "nominal"
-    },
-    {
-      "name": "tags",
-      "type": "string",
-      "x-measurement": "nominal"
-    },
-    {
-      "name": "source",
-      "type": "string",
-      "x-measurement": "nominal"
-    },
-    {
-      "name": "source_domain",
-      "type": "string",
-      "x-measurement": "nominal"
-    },
-    {
-      "name": "language",
-      "type": "string",
-      "x-measurement": "nominal"
-    },
-    {
-      "name": "uniq_id",
-      "type": "string",
-      "x-role": "identifier"
-    },
-    {
-      "name": "scraped_at",
       "type": "datetime",
-      "format": "%d/%m/%Y %H:%M:%S"
+      "name": "reviewed_at"
     },
     {
-      "name": "_version",
       "type": "string",
-      "x-measurement": "nominal"
+      "name": "stayed_at",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
     },
     {
-      "name": "_imported_at",
-      "type": "datetime"
+      "type": "string",
+      "name": "tags",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "source",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "source_domain",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "language",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "uniq_id",
+      "x-linked-codebook": {
+        "identifying": true
+      }
+    },
+    {
+      "type": "datetime",
+      "format": "%d/%m/%Y %H:%M:%S",
+      "name": "scraped_at"
+    },
+    {
+      "type": "string",
+      "name": "_version",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "datetime",
+      "name": "_imported_at"
     }
   ]
 }

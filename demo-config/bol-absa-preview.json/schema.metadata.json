@@ -1,41 +1,37 @@
 {
   "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
   "fieldsMatch": "partial",
-  "missingValues": [
-    ""
-  ],
   "fields": [
     {
-      "name": "text",
       "type": "string",
-      "x-role": "text"
+      "name": "text"
     },
     {
-      "name": "pros_text",
       "type": "string",
-      "x-role": "text"
+      "name": "pros_text"
     },
     {
-      "name": "cons_text",
       "type": "string",
-      "x-role": "text"
+      "name": "cons_text"
     },
     {
-      "name": "source_index",
       "type": "integer",
-      "x-role": "identifier"
+      "name": "source_index",
+      "x-linked-codebook": {
+        "identifying": true
+      }
     },
     {
-      "name": "pro_count",
-      "type": "number"
+      "type": "number",
+      "name": "pro_count"
     },
     {
-      "name": "con_count",
-      "type": "number"
+      "type": "number",
+      "name": "con_count"
     },
     {
-      "name": "word_count",
-      "type": "number"
+      "type": "number",
+      "name": "word_count"
     }
   ]
 }
