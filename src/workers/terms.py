@@ -8,7 +8,13 @@ from lexical import analyze_terms as analyze_terms
 from lexical import analyze_tokens, tokenize_text
 from sklearn.feature_extraction.text import CountVectorizer
 from term_ranking import POPULATION_RANKINGS, embedding_population, population_scores
-from text_indexes import get_text_index, register_text_index, tokenize_column
+from text_indexes import (
+    STEP_ROWS,
+    get_text_index,
+    ignore_step,
+    register_text_index,
+    tokenize_column,
+)
 
 term_indexes = {}
 term_index_id = None
@@ -17,11 +23,26 @@ terms_progress = None  # Set by the worker bridge; native tests need no callback
 embedding_values = None  # Saved embeddings supplied by the worker bridge, never fitted here.
 
 
+def counting_analyzer(analyzer, step):
+    """Wrap an n-gram analyzer so the vectorizing pass reports progress per document."""
+    seen = 0
+
+    def count(tokens):
+        nonlocal seen
+        seen += 1
+        if seen % STEP_ROWS == 0:
+            step(STEP_ROWS)
+        return analyzer(tokens)
+
+    return count
+
+
 def index_field(column, data):
     if len(column["texts"]) != data["rows"]:
         raise ValueError("Every text field must contain one value per record.")
     texts = tokenize_column(column, data, tokenize_text)
     analyzer = partial(analyze_tokens, stopwords=set(data["stopwords"]), sizes=data["sizes"])
+    analyzer = counting_analyzer(analyzer, data.get("_step", ignore_step))
     vectorizer = CountVectorizer(analyzer=analyzer, max_features=20000, dtype=np.int32)
     try:
         matrix = vectorizer.fit_transform(texts)

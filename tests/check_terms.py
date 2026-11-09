@@ -274,6 +274,33 @@ class ExactPhraseQueries(unittest.TestCase):
         self.assertEqual(json.loads(matcher(json.dumps(payload))), result)
 
 
+class IndexProgress(unittest.TestCase):
+    def run_build(self, rows, fields=("text",)):
+        reports = []
+        terms.terms_progress = lambda *args: reports.append(args)
+        try:
+            texts = [f"word{i} common" for i in range(rows)]
+            build([dict.fromkeys(fields, text) for text in texts], fields=fields)
+        finally:
+            terms.terms_progress = None
+        return reports
+
+    def test_progress_advances_within_a_column_and_ends_at_the_total(self):
+        reports = self.run_build(2500)
+        completed = [done for _, done, _ in reports]
+        self.assertEqual({total for _, _, total in reports}, {2 * 2500})
+        self.assertGreater(len(reports), 2, "a single column must report more than start and end")
+        self.assertEqual(completed, sorted(completed))
+        self.assertEqual(completed[-1], 2 * 2500)
+        self.assertNotIn(0, completed, "no report may claim 0% for work already under way")
+
+    def test_progress_spans_all_columns_and_never_exceeds_the_total(self):
+        reports = self.run_build(1200, fields=("left", "right"))
+        self.assertTrue(all(done <= total for _, done, total in reports))
+        self.assertEqual(reports[-1][1:], (4 * 1200, 4 * 1200))
+        self.assertEqual({label for label, _, _ in reports}, {"Indexing left", "Indexing right"})
+
+
 class SharedIndexes(unittest.TestCase):
     def test_new_dataset_releases_prior_count_variants(self):
         from text_indexes import get_text_index, register_text_index

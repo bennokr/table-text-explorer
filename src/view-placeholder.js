@@ -1,4 +1,5 @@
 import { element } from './dom.js';
+import { percent } from './status.js';
 
 export class ViewPlaceholder {
   constructor(model, config, container, make) {
@@ -43,8 +44,8 @@ export class ViewPlaceholder {
   progress(task) {
     if (task?.total > 0) {
       this.bar.max = task.total;
-      this.bar.value = task.completed;
-      this.status.textContent = `${task.message} · ${Math.floor(100 * task.completed / task.total)}%`;
+      this.bar.value = Math.min(task.completed, task.total);
+      this.status.textContent = `${task.message} · ${percent(task)}%`;
     } else { this.bar.removeAttribute('value'); }
   }
 
