@@ -16,7 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from eval_columns import grade_screen, screen_columns
+from eval_columns import grade_screen, screen_columns, screen_raw
 from eval_common import (
     EMBEDDING_KINDS,
     ROOT,
@@ -51,10 +51,11 @@ def column_screen(subject):
 # Descriptions use the phrase index only, so they do not depend on the representation.
 PER_REPRESENTATION = {
     "columns": column_screen,
+    "columns_raw": screen_raw,
     "structure": evaluate_structure,
     "surfacing": evaluate_surfacing,
 }
-ALL_SECTIONS = ["columns", "descriptions", "structure", "surfacing"]
+ALL_SECTIONS = ["columns", "columns_raw", "descriptions", "structure", "surfacing"]
 
 
 def run_field(base, wanted, sections):

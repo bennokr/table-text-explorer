@@ -19,8 +19,10 @@ to resolve p = 0.05).
 """
 
 import numpy as np
+from sklearn.decomposition import TruncatedSVD
 from sklearn.dummy import DummyClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.metrics import log_loss
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.pipeline import make_pipeline
@@ -33,6 +35,9 @@ MIN_GROUP = 10  # Smaller groups are merged so every fold can see every class.
 MAX_GROUPS = 50
 MAX_DISCRETE = 12
 ALPHA = 0.05
+RAW_DIMENSIONS = 384  # TF-IDF is reduced to this many SVD dimensions to match the sentence models.
+RAW_NULLS = 6
+TUNED_C = (0.001, 0.01, 0.1, 1.0)  # Inner cross-validation picks the regularisation.
 LENGTH_DETERMINED = 0.9  # Length alone removes this share of loss: skill beyond it is undefined.
 
 
@@ -74,11 +79,16 @@ def held_out_loss(model, design, labels, seed):
     return float(np.mean(losses))
 
 
-def score_column(vectors, lengths, values, seed):
+def score_column(vectors, lengths, values, seed, tuned=False):
     labels = merge_rare(column_groups(values))
     if not 2 <= len(set(labels)) <= MAX_GROUPS:
         return None
-    text_model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=500))
+    regression = (
+        LogisticRegressionCV(Cs=TUNED_C, cv=3, max_iter=300)
+        if tuned
+        else LogisticRegression(max_iter=500)
+    )
+    text_model = make_pipeline(StandardScaler(), regression)
     prior = held_out_loss(DummyClassifier(strategy="prior"), lengths, labels, seed)
     by_length = held_out_loss(text_model, lengths, labels, seed)
     combined = held_out_loss(text_model, np.hstack([vectors, lengths]), labels, seed)
@@ -168,3 +178,39 @@ def grade_screen(results, manifest, text_field):
         ],
         "length_determined_columns": [n for n, r in results.items() if r["length_determined"]],
     }
+
+
+def raw_vectors(subject):
+    """Unreduced embeddings, or TF-IDF reduced to as many dimensions as the sentence models."""
+    if subject.embeddings is not None:
+        return subject.embeddings
+    tfidf = TfidfTransformer(sublinear_tf=True).fit_transform(subject.field["matrix"])
+    return TruncatedSVD(RAW_DIMENSIONS, random_state=42).fit_transform(tfidf)
+
+
+def screen_raw(subject):
+    """Sensitivity: strong columns on the app's 32-d vectors and on unreduced vectors.
+
+    Both use the same logistic regression with its regularisation tuned by inner cross-validation,
+    because a fixed setting overfits 300+ dimensions and would make the comparison unfair.
+    """
+    rows, manifest = subject.rows, subject.manifest
+    lengths = length_design(np.array([len(row[subject.text_field].split()) for row in rows]))
+    strong = [n for n, spec in manifest["columns"].items() if spec["expected"] == "strong"]
+    rng = np.random.default_rng(subject.seed)
+    values = np.array([row[strong[0]] for row in rows], dtype=object)
+    columns = {name: [row[name] for row in rows] for name in strong}
+    columns.update({f"shuffled:{i}": rng.permutation(values) for i in range(RAW_NULLS)})
+    results = {}
+    for label, vectors in (("reduced", subject.features), ("raw", raw_vectors(subject))):
+        skills = {
+            n: score_column(vectors, lengths, v, subject.seed, tuned=True)["skill_beyond_length"]
+            for n, v in columns.items()
+        }
+        nulls = [v for n, v in skills.items() if n.startswith("shuffled:")]
+        results[label] = {
+            "dimensions": vectors.shape[1],
+            "skills": {n: skills[n] for n in strong},
+            "null_max": max(nulls),
+        }
+    return results

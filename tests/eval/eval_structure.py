@@ -3,6 +3,7 @@
 import json
 import subprocess
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 import numpy as np
@@ -14,6 +15,10 @@ NEIGHBORS = 15  # The app's default UMAP neighbors and epochs.
 EPOCHS = 150
 KNN = 10
 SHUFFLES = 10
+REPEATS = 20  # Subsample-and-seed repeats for k-means.
+UMAP_SEEDS = (1, 2, 3, 4, 5)
+DEFAULT_UMAP_SEED = 42  # The app's own seed.
+SUBSAMPLE_SHARE = 0.8
 CLUSTER_RUNS = [
     ("minibatch", {"method": "minibatch"}),
     ("agglomerative", {"method": "agglomerative"}),
@@ -84,11 +89,18 @@ def knn_purity(points, labels):
     return float((labels[indices] == labels[:, None]).mean())
 
 
-def umap_coordinates(features):
+def umap_coordinates(features, seed=DEFAULT_UMAP_SEED):
     with tempfile.TemporaryDirectory() as folder:
         source, target = Path(folder, "features.json"), Path(folder, "umap.json")
         source.write_text(
-            json.dumps({"features": features.tolist(), "neighbors": NEIGHBORS, "epochs": EPOCHS})
+            json.dumps(
+                {
+                    "features": features.tolist(),
+                    "neighbors": NEIGHBORS,
+                    "epochs": EPOCHS,
+                    "seed": seed,
+                }
+            )
         )
         subprocess.run(
             ["node", str(ROOT / "tests/eval/umap-map.mjs"), str(source), str(target)],
@@ -115,10 +127,60 @@ def map_runs(analysis, features, labels, manifest, rng):
     return results
 
 
+@contextmanager
+def kmeans_seed(clustering, seed):
+    """MiniBatch K-means exactly as the app configures it, but with a chosen random seed."""
+    original = clustering.MiniBatchKMeans
+    clustering.MiniBatchKMeans = lambda **kwargs: original(**{**kwargs, "random_state": seed})
+    try:
+        yield
+    finally:
+        clustering.MiniBatchKMeans = original
+
+
+def stability(clustering, features, labels, manifest):
+    """Per-repeat ARI and NMI of MiniBatch on 80% subsamples with a new seed each time.
+
+    Subsamples and seeds depend only on the repeat number, so every representation sees the same
+    ones and results can be compared pairwise.
+    """
+    results = {}
+    for level, column in manifest["hierarchy"].items():
+        truth = np.array(labels[column])
+        config = {"method": "minibatch", "clusters": len(set(truth)), "normalize": True}
+        scores = []
+        for repeat in range(REPEATS):
+            keep = np.random.default_rng(repeat).choice(
+                len(truth), size=int(0.8 * len(truth)), replace=False
+            )
+            with kmeans_seed(clustering, repeat):
+                predicted = clustering.cluster(config, features[keep])["labels"]
+            scores.append(
+                [
+                    adjusted_rand_score(truth[keep], predicted),
+                    normalized_mutual_info_score(truth[keep], predicted),
+                ]
+            )
+        results[level] = scores
+    return results
+
+
+def umap_seeds(features, labels, manifest):
+    """kNN purity of UMAP layouts from different random seeds."""
+    results = {level: [] for level in manifest["hierarchy"]}
+    for seed in UMAP_SEEDS:
+        points = umap_coordinates(features, seed)
+        for level, column in manifest["hierarchy"].items():
+            results[level].append(knn_purity(points, np.array(labels[column])))
+    return results
+
+
 def evaluate_structure(subject):
     rng = np.random.default_rng(subject.seed)
     labels = label_sets(subject.rows, subject.manifest, rng)
     return {
         "clusters": cluster_runs(subject.clustering, subject.features, labels, subject.manifest),
+        "stability": stability(subject.clustering, subject.features, labels, subject.manifest),
+        "umap_seeds": umap_seeds(subject.features, labels, subject.manifest),
         "maps": map_runs(subject.analysis, subject.features, labels, subject.manifest, rng),
     }

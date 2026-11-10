@@ -3,7 +3,7 @@
   "revision": 1,
   "revision_note": "Sentiment (2 groups) is the coarse level and rating (1,2,4,5 stars) the fine level of a nested hierarchy. DBRD is where the length confound was first seen: the naive chi-square screen ranked word and character count above sentiment and rating.",
   "dataset": "examples/dbrd-test.json",
-  "sections": ["columns", "descriptions", "structure", "surfacing"],
+  "sections": ["columns", "columns_raw", "descriptions", "structure", "surfacing"],
   "text_fields": {"text": "Dutch book review text."},
   "columns": {
     "sentiment": {"expected": "strong", "why": "Positive or negative review: very different vocabulary."},

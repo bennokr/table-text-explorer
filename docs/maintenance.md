@@ -48,7 +48,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 ## Readability budgets
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
-each authored module at 250 statements, Python at 2500 total and JavaScript at
+each authored module at 250 statements, Python at 2600 total and JavaScript at
 10200 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
@@ -61,6 +61,13 @@ focused regression coverage. Existing worker, cache and dialog paths are reused;
 these additions introduce no UI framework. Prefer deleting obsolete paths and
 splitting responsibilities over compressing code. Any future increase needs a
 written rationale here; function and module limits stay unchanged.
+
+The Python budget rose from 2500 to 2600 for the evaluation harness (`tests/eval/`, `scripts/prepare_rechtspraak.py`,
+about 800 statements). It is tooling the budget counts but not product code: a seeded sampler, a gold-manifest
+scorer with null controls, column screening, phrase-description recovery, cluster/map agreement, split surfacing,
+multi-seed stability and a Markdown report, plus a self-check on synthetic planted structure. It is split into
+modules under 250 statements with the usual function limits, and none of it ships in the app. See
+[evaluation](evaluation.md).
 
 ## Codebook reader
 

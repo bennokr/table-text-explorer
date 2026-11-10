@@ -57,6 +57,27 @@ def column_tables(screens):
     return "\n\n".join(parts)
 
 
+def raw_table(by_representation):
+    """Strong columns: tuned skill on the app's 32-d vectors against unreduced vectors."""
+    kinds = list(by_representation)
+    rows = []
+    for name in by_representation[kinds[0]]["reduced"]["skills"]:
+        cells = []
+        for kind in kinds:
+            result = by_representation[kind]
+            cells.append(
+                f"{result['reduced']['skills'][name]:.3f} / {result['raw']['skills'][name]:.3f}"
+            )
+        rows.append([name, *cells])
+    dims = [f"{by_representation[k]['raw']['dimensions']}" for k in kinds]
+    floor = []
+    for kind in kinds:
+        result = by_representation[kind]
+        floor.append(f"{result['reduced']['null_max']:.3f} / {result['raw']['null_max']:.3f}")
+    rows += [["raw dimensions", *dims], ["null max", *floor]]
+    return table(["strong column: 32-d / raw (tuned)", *kinds], rows)
+
+
 # ---- do phrase descriptions explain a group?
 
 
@@ -128,6 +149,43 @@ def surfacing_table(by_representation, manifest):
 
 # ---- clusters and maps
 
+T_95 = 2.093  # Two-sided 95% t quantile for 19 degrees of freedom (20 paired repeats).
+
+
+def paired_table(by_representation, manifest):
+    """Each representation minus TF-IDF over the same 20 subsamples: mean difference and 95% CI."""
+    kinds = list(by_representation)
+    base = {
+        lv: np.array(by_representation[kinds[0]]["stability"][lv]) for lv in manifest["hierarchy"]
+    }
+    rows = []
+    for level in manifest["hierarchy"]:
+        for index, metric in enumerate(("ARI", "NMI")):
+            cells = []
+            for kind in kinds[1:]:
+                diff = (
+                    np.array(by_representation[kind]["stability"][level])[:, index]
+                    - base[level][:, index]
+                )
+                half = T_95 * diff.std(ddof=1) / np.sqrt(len(diff))
+                low, high = diff.mean() - half, diff.mean() + half
+                wins = f"{(diff > 0).sum()}/{len(diff)}"
+                cells.append(f"{diff.mean():+.2f} [{low:+.2f}, {high:+.2f}], wins {wins}")
+            rows.append([f"{level} {metric}", *cells])
+    return table(["minus TF-IDF: mean [95% CI], wins", *kinds[1:]], rows)
+
+
+def umap_seed_table(by_representation, manifest):
+    kinds = list(by_representation)
+    rows = []
+    for level in manifest["hierarchy"]:
+        cells = []
+        for kind in kinds:
+            values = np.array(by_representation[kind]["umap_seeds"][level])
+            cells.append(f"{values.mean():.3f} ± {values.std(ddof=1):.3f}")
+        rows.append([f"UMAP kNN purity, {level}: mean ± sd over 5 seeds", *cells])
+    return table(["", *kinds], rows)
+
 
 def matched_label(run, manifest):
     level = "coarse" if "coarse" in run else "fine"
@@ -146,6 +204,13 @@ def cluster_table(by_representation, manifest):
             lost = f", {output['unassigned']:.0%} unassigned" if output["unassigned"] else ""
             cells.append(f"{ari:.2f} / {nmi:.2f}{lost}")
         rows.append([f"{run} vs {label}", *cells])
+    for level, column in manifest["hierarchy"].items():
+        cells = []
+        for kind in kinds:
+            scores = np.array(by_representation[kind]["stability"][level])
+            mean, sd = scores.mean(axis=0), scores.std(axis=0, ddof=1)
+            cells.append(f"{mean[0]:.2f} ± {sd[0]:.2f} / {mean[1]:.2f} ± {sd[1]:.2f}")
+        rows.append([f"minibatch ({level}), 20 subsample+seed runs vs {column}: mean ± sd", *cells])
     return table(["run (ARI / NMI)", *kinds], rows)
 
 
@@ -164,13 +229,20 @@ def structure_tables(structure, manifest):
     parts = []
     for text_field, by_representation in structure.items():
         parts += [f"### Clusters, `{text_field}`", cluster_table(by_representation, manifest)]
+        parts += [f"Paired differences, `{text_field}`", paired_table(by_representation, manifest)]
         parts += [f"### Maps, `{text_field}`", map_table(by_representation, manifest)]
+        parts += [umap_seed_table(by_representation, manifest)]
     return parts
 
 
 def full_report(sections, rows, manifest):
     parts = [f"# {manifest['name']} evaluation", sample_summary(rows, manifest)]
     parts += ["## Which columns does the text vary with?", column_tables(sections["columns"])]
+    for text_field, by_representation in sections.get("columns_raw", {}).items():
+        parts += [
+            f"Without the 32-d reduction, `{text_field}`",
+            raw_table(by_representation),
+        ]
     if "descriptions" in sections:
         parts += [
             "## Do phrase descriptions explain a group?",
