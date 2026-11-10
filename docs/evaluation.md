@@ -80,6 +80,15 @@ per dataset and text field, then merged).
 - **Semantic splits surface the dominant structure, not the one you want.** On Rechtspraak they
   beat balanced splits clearly (excerpt: 94-96th percentile against 38th); on DBRD no ranking
   surfaces sentiment (percentiles 34-65).
+- **Text axes do not replace semantic splits.** The main directions of variation of the 32-d vectors
+  (median split, each side described with c-TF-IDF contrast) beat the true null (random record splits) and
+  balanced splits, but trail semantic splits where the embeddings are good: on the Rechtspraak excerpts,
+  information about legal area 0.12-0.15 for axes against 0.20 for semantic splits (null 0.057, best
+  possible 0.24); on the summaries 0.034-0.041 against 0.042-0.043 (null 0.014). Axes work for TF-IDF
+  without embeddings (excerpt 0.150, percentile 79, against 0.060 for balanced). Random directions are
+  not a null: they score between the true null and the axes (0.08-0.10 on excerpts) because the vectors'
+  variance is concentrated in a few components. On DBRD nothing surfaces sentiment: axes, semantic splits
+  and the null are all 0.003-0.006 (best possible 0.021).
 - **Balanced splits add nothing on short texts.** When no phrase occurs in more than half the
   records (true for the summaries, 0 of 2,360 phrases) the balanced and common-phrase rankings
   are identical.

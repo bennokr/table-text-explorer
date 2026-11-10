@@ -122,14 +122,61 @@ def example_table(results, text_field, ranking="contrast"):
 # ---- split surfacing
 
 
+def axis_rows(level, kind, rankings):
+    """Axis 1, the best of the three axes (by information) and the mean of random directions."""
+    axes = {name: r for name, r in rankings.items() if name.startswith("axis")}
+    random = [r for name, r in rankings.items() if name.startswith("random")]
+    null = [r for name, r in rankings.items() if name.startswith("null")]
+    best = max(axes.values(), key=lambda r: r["information"])
+    chosen = {
+        f"text axis 1 ({kind})": axes["axis 1"],
+        f"best of 3 axes ({kind})": best,
+    }
+    rows = [
+        [
+            level,
+            name,
+            f"{r['information']:.3f}",
+            f"{r['percentile']:.0f}",
+            ", ".join(r["phrases"][:6]),
+        ]
+        for name, r in chosen.items()
+    ]
+    mean_information = np.mean([r["information"] for r in random])
+    mean_percentile = np.mean([r["percentile"] for r in random])
+    rows.append(
+        [
+            level,
+            f"random directions, mean, not a null ({kind})",
+            f"{mean_information:.3f}",
+            f"{mean_percentile:.0f}",
+            "",
+        ]
+    )
+    null_information = np.mean([r["information"] for r in null])
+    null_percentile = np.mean([r["percentile"] for r in null])
+    rows.append(
+        [
+            level,
+            f"random record splits, true null ({kind})",
+            f"{null_information:.3f}",
+            f"{null_percentile:.0f}",
+            "",
+        ]
+    )
+    return rows
+
+
 def surfacing_table(by_representation, manifest):
     rows = []
     kinds = list(by_representation)
     for level in manifest["hierarchy"]:
         for kind in kinds:
-            entry = by_representation[kind][level]
-            for ranking, result in entry["rankings"].items():
-                if ranking != "semantic" and kind != kinds[0]:
+            rankings = by_representation[kind][level]["rankings"]
+            for ranking, result in rankings.items():
+                if ranking.startswith(("axis", "random", "null")) or (
+                    ranking != "semantic" and kind != kinds[0]
+                ):
                     continue  # Frequency and balanced do not depend on the representation.
                 name = f"semantic ({kind})" if ranking == "semantic" else ranking
                 rows.append(
@@ -141,6 +188,7 @@ def surfacing_table(by_representation, manifest):
                         ", ".join(result["phrases"][:6]),
                     ]
                 )
+            rows += axis_rows(level, kind, rankings)
         first = by_representation[kinds[0]][level]
         rows.append([level, "best possible 15 phrases", f"{first['best_possible']:.3f}", "100", ""])
         rows.append([level, "typical phrase", f"{first['typical']:.3f}", "50", ""])

@@ -57,19 +57,59 @@ Examples, `text`
 |---|---:|---:|---:|---:|
 | coarse | frequency | 0.003 | 34 | boek, niet, verhaal, wat, over, wel |
 | coarse | balanced | 0.004 | 48 | over, wel, nog, ze, meer, al |
+| coarse | text axis 1 (tfidf) | 0.006 | 61 | boek, heb, vond, mij, niet, lezen |
+| coarse | best of 3 axes (tfidf) | 0.006 | 61 | boek, heb, vond, mij, niet, lezen |
+| coarse | random directions, mean, not a null (tfidf) | 0.004 | 55 |  |
+| coarse | random record splits, true null (tfidf) | 0.004 | 49 |  |
 | coarse | semantic (words-mean) | 0.005 | 49 | ze, zich, haar, hun, leven, worden |
+| coarse | text axis 1 (words-mean) | 0.005 | 54 | boek, heb, niet, me, wel, vond |
+| coarse | best of 3 axes (words-mean) | 0.006 | 61 | niet, wel, of, wat, worden, veel |
+| coarse | random directions, mean, not a null (words-mean) | 0.004 | 55 |  |
+| coarse | random record splits, true null (words-mean) | 0.004 | 49 |  |
 | coarse | semantic (words-tfidf) | 0.005 | 54 | zich, ze, haar, hun, leven, worden |
+| coarse | text axis 1 (words-tfidf) | 0.005 | 55 | haar, zich, hun, lezer, leven, worden |
+| coarse | best of 3 axes (words-tfidf) | 0.005 | 61 | haar, the, vader, ze, moeder, jaar |
+| coarse | random directions, mean, not a null (words-tfidf) | 0.004 | 49 |  |
+| coarse | random record splits, true null (words-tfidf) | 0.004 | 49 |  |
 | coarse | semantic (sentences-multilingual) | 0.006 | 60 | haar, ze, zich, leven, hun, verhaal |
+| coarse | text axis 1 (sentences-multilingual) | 0.006 | 63 | boek, heb, lezen, vond, me, mij |
+| coarse | best of 3 axes (sentences-multilingual) | 0.006 | 63 | boek, heb, lezen, vond, me, mij |
+| coarse | random directions, mean, not a null (sentences-multilingual) | 0.004 | 51 |  |
+| coarse | random record splits, true null (sentences-multilingual) | 0.004 | 49 |  |
 | coarse | semantic (sentences-dutch) | 0.006 | 62 | haar, ze, verhaal, leven, zich, moeder |
+| coarse | text axis 1 (sentences-dutch) | 0.006 | 63 | haar, ze, zich, leven, hun, moeder |
+| coarse | best of 3 axes (sentences-dutch) | 0.006 | 63 | haar, ze, zich, leven, hun, moeder |
+| coarse | random directions, mean, not a null (sentences-dutch) | 0.004 | 50 |  |
+| coarse | random record splits, true null (sentences-dutch) | 0.004 | 49 |  |
 | coarse | best possible 15 phrases | 0.021 | 100 |  |
 | coarse | typical phrase | 0.001 | 50 |  |
 | fine | frequency | 0.004 | 36 | boek, niet, verhaal, wat, over, wel |
 | fine | balanced | 0.004 | 44 | over, wel, nog, ze, meer, al |
+| fine | text axis 1 (tfidf) | 0.005 | 61 | boek, heb, vond, mij, niet, lezen |
+| fine | best of 3 axes (tfidf) | 0.005 | 61 | boek, heb, vond, mij, niet, lezen |
+| fine | random directions, mean, not a null (tfidf) | 0.004 | 52 |  |
+| fine | random record splits, true null (tfidf) | 0.004 | 51 |  |
 | fine | semantic (words-mean) | 0.005 | 62 | ze, zich, haar, hun, leven, worden |
+| fine | text axis 1 (words-mean) | 0.005 | 55 | boek, heb, niet, me, wel, vond |
+| fine | best of 3 axes (words-mean) | 0.005 | 61 | niet, wel, of, wat, worden, veel |
+| fine | random directions, mean, not a null (words-mean) | 0.004 | 55 |  |
+| fine | random record splits, true null (words-mean) | 0.004 | 51 |  |
 | fine | semantic (words-tfidf) | 0.005 | 60 | zich, ze, haar, hun, leven, worden |
+| fine | text axis 1 (words-tfidf) | 0.004 | 55 | haar, zich, hun, lezer, leven, worden |
+| fine | best of 3 axes (words-tfidf) | 0.004 | 55 | haar, zich, hun, lezer, leven, worden |
+| fine | random directions, mean, not a null (words-tfidf) | 0.004 | 51 |  |
+| fine | random record splits, true null (words-tfidf) | 0.004 | 51 |  |
 | fine | semantic (sentences-multilingual) | 0.006 | 65 | haar, ze, zich, leven, hun, verhaal |
+| fine | text axis 1 (sentences-multilingual) | 0.005 | 59 | boek, heb, lezen, vond, me, mij |
+| fine | best of 3 axes (sentences-multilingual) | 0.005 | 59 | boek, heb, lezen, vond, me, mij |
+| fine | random directions, mean, not a null (sentences-multilingual) | 0.004 | 53 |  |
+| fine | random record splits, true null (sentences-multilingual) | 0.004 | 51 |  |
 | fine | semantic (sentences-dutch) | 0.006 | 65 | haar, ze, verhaal, leven, zich, moeder |
-| fine | best possible 15 phrases | 0.013 | 100 |  |
+| fine | text axis 1 (sentences-dutch) | 0.005 | 62 | haar, ze, zich, leven, hun, moeder |
+| fine | best of 3 axes (sentences-dutch) | 0.005 | 62 | haar, ze, zich, leven, hun, moeder |
+| fine | random directions, mean, not a null (sentences-dutch) | 0.004 | 55 |  |
+| fine | random record splits, true null (sentences-dutch) | 0.004 | 51 |  |
+| fine | best possible 15 phrases | 0.012 | 100 |  |
 | fine | typical phrase | 0.001 | 50 |  |
 
 ## Clusters and maps

@@ -124,20 +124,60 @@ Examples, `ruling_excerpt`
 
 | level | ranking | information | percentile | top phrases |
 |---|---:|---:|---:|---:|
-| coarse | frequency | 0.018 | 32 | niet, geen, beroep, artikel, worden, rechtbank |
-| coarse | balanced | 0.018 | 32 | niet, geen, beroep, artikel, worden, rechtbank |
-| coarse | semantic (words-mean) | 0.011 | 50 | niet, lid, hr, bw, ro, artikel |
-| coarse | semantic (words-tfidf) | 0.012 | 66 | hr, ro, niet, lid, 81, omgevingsvergunning |
+| coarse | frequency | 0.018 | 31 | niet, geen, beroep, artikel, worden, rechtbank |
+| coarse | balanced | 0.018 | 31 | niet, geen, beroep, artikel, worden, rechtbank |
+| coarse | text axis 1 (tfidf) | 0.035 | 74 | besluit, afgewezen, omgevingsvergunning, college, aanvraag, perceel |
+| coarse | best of 3 axes (tfidf) | 0.041 | 82 | beroep, niet, besluit, omgevingsvergunning, verweerder, college |
+| coarse | random directions, mean, not a null (tfidf) | 0.032 | 68 |  |
+| coarse | random record splits, true null (tfidf) | 0.014 | 52 |  |
+| coarse | semantic (words-mean) | 0.011 | 44 | niet, lid, hr, bw, ro, artikel |
+| coarse | text axis 1 (words-mean) | 0.026 | 60 | niet, verdachte, worden, kan, rechtbank, eiser |
+| coarse | best of 3 axes (words-mean) | 0.027 | 59 | niet, geen, of, worden, kan, art |
+| coarse | random directions, mean, not a null (words-mean) | 0.020 | 55 |  |
+| coarse | random record splits, true null (words-mean) | 0.014 | 52 |  |
+| coarse | semantic (words-tfidf) | 0.012 | 60 | hr, ro, niet, lid, 81, omgevingsvergunning |
+| coarse | text axis 1 (words-tfidf) | 0.028 | 62 | verdachte, niet, worden, rechtbank, kan, eiser |
+| coarse | best of 3 axes (words-tfidf) | 0.028 | 62 | verdachte, niet, worden, rechtbank, kan, eiser |
+| coarse | random directions, mean, not a null (words-tfidf) | 0.026 | 61 |  |
+| coarse | random record splits, true null (words-tfidf) | 0.014 | 52 |  |
 | coarse | semantic (sentences-multilingual) | 0.043 | 80 | verdachte, omgevingsvergunning, gevangenisstraf, staatssecretaris, niet, college |
-| coarse | semantic (sentences-dutch) | 0.042 | 83 | verdachte, gevangenisstraf, omgevingsvergunning, college, staatssecretaris, asiel |
+| coarse | text axis 1 (sentences-multilingual) | 0.031 | 74 | rechtbank, verdachte, hof, maatregel, oordeel, beslissing |
+| coarse | best of 3 axes (sentences-multilingual) | 0.037 | 71 | verdachte, hof, gevangenisstraf, maatregel, rechtbank, maanden |
+| coarse | random directions, mean, not a null (sentences-multilingual) | 0.029 | 70 |  |
+| coarse | random record splits, true null (sentences-multilingual) | 0.014 | 52 |  |
+| coarse | semantic (sentences-dutch) | 0.042 | 82 | verdachte, gevangenisstraf, omgevingsvergunning, college, staatssecretaris, asiel |
+| coarse | text axis 1 (sentences-dutch) | 0.034 | 85 | omgevingsvergunning, perceel, college, verleend, inbreuk, locatie |
+| coarse | best of 3 axes (sentences-dutch) | 0.036 | 85 | besluit, omgevingsvergunning, college, aanvraag, perceel, verlenging |
+| coarse | random directions, mean, not a null (sentences-dutch) | 0.029 | 65 |  |
+| coarse | random record splits, true null (sentences-dutch) | 0.014 | 52 |  |
 | coarse | best possible 15 phrases | 0.047 | 100 |  |
 | coarse | typical phrase | 0.002 | 50 |  |
-| fine | frequency | 0.015 | 38 | niet, geen, beroep, artikel, worden, rechtbank |
-| fine | balanced | 0.015 | 38 | niet, geen, beroep, artikel, worden, rechtbank |
-| fine | semantic (words-mean) | 0.012 | 56 | niet, lid, hr, bw, ro, artikel |
-| fine | semantic (words-tfidf) | 0.013 | 72 | hr, ro, niet, lid, 81, omgevingsvergunning |
+| fine | frequency | 0.015 | 37 | niet, geen, beroep, artikel, worden, rechtbank |
+| fine | balanced | 0.015 | 37 | niet, geen, beroep, artikel, worden, rechtbank |
+| fine | text axis 1 (tfidf) | 0.027 | 80 | besluit, afgewezen, omgevingsvergunning, college, aanvraag, perceel |
+| fine | best of 3 axes (tfidf) | 0.028 | 81 | beroep, niet, besluit, omgevingsvergunning, verweerder, college |
+| fine | random directions, mean, not a null (tfidf) | 0.025 | 72 |  |
+| fine | random record splits, true null (tfidf) | 0.012 | 55 |  |
+| fine | semantic (words-mean) | 0.013 | 49 | niet, lid, hr, bw, ro, artikel |
+| fine | text axis 1 (words-mean) | 0.020 | 57 | niet, verdachte, worden, kan, rechtbank, eiser |
+| fine | best of 3 axes (words-mean) | 0.021 | 60 | niet, geen, of, worden, kan, art |
+| fine | random directions, mean, not a null (words-mean) | 0.016 | 56 |  |
+| fine | random record splits, true null (words-mean) | 0.012 | 55 |  |
+| fine | semantic (words-tfidf) | 0.012 | 65 | hr, ro, niet, lid, 81, omgevingsvergunning |
+| fine | text axis 1 (words-tfidf) | 0.021 | 60 | verdachte, niet, worden, rechtbank, kan, eiser |
+| fine | best of 3 axes (words-tfidf) | 0.021 | 60 | verdachte, niet, worden, rechtbank, kan, eiser |
+| fine | random directions, mean, not a null (words-tfidf) | 0.021 | 64 |  |
+| fine | random record splits, true null (words-tfidf) | 0.012 | 55 |  |
 | fine | semantic (sentences-multilingual) | 0.033 | 82 | verdachte, omgevingsvergunning, gevangenisstraf, staatssecretaris, niet, college |
+| fine | text axis 1 (sentences-multilingual) | 0.026 | 77 | rechtbank, verdachte, hof, maatregel, oordeel, beslissing |
+| fine | best of 3 axes (sentences-multilingual) | 0.029 | 86 | verdachte, werknemer, werkgever, arbeidsovereenkomst, vergoeding, slachtoffer |
+| fine | random directions, mean, not a null (sentences-multilingual) | 0.023 | 74 |  |
+| fine | random record splits, true null (sentences-multilingual) | 0.012 | 55 |  |
 | fine | semantic (sentences-dutch) | 0.034 | 84 | verdachte, gevangenisstraf, omgevingsvergunning, college, staatssecretaris, asiel |
+| fine | text axis 1 (sentences-dutch) | 0.027 | 86 | omgevingsvergunning, perceel, college, verleend, inbreuk, locatie |
+| fine | best of 3 axes (sentences-dutch) | 0.028 | 87 | besluit, omgevingsvergunning, college, aanvraag, perceel, verlenging |
+| fine | random directions, mean, not a null (sentences-dutch) | 0.024 | 72 |  |
+| fine | random record splits, true null (sentences-dutch) | 0.012 | 55 |  |
 | fine | best possible 15 phrases | 0.034 | 100 |  |
 | fine | typical phrase | 0.002 | 50 |  |
 
@@ -145,20 +185,60 @@ Examples, `ruling_excerpt`
 
 | level | ranking | information | percentile | top phrases |
 |---|---:|---:|---:|---:|
-| coarse | frequency | 0.022 | 38 | rechtbank, 1, 2, tegen, mr, 3 |
-| coarse | balanced | 0.036 | 38 | a, artikel, worden, zaaknummer, m, onder |
+| coarse | frequency | 0.066 | 44 | rechtbank, tegen, mr, zaak, niet, ter |
+| coarse | balanced | 0.060 | 45 | artikel, worden, zaaknummer, onder, zitting, advocaat |
+| coarse | text axis 1 (tfidf) | 0.150 | 79 | verdachte, of, vonnis, gedaagde, advocaat, officier van justitie |
+| coarse | best of 3 axes (tfidf) | 0.150 | 79 | verdachte, of, vonnis, gedaagde, advocaat, officier van justitie |
+| coarse | random directions, mean, not a null (tfidf) | 0.086 | 67 |  |
+| coarse | random record splits, true null (tfidf) | 0.057 | 56 |  |
 | coarse | semantic (words-mean) | 0.154 | 94 | verdachte, parketnummer, ten laste, of omstreeks, ten laste gelegd, za |
+| coarse | text axis 1 (words-mean) | 0.100 | 62 | of, verdachte, niet, officier van justitie, justitie, ten |
+| coarse | best of 3 axes (words-mean) | 0.133 | 77 | of, verdachte, gedaagde, vonnis, producties, slachtoffer |
+| coarse | random directions, mean, not a null (words-mean) | 0.083 | 60 |  |
+| coarse | random record splits, true null (words-mean) | 0.057 | 56 |  |
 | coarse | semantic (words-tfidf) | 0.188 | 94 | verdachte, parketnummer, za, tenlastelegging, terechtzitting, ten laste |
+| coarse | text axis 1 (words-tfidf) | 0.103 | 65 | of, verdachte, niet, justitie, officier van justitie, terechtzitting |
+| coarse | best of 3 axes (words-tfidf) | 0.122 | 70 | uitspraak, besluit, beroep, appellant, verweerder, eiser |
+| coarse | random directions, mean, not a null (words-tfidf) | 0.098 | 67 |  |
+| coarse | random record splits, true null (words-tfidf) | 0.057 | 56 |  |
 | coarse | semantic (sentences-multilingual) | 0.195 | 96 | verdachte, parketnummer, terechtzitting, tenlastelegging, tegenspraak, gewezen naar aanleiding |
+| coarse | text axis 1 (sentences-multilingual) | 0.126 | 75 | verdachte, of, hof, justitie, officier van justitie, hoger beroep |
+| coarse | best of 3 axes (sentences-multilingual) | 0.133 | 69 | gedaagde, of, producties, vonnis, verdachte, hierna |
+| coarse | random directions, mean, not a null (sentences-multilingual) | 0.095 | 67 |  |
+| coarse | random record splits, true null (sentences-multilingual) | 0.057 | 56 |  |
 | coarse | semantic (sentences-dutch) | 0.200 | 96 | verdachte, parketnummer, geboorteplaats, terechtzitting, geboren, tenlastelegging |
+| coarse | text axis 1 (sentences-dutch) | 0.121 | 72 | verdachte, of, justitie, hof, officier van justitie, beslissing |
+| coarse | best of 3 axes (sentences-dutch) | 0.121 | 74 | besluit, appellant, college, appellante, beroep, uitspraak |
+| coarse | random directions, mean, not a null (sentences-dutch) | 0.102 | 69 |  |
+| coarse | random record splits, true null (sentences-dutch) | 0.057 | 56 |  |
 | coarse | best possible 15 phrases | 0.240 | 100 |  |
 | coarse | typical phrase | 0.005 | 50 |  |
-| fine | frequency | 0.027 | 39 | rechtbank, 1, 2, tegen, mr, 3 |
-| fine | balanced | 0.032 | 38 | a, artikel, worden, zaaknummer, m, onder |
+| fine | frequency | 0.050 | 43 | rechtbank, tegen, mr, zaak, niet, ter |
+| fine | balanced | 0.049 | 48 | artikel, worden, zaaknummer, onder, zitting, advocaat |
+| fine | text axis 1 (tfidf) | 0.093 | 81 | verdachte, of, vonnis, gedaagde, advocaat, officier van justitie |
+| fine | best of 3 axes (tfidf) | 0.093 | 81 | verdachte, of, vonnis, gedaagde, advocaat, officier van justitie |
+| fine | random directions, mean, not a null (tfidf) | 0.064 | 73 |  |
+| fine | random record splits, true null (tfidf) | 0.043 | 61 |  |
 | fine | semantic (words-mean) | 0.082 | 90 | verdachte, parketnummer, ten laste, of omstreeks, ten laste gelegd, za |
-| fine | semantic (words-tfidf) | 0.105 | 95 | verdachte, parketnummer, za, tenlastelegging, terechtzitting, ten laste |
-| fine | semantic (sentences-multilingual) | 0.098 | 94 | verdachte, parketnummer, terechtzitting, tenlastelegging, tegenspraak, gewezen naar aanleiding |
+| fine | text axis 1 (words-mean) | 0.063 | 63 | of, verdachte, niet, officier van justitie, justitie, ten |
+| fine | best of 3 axes (words-mean) | 0.080 | 75 | of, verdachte, gedaagde, vonnis, producties, slachtoffer |
+| fine | random directions, mean, not a null (words-mean) | 0.061 | 66 |  |
+| fine | random record splits, true null (words-mean) | 0.043 | 61 |  |
+| fine | semantic (words-tfidf) | 0.105 | 94 | verdachte, parketnummer, za, tenlastelegging, terechtzitting, ten laste |
+| fine | text axis 1 (words-tfidf) | 0.066 | 68 | of, verdachte, niet, justitie, officier van justitie, terechtzitting |
+| fine | best of 3 axes (words-tfidf) | 0.081 | 76 | uitspraak, besluit, beroep, appellant, verweerder, eiser |
+| fine | random directions, mean, not a null (words-tfidf) | 0.066 | 72 |  |
+| fine | random record splits, true null (words-tfidf) | 0.043 | 61 |  |
+| fine | semantic (sentences-multilingual) | 0.098 | 93 | verdachte, parketnummer, terechtzitting, tenlastelegging, tegenspraak, gewezen naar aanleiding |
+| fine | text axis 1 (sentences-multilingual) | 0.083 | 76 | verdachte, of, hof, justitie, officier van justitie, hoger beroep |
+| fine | best of 3 axes (sentences-multilingual) | 0.083 | 76 | verdachte, of, hof, justitie, officier van justitie, hoger beroep |
+| fine | random directions, mean, not a null (sentences-multilingual) | 0.069 | 72 |  |
+| fine | random record splits, true null (sentences-multilingual) | 0.043 | 61 |  |
 | fine | semantic (sentences-dutch) | 0.105 | 95 | verdachte, parketnummer, geboorteplaats, terechtzitting, geboren, tenlastelegging |
+| fine | text axis 1 (sentences-dutch) | 0.076 | 75 | verdachte, of, justitie, hof, officier van justitie, beslissing |
+| fine | best of 3 axes (sentences-dutch) | 0.081 | 80 | besluit, appellant, college, appellante, beroep, uitspraak |
+| fine | random directions, mean, not a null (sentences-dutch) | 0.068 | 70 |  |
+| fine | random record splits, true null (sentences-dutch) | 0.043 | 61 |  |
 | fine | best possible 15 phrases | 0.128 | 100 |  |
 | fine | typical phrase | 0.004 | 50 |  |
 
