@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
-from eval_common import ROOT
+from eval_common import ROOT, text_features
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from sklearn.neighbors import NearestNeighbors
 
@@ -19,17 +19,6 @@ CLUSTER_RUNS = [
     ("agglomerative", {"method": "agglomerative"}),
     ("hdbscan", {"method": "hdbscan", "minClusterSize": 15, "minSamples": 5}),
 ]
-
-
-def text_features(analysis, rows, text_field):
-    payload = {
-        "mode": "text",
-        "method": "prepare",
-        "indexId": text_field,
-        "rows": [{} for _ in rows],
-        "fields": [{"name": text_field, "kind": "text"}],
-    }
-    return np.asarray(analysis.project(payload)["features"], dtype=np.float32)
 
 
 def label_sets(rows, manifest, rng):

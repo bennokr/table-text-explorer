@@ -17,43 +17,63 @@ def table(header, rows):
 
 
 def sample_summary(rows, manifest):
+    text = f"{len(rows)} records. Gold manifest revision {manifest['revision']}."
+    if "hierarchy" not in manifest:
+        return text
     fine = Counter(row[manifest["hierarchy"]["fine"]] for row in rows)
     courts = Counter(row["court_type"] for row in rows)
-    years = Counter(row["year"] for row in rows)
     lengths = {
-        field: int(np.median([row[field] for row in rows]))
-        for field in ("summary_words", "ruling_words")
+        f: int(np.median([row[f] for row in rows])) for f in ("summary_words", "ruling_words")
     }
     return (
-        f"{len(rows)} rulings, {len(fine)} sub-areas "
-        f"({min(fine.values())}-{max(fine.values())} each), "
-        f"{len(years)} years, {len(courts)} court types {dict(courts.most_common())}, "
+        f"{text} {len(fine)} sub-areas ({min(fine.values())}-{max(fine.values())} each), "
+        f"{len({row['year'] for row in rows})} years, court types {dict(courts.most_common())}, "
         f"{len({row['court'] for row in rows})} courts. Median words: {lengths}."
     )
 
 
-def column_tables(screens, manifest):
-    """Per text field: expected class and z, naive versus length-controlled."""
+def column_tables(screens):
+    """Per text field: real columns by skill beyond text length, then the null-control floor."""
     parts = []
-    for text_field, variants in screens.items():
-        naive, controlled = variants["naive"], variants["length-controlled"]
-        names = sorted(controlled["z"], key=lambda name: -controlled["z"][name])
-        rows = [
-            [
-                name,
-                manifest["columns"].get(name, {}).get("expected", "null control"),
-                f"{naive['z'].get(name, 0):.1f}",
-                f"{controlled['z'][name]:.1f}",
-            ]
-            for name in names
+    for text_field, grade in screens.items():
+        rows = []
+        for name, entry in grade["table"].items():
+            if entry["class"] == "null" and name.startswith(("shuffled:", "noise:")):
+                continue
+            rows.append(
+                [
+                    name,
+                    entry["class"],
+                    "n/a" if entry["length_determined"] else f"{entry['skill_beyond_length']:.3f}",
+                    f"{entry['skill_total']:.3f}",
+                    f"{entry['length_explains']:.2f}"
+                    + (" (determined)" if entry["length_determined"] else ""),
+                    "n/a" if entry["length_determined"] else f"{entry['p']:.3f}",
+                ]
+            )
+        floor = f"{grade['null_mean']:.3f} ± {grade['null_sd']:.3f} (max {grade['null_max']:.3f})"
+        rows.append([f"null controls (n={grade['null_count']})", "null", floor, "", "", ""])
+        header = [
+            "column",
+            "class",
+            "skill beyond length",
+            "skill total",
+            "length alone explains",
+            "p vs nulls",
         ]
-        parts.append(
-            f"**Text field `{text_field}`**\n\n"
-            + table(["column", "expected", "z naive", "z length-controlled"], rows)
-        )
-        grades = [[key, naive[key], controlled[key]] for key in naive if key != "z"]
-        grades = [[key, fmt(a), fmt(b)] for key, a, b in grades]
-        parts.append(table(["grade", "naive", "length-controlled"], grades))
+        parts.append(f"**Text field `{text_field}`**\n\n" + table(header, rows))
+        grades = [
+            ["strong columns beat every null", grade["strong_above_all_nulls"]],
+            ["p = 0.05 resolvable with this many nulls", grade["alpha_resolvable"]],
+            ["AUC strong vs null", fmt(grade["auc_strong_vs_null"])],
+            ["AUC strong+moderate vs null", fmt(grade["auc_strong_moderate_vs_null"])],
+            ["length columns detected beyond length", grade["length_columns_detected"] or "none"],
+            [
+                "columns determined by length (not scored)",
+                grade["length_determined_columns"] or "none",
+            ],
+        ]
+        parts.append(table(["grade", "result"], grades))
     return "\n\n".join(parts)
 
 
@@ -130,18 +150,19 @@ def map_table(maps):
 
 
 def full_report(sections, rows, manifest):
-    parts = ["# Rechtspraak evaluation", sample_summary(rows, manifest)]
-    parts += [
-        "## Which columns does the text vary with?",
-        column_tables(sections["columns"], manifest),
-    ]
-    parts += [
-        "## Do phrase descriptions explain a group?",
-        description_tables(sections["descriptions"]),
-    ]
-    for text_field in sections["descriptions"]:
-        parts += [f"Examples, `{text_field}`", example_table(sections["descriptions"], text_field)]
-    for text_field, output in sections["structure"].items():
+    parts = [f"# {manifest['name']} evaluation", sample_summary(rows, manifest)]
+    parts += ["## Which columns does the text vary with?", column_tables(sections["columns"])]
+    if "descriptions" in sections:
+        parts += [
+            "## Do phrase descriptions explain a group?",
+            description_tables(sections["descriptions"]),
+        ]
+        for text_field in sections["descriptions"]:
+            parts += [
+                f"Examples, `{text_field}`",
+                example_table(sections["descriptions"], text_field),
+            ]
+    for text_field, output in sections.get("structure", {}).items():
         parts += [
             f"## Clusters and maps, `{text_field}`",
             cluster_table(output["clusters"]),

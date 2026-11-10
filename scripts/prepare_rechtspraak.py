@@ -35,8 +35,8 @@ SUB_AREAS = [
     "strafrecht_penitentiairStrafrecht",
 ]
 YEARS = range(2016, 2026)
-SAMPLE_PER_CELL = 10
-DRAWS_PER_CELL = 16  # Spare draws replace multi-area, duplicate and text-less rulings.
+SAMPLE_PER_CELL = 20
+DRAWS_PER_CELL = 36  # Spare draws replace multi-area, duplicate and text-less rulings.
 DRAW_ORDER = (
     36  # Fixed draw order; only the first DRAWS_PER_CELL are used, so cached searches survive.
 )
@@ -191,10 +191,10 @@ def main():
     cells = [(area, year) for area in SUB_AREAS for year in YEARS]
     with ThreadPoolExecutor(max_workers=3) as pool:
         drawn = dict(zip(cells, pool.map(draw_eclis, cells), strict=True))
-        list(pool.map(fetch_document, [ecli for cell in cells for ecli in drawn[cell]]))
-    seen, records = set(), []
-    for cell in cells:
-        records.extend(cell_records(cell, drawn[cell], seen))
+        # A cell's rulings are fetched in draw order until its quota is met. ECLIs are unique
+        # to one area and year, so cells never overlap and need no shared seen-set.
+        per_cell = pool.map(lambda cell: cell_records(cell, drawn[cell], set()), cells)
+        records = [record for cell_records_ in per_cell for record in cell_records_]
     OUTPUT.parent.mkdir(exist_ok=True)
     OUTPUT.write_text(json.dumps(records, ensure_ascii=False, indent=1), encoding="utf-8")
     print(len(records), "records", json.dumps(summarize(records), ensure_ascii=False))

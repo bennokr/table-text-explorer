@@ -30,9 +30,9 @@ MANIFEST = {
     },
     "controls": {
         "shuffled": ["signal"],
-        "shuffles_per_column": 3,
-        "noise_categories": [3, 5],
-        "noise_numeric": 2,
+        "shuffles_per_column": 14,
+        "noise_categories": [3, 5, 8],
+        "noise_numeric": 4,
     },
     "hierarchy": {"coarse": "signal", "fine": "signal"},
 }
@@ -73,23 +73,28 @@ def make_subject(own_share=0.25):
     )
 
 
+def graded(subject):
+    return grade_screen(screen_columns(subject), MANIFEST, "text")
+
+
 class HarnessControls(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.subject = make_subject()
 
-    def test_screen_finds_planted_columns_and_ignores_noise(self):
-        grade = grade_screen(screen_columns(self.subject, stratified=True), MANIFEST)
+    def test_screen_finds_planted_columns_and_ignores_noise_and_length(self):
+        grade = graded(self.subject)
+        self.assertTrue(grade["alpha_resolvable"])
         self.assertTrue(grade["strong_above_all_nulls"])
         self.assertGreater(grade["auc_strong_moderate_vs_null"], 0.95)
-        self.assertLessEqual(grade["null_false_positive_rate_z3"], 0.1)
-        self.assertTrue(grade["length_below_all_strong"])
+        self.assertEqual(grade["length_columns_detected"], [])
+        self.assertEqual(grade["length_determined_columns"], ["length"])
+        self.assertLess(grade["null_max"], 0.05)
 
-    def test_faint_signal_is_still_found_and_length_is_not(self):
-        subject = make_subject(own_share=0.04)
-        controlled = grade_screen(screen_columns(subject, stratified=True), MANIFEST)
-        self.assertGreater(controlled["z"]["signal"], 3)
-        self.assertLess(controlled["z"]["length"], 3)
+    def test_faint_signal_is_still_found(self):
+        grade = graded(make_subject(own_share=0.04))
+        self.assertLessEqual(grade["table"]["signal"]["p"], 0.05)
+        self.assertGreater(grade["table"]["signal"]["skill_beyond_length"], grade["null_max"])
 
     def test_descriptions_recover_planted_groups_but_not_random_ones(self):
         output = evaluate_descriptions(self.subject)["groups"]["contrast"]

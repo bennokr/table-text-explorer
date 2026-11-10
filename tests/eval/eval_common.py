@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 
+import numpy as np
+
 ROOT = Path(__file__).parents[2]
 WORKERS = ROOT / "src/workers"
 sys.path.insert(0, str(WORKERS))
@@ -76,3 +78,15 @@ class Subject:
     text_field: str
     field: dict  # The app's phrase index for text_field (its indexId is the field name).
     seed: int
+
+
+def text_features(analysis, rows, text_field):
+    """The app's own text vectors: TF-IDF of the phrase index, reduced to 32 SVD dimensions."""
+    payload = {
+        "mode": "text",
+        "method": "prepare",
+        "indexId": text_field,
+        "rows": [{} for _ in rows],
+        "fields": [{"name": text_field, "kind": "text"}],
+    }
+    return np.asarray(analysis.project(payload)["features"], dtype=np.float32)

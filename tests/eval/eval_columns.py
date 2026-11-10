@@ -1,25 +1,39 @@
-"""Which columns does the text vary with? Screens with null controls and a length control.
+"""Which columns does the text vary with? Held-out skill beyond text length, with null controls.
 
-This screen is a candidate for the app, not existing app behaviour. It scores each column by
-how strongly phrase usage differs across its groups (per-phrase chi-square, mean of the top
-phrases), then calibrates against label shuffles. The length-controlled variant works within
-text-length strata so that longer texts, which hold more distinct phrases, cannot pose as signal.
+This is a candidate for the app, not existing behaviour. For each column, predict its groups from
+the app's own text vectors (32-d TF-IDF/SVD) with a regularised logistic regression, scored by
+repeated 5-fold cross-validation. Skill is the proportional reduction in log-loss against a
+baseline. Two baselines are reported:
+
+- skill_total: against the column's overall group frequencies.
+- skill_beyond_length: against a model that knows only the text length. This is the score to
+  rank by. A column that merely tracks length scores about zero here. When length alone already
+  removes 90% of the loss the ratio is meaningless, so the column is marked length-determined
+  and not scored (n/a).
+
+Proportional skill does not depend on how many groups a column has, and held-out scoring puts
+noise near zero. Shuffled and random control columns measure the floor, and a column is
+detected when it beats nearly all of them (empirical one-sided p; at least 19 nulls are needed
+to resolve p = 0.05).
 """
 
 import numpy as np
+from eval_common import text_features
+from sklearn.dummy import DummyClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import log_loss
+from sklearn.model_selection import StratifiedKFold, cross_val_predict
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
-TOP_PHRASES = 50
-PERMUTATIONS = 30
+FOLDS = 5
+REPEATS = 2
 STRATA = 8
-MIN_DOCS = 10  # A phrase must appear in this many records to take part.
+MIN_GROUP = 10  # Smaller groups are merged so every fold can see every class.
 MAX_GROUPS = 50
 MAX_DISCRETE = 12
-
-
-def presence_matrix(field):
-    matrix = field["matrix"].astype(bool).astype(np.float32).tocsc()
-    keep = np.flatnonzero(np.asarray(matrix.sum(axis=0)).ravel() >= MIN_DOCS)
-    return matrix[:, keep].tocsr()
+ALPHA = 0.05
+LENGTH_DETERMINED = 0.9  # Length alone removes this share of loss: skill beyond it is undefined.
 
 
 def column_groups(values):
@@ -34,59 +48,47 @@ def column_groups(values):
     return np.digitize(numbers, edges).astype(str)
 
 
-def length_strata(lengths, count=STRATA):
-    edges = np.unique(np.quantile(lengths, np.linspace(0, 1, count + 1)[1:-1]))
-    return np.digitize(lengths, edges)
+def merge_rare(labels):
+    names, counts = np.unique(labels, return_counts=True)
+    rare = set(names[counts < MIN_GROUP])
+    return np.array(["(other)" if label in rare else label for label in labels])
 
 
-def phrase_chi2(presence, labels):
-    """Chi-square of phrase presence against group, per phrase."""
-    groups, inverse = np.unique(labels, return_inverse=True)
-    onehot = np.zeros((len(labels), len(groups)))
-    onehot[np.arange(len(labels)), inverse] = 1
-    present = np.asarray(presence.T @ onehot)
-    size = onehot.sum(axis=0)
-    total = present.sum(axis=1, keepdims=True)
-    expected = total * size / len(labels)
-    expected_absent = (len(labels) - total) * size / len(labels)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        parts = (present - expected) ** 2 / expected + (size - present - expected_absent) ** 2 / (
-            expected_absent
-        )
-    return np.nansum(parts, axis=1)
+def length_design(lengths):
+    """Everything the baseline may know about length: 8 strata plus smooth log-length terms."""
+    edges = np.unique(np.quantile(lengths, np.linspace(0, 1, STRATA + 1)[1:-1]))
+    strata = np.eye(len(edges) + 1)[np.digitize(lengths, edges)]
+    logs = np.log1p(lengths)
+    logs = (logs - logs.mean()) / (logs.std() or 1.0)
+    return np.column_stack([strata, logs, logs**2])
 
 
-def strength(parts, labels, strata):
-    """Sum per-stratum phrase statistics, then average the strongest phrases."""
-    total = 0
-    for level in np.unique(strata):
-        mask = strata == level
-        total = total + phrase_chi2(parts[level], labels[mask])
-    return float(np.sort(total)[-TOP_PHRASES:].mean())
+def held_out_loss(model, design, labels, seed):
+    """Mean held-out log-loss over REPEATS shuffled stratified folds."""
+    classes = np.unique(labels)
+    losses = []
+    for repeat in range(REPEATS):
+        folds = StratifiedKFold(FOLDS, shuffle=True, random_state=seed + repeat)
+        proba = cross_val_predict(model, design, labels, cv=folds, method="predict_proba")
+        losses.append(log_loss(labels, proba, labels=classes))
+    return float(np.mean(losses))
 
 
-def permute_within(labels, strata, rng):
-    shuffled = labels.copy()
-    for level in np.unique(strata):
-        where = np.flatnonzero(strata == level)
-        shuffled[where] = rng.permutation(labels[where])
-    return shuffled
-
-
-def score_column(presence, values, strata, rng):
-    labels = column_groups(values)
+def score_column(vectors, lengths, values, seed):
+    labels = merge_rare(column_groups(values))
     if not 2 <= len(set(labels)) <= MAX_GROUPS:
         return None
-    parts = {level: presence[strata == level] for level in np.unique(strata)}
-    observed = strength(parts, labels, strata)
-    null = [
-        strength(parts, permute_within(labels, strata, rng), strata) for _ in range(PERMUTATIONS)
-    ]
-    spread = float(np.std(null)) or np.nan
+    text_model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=500))
+    prior = held_out_loss(DummyClassifier(strategy="prior"), lengths, labels, seed)
+    by_length = held_out_loss(text_model, lengths, labels, seed)
+    combined = held_out_loss(text_model, np.hstack([vectors, lengths]), labels, seed)
+    explained = 1 - by_length / prior
+    determined = explained >= LENGTH_DETERMINED
     return {
-        "strength": observed,
-        "null_mean": float(np.mean(null)),
-        "z": (observed - np.mean(null)) / spread,
+        "skill_total": 1 - combined / prior,
+        "length_explains": explained,
+        "skill_beyond_length": float("nan") if determined else 1 - combined / by_length,
+        "length_determined": bool(determined),
     }
 
 
@@ -104,18 +106,17 @@ def control_columns(rows, manifest, rng):
     return columns
 
 
-def screen_columns(subject, stratified):
+def screen_columns(subject):
     """Score every real column and every null control; returns {name: result}."""
     rows, manifest = subject.rows, subject.manifest
     rng = np.random.default_rng(subject.seed)
-    presence = presence_matrix(subject.field)
-    lengths = np.array([len(row[subject.text_field].split()) for row in rows])
-    strata = length_strata(lengths) if stratified else np.zeros(len(rows), dtype=int)
+    vectors = text_features(subject.analysis, rows, subject.text_field)
+    lengths = length_design(np.array([len(row[subject.text_field].split()) for row in rows]))
     columns = {name: [row[name] for row in rows] for name in manifest["columns"]}
     columns.update(control_columns(rows, manifest, rng))
     results = {}
     for name, values in columns.items():
-        result = score_column(presence, values, strata, rng)
+        result = score_column(vectors, lengths, values, subject.seed)
         if result is not None:
             results[name] = result
     return results
@@ -127,21 +128,43 @@ def rank_auc(positive, negative):
     return wins / (len(positive) * len(negative))
 
 
-def grade_screen(results, manifest):
-    """Grade a screen against the gold classes; NaN z (a column that is its own stratifier) is 0."""
-    z = {name: 0.0 if np.isnan(r["z"]) else r["z"] for name, r in results.items()}
-    kinds = {name: spec["expected"] for name, spec in manifest["columns"].items()}
-    by_kind = {}
-    for name, value in z.items():
-        by_kind.setdefault(kinds.get(name, "null"), []).append(value)
-    nulls = by_kind["null"]
-    strong, moderate = by_kind["strong"], by_kind["moderate"]
+def column_classes(results, manifest, text_field):
+    """Gold class per column; controls and listed-null columns count as null."""
+    overrides = manifest.get("field_overrides", {}).get(text_field, {})
+    classes = {}
+    for name in results:
+        spec = manifest["columns"].get(name)
+        classes[name] = overrides.get(name, spec["expected"] if spec else "null")
+    return classes
+
+
+def grade_screen(results, manifest, text_field):
+    classes = column_classes(results, manifest, text_field)
+    scorable = {
+        n: r["skill_beyond_length"] for n, r in results.items() if not r["length_determined"]
+    }
+    nulls = np.array([value for name, value in scorable.items() if classes[name] == "null"])
+    by_class = {}
+    for name, value in scorable.items():
+        by_class.setdefault(classes[name], []).append(value)
+    strong, moderate = by_class.get("strong", []), by_class.get("moderate", [])
+    p_values = {n: (1 + (nulls >= v).sum()) / (1 + len(nulls)) for n, v in scorable.items()}
+    order = sorted(results, key=lambda n: -scorable.get(n, -np.inf))
     return {
-        "z": dict(sorted(z.items(), key=lambda item: -item[1])),
-        "strong_above_all_nulls": bool(min(strong) > max(nulls)),
+        "table": {
+            name: {**results[name], "class": classes[name], "p": p_values.get(name, float("nan"))}
+            for name in order
+        },
+        "null_count": len(nulls),
+        "alpha_resolvable": bool(1 / (1 + len(nulls)) <= ALPHA),
+        "null_mean": float(nulls.mean()),
+        "null_sd": float(nulls.std()),
+        "null_max": float(nulls.max()),
+        "strong_above_all_nulls": bool(min(strong) > nulls.max()),
         "auc_strong_vs_null": rank_auc(strong, nulls),
         "auc_strong_moderate_vs_null": rank_auc(strong + moderate, nulls),
-        "null_false_positive_rate_z3": float(np.mean(np.array(nulls) > 3)),
-        "null_max_z": max(nulls),
-        "length_below_all_strong": bool(max(by_kind.get("length", [0])) < min(strong)),
+        "length_columns_detected": [
+            n for n, kind in classes.items() if kind == "length" and p_values.get(n, 1) <= ALPHA
+        ],
+        "length_determined_columns": [n for n, r in results.items() if r["length_determined"]],
     }

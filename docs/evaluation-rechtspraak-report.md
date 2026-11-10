@@ -1,96 +1,56 @@
-# Rechtspraak evaluation
+# rechtspraak evaluation
 
-1190 rulings, 12 sub-areas (90-100 each), 10 years, 6 court types {'Rechtbank': 695, 'Gerechtshof': 283, 'Raad van State': 81, 'Centrale Raad van Beroep': 66, 'Overig': 41, 'Hoge Raad': 24}, 23 courts. Median words: {'summary_words': 27, 'ruling_words': 1924}.
+2360 records. Gold manifest revision 2. 12 sub-areas (160-200 each), 10 years, court types {'Rechtbank': 1415, 'Gerechtshof': 532, 'Raad van State': 144, 'Centrale Raad van Beroep': 144, 'Overig': 73, 'Hoge Raad': 52}, 23 courts. Median words: {'summary_words': 27, 'ruling_words': 1968}.
 
 ## Which columns does the text vary with?
 
 **Text field `summary`**
 
-| column | expected | z naive | z length-controlled |
-|---|---:|---:|---:|
-| legal_area | strong | 185.4 | 75.6 |
-| legal_subarea | strong | 357.1 | 55.7 |
-| ruling_words | length | 48.4 | 32.0 |
-| court_type | moderate | 146.9 | 29.8 |
-| procedure | moderate | 12.5 | 11.1 |
-| court | weak | 54.9 | 7.8 |
-| ecli_sequence | uncertain | 13.7 | 6.7 |
-| shuffled:court_type:0 | null control | 0.8 | 3.4 |
-| year | weak | 5.2 | 2.2 |
-| noise:categories-5 | null control | -0.5 | 1.6 |
-| shuffled:procedure:1 | null control | -0.0 | 1.2 |
-| shuffled:legal_area:2 | null control | -0.3 | 0.7 |
-| shuffled:procedure:2 | null control | -1.5 | 0.6 |
-| shuffled:year:2 | null control | -0.9 | 0.5 |
-| shuffled:legal_subarea:1 | null control | 0.9 | 0.4 |
-| noise:numeric-0 | null control | 2.4 | 0.3 |
-| shuffled:procedure:0 | null control | -0.5 | 0.2 |
-| shuffled:legal_subarea:0 | null control | -0.8 | 0.2 |
-| shuffled:year:0 | null control | -0.7 | 0.1 |
-| summary_words | length | 172.2 | 0.0 |
-| noise:categories-12 | null control | 2.1 | -0.0 |
-| noise:numeric-1 | null control | 1.9 | -0.1 |
-| shuffled:legal_area:0 | null control | -0.3 | -0.1 |
-| shuffled:legal_subarea:2 | null control | 0.0 | -0.2 |
-| shuffled:year:1 | null control | -0.1 | -0.6 |
-| shuffled:legal_area:1 | null control | 0.9 | -0.6 |
-| shuffled:court_type:2 | null control | -1.5 | -1.0 |
-| shuffled:court_type:1 | null control | 0.7 | -1.0 |
-| noise:categories-3 | null control | -0.9 | -1.9 |
-| noise:numeric-2 | null control | -0.4 | -3.0 |
+| column | class | skill beyond length | skill total | length alone explains | p vs nulls |
+|---|---:|---:|---:|---:|---:|
+| legal_area | strong | 0.734 | 0.743 | 0.03 | 0.027 |
+| legal_subarea | strong | 0.664 | 0.673 | 0.03 | 0.027 |
+| court_type | moderate | 0.497 | 0.522 | 0.05 | 0.027 |
+| procedure | moderate | 0.294 | 0.300 | 0.01 | 0.027 |
+| court | weak | 0.259 | 0.279 | 0.03 | 0.027 |
+| ruling_words | structure | 0.140 | 0.148 | 0.01 | 0.027 |
+| ecli_sequence | uncertain | 0.044 | 0.040 | -0.00 | 0.027 |
+| year | weak | -0.020 | -0.021 | -0.00 | 0.162 |
+| summary_words | length | n/a | 0.998 | 1.00 (determined) | n/a |
+| null controls (n=36) | null | -0.046 ± 0.020 (max -0.014) |  |  |  |
 
-| grade | naive | length-controlled |
-|---|---:|---:|
-| strong_above_all_nulls | True | True |
-| auc_strong_vs_null | 1.00 | 1.00 |
-| auc_strong_moderate_vs_null | 1.00 | 1.00 |
-| null_false_positive_rate_z3 | 0.00 | 0.05 |
-| null_max_z | 2.40 | 3.37 |
-| length_below_all_strong | True | True |
+| grade | result |
+|---|---:|
+| strong columns beat every null | True |
+| p = 0.05 resolvable with this many nulls | True |
+| AUC strong vs null | 1.00 |
+| AUC strong+moderate vs null | 1.00 |
+| length columns detected beyond length | none |
+| columns determined by length (not scored) | ['summary_words'] |
 
 **Text field `ruling_excerpt`**
 
-| column | expected | z naive | z length-controlled |
-|---|---:|---:|---:|
-| legal_area | strong | 919.9 | 598.1 |
-| year | weak | 308.5 | 107.7 |
-| court_type | moderate | 473.4 | 60.8 |
-| ruling_words | length | 124.3 | 60.8 |
-| court | weak | 195.5 | 56.5 |
-| legal_subarea | strong | 618.1 | 42.2 |
-| ecli_sequence | uncertain | 72.6 | 37.3 |
-| procedure | moderate | 81.5 | 36.5 |
-| summary_words | length | 44.6 | 25.9 |
-| shuffled:procedure:0 | null control | -1.3 | 2.5 |
-| noise:numeric-1 | null control | -0.3 | 1.9 |
-| shuffled:procedure:2 | null control | -0.5 | 0.6 |
-| shuffled:court_type:2 | null control | 0.9 | 0.4 |
-| shuffled:procedure:1 | null control | -0.4 | 0.3 |
-| shuffled:legal_subarea:1 | null control | -0.6 | 0.3 |
-| noise:categories-5 | null control | 1.9 | 0.3 |
-| shuffled:legal_subarea:2 | null control | -0.1 | 0.2 |
-| shuffled:year:1 | null control | 0.1 | -0.1 |
-| noise:numeric-0 | null control | 0.6 | -0.3 |
-| shuffled:legal_area:1 | null control | -1.4 | -0.4 |
-| shuffled:legal_subarea:0 | null control | -1.2 | -0.4 |
-| noise:categories-12 | null control | 0.8 | -0.5 |
-| shuffled:court_type:0 | null control | 2.9 | -0.6 |
-| noise:categories-3 | null control | -0.7 | -0.8 |
-| shuffled:court_type:1 | null control | -1.1 | -0.9 |
-| shuffled:legal_area:0 | null control | 0.0 | -0.9 |
-| shuffled:year:2 | null control | -0.7 | -1.1 |
-| shuffled:year:0 | null control | -0.6 | -1.1 |
-| shuffled:legal_area:2 | null control | -0.4 | -1.2 |
-| noise:numeric-2 | null control | 1.0 | -1.3 |
+| column | class | skill beyond length | skill total | length alone explains | p vs nulls |
+|---|---:|---:|---:|---:|---:|
+| legal_area | strong | 0.990 | 0.991 | 0.03 | 0.027 |
+| court_type | echoed | 0.973 | 0.974 | 0.04 | 0.027 |
+| legal_subarea | strong | 0.898 | 0.901 | 0.03 | 0.027 |
+| court | echoed | 0.820 | 0.821 | 0.01 | 0.027 |
+| procedure | moderate | 0.636 | 0.646 | 0.03 | 0.027 |
+| year | echoed | 0.362 | 0.356 | -0.01 | 0.027 |
+| ruling_words | structure | 0.224 | 0.247 | 0.03 | 0.027 |
+| ecli_sequence | uncertain | 0.123 | 0.120 | -0.00 | 0.027 |
+| summary_words | structure | 0.075 | 0.080 | 0.01 | 0.027 |
+| null controls (n=36) | null | -0.041 ± 0.017 (max -0.014) |  |  |  |
 
-| grade | naive | length-controlled |
-|---|---:|---:|
-| strong_above_all_nulls | True | True |
-| auc_strong_vs_null | 1.00 | 1.00 |
-| auc_strong_moderate_vs_null | 1.00 | 1.00 |
-| null_false_positive_rate_z3 | 0.00 | 0.00 |
-| null_max_z | 2.91 | 2.49 |
-| length_below_all_strong | True | False |
+| grade | result |
+|---|---:|
+| strong columns beat every null | True |
+| p = 0.05 resolvable with this many nulls | True |
+| AUC strong vs null | 1.00 |
+| AUC strong+moderate vs null | 1.00 |
+| length columns detected beyond length | none |
+| columns determined by length (not scored) | none |
 
 ## Do phrase descriptions explain a group?
 
@@ -98,94 +58,94 @@
 
 | ranking | AUC fine | AUC coarse | AUC null | AUC length | precision fine | coverage fine | precision null |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| frequency | 0.715 | 0.638 | 0.505 | 0.533 | 0.43 | 0.79 | 0.26 |
-| balanced | 0.701 | 0.641 | 0.505 | 0.533 | 0.40 | 0.78 | 0.25 |
-| ctfidf | 0.732 | 0.648 | 0.502 | 0.546 | 0.46 | 0.78 | 0.25 |
-| contrast | 0.777 | 0.726 | 0.494 | 0.604 | 0.62 | 0.67 | 0.24 |
-| lift | 0.733 | 0.710 | 0.497 | 0.539 | 0.85 | 0.47 | 0.23 |
+| frequency | 0.709 | 0.627 | 0.501 | 0.528 | 0.42 | 0.78 | 0.25 |
+| balanced | 0.712 | 0.629 | 0.500 | 0.508 | 0.42 | 0.78 | 0.25 |
+| ctfidf | 0.729 | 0.635 | 0.499 | 0.534 | 0.50 | 0.76 | 0.25 |
+| contrast | 0.789 | 0.739 | 0.504 | 0.630 | 0.67 | 0.68 | 0.27 |
+| lift | 0.734 | 0.713 | 0.501 | 0.522 | 0.90 | 0.47 | 0.26 |
 
 **Text field `ruling_excerpt`** (held-out, top 10 phrases)
 
 | ranking | AUC fine | AUC coarse | AUC null | AUC length | precision fine | coverage fine | precision null |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| frequency | 0.890 | 0.880 | 0.503 | 0.733 | 0.16 | 1.00 | 0.25 |
-| balanced | 0.800 | 0.845 | 0.501 | 0.628 | 0.27 | 0.99 | 0.25 |
-| ctfidf | 0.928 | 0.903 | 0.494 | 0.715 | 0.28 | 1.00 | 0.25 |
-| contrast | 0.959 | 0.960 | 0.497 | 0.751 | 0.43 | 1.00 | 0.24 |
-| lift | 0.859 | 0.941 | 0.498 | 0.560 | 0.94 | 0.72 | 0.22 |
+| frequency | 0.890 | 0.875 | 0.501 | 0.688 | 0.15 | 1.00 | 0.25 |
+| balanced | 0.808 | 0.860 | 0.495 | 0.619 | 0.25 | 0.99 | 0.25 |
+| ctfidf | 0.927 | 0.914 | 0.503 | 0.713 | 0.28 | 1.00 | 0.25 |
+| contrast | 0.962 | 0.971 | 0.498 | 0.730 | 0.43 | 1.00 | 0.25 |
+| lift | 0.852 | 0.931 | 0.501 | 0.533 | 0.96 | 0.71 | 0.25 |
 
 Examples, `summary`
 
 | group | held-out AUC | top contrast phrases |
 |---|---:|---:|
-| coarse:Bestuursrecht | 0.79 | besluit, beroep, verweerder, college, omgevingsvergunning, appellant, aanvraag |
-| coarse:Civiel recht | 0.61 | bw, werknemer, verzoek, werkgever, arbeidsovereenkomst, gedaagde, kort geding |
-| coarse:Strafrecht | 0.78 | verdachte, hof, maatregel, gevangenisstraf, terbeschikkingstelling, beslissing, jaar |
-| fine:Arbeidsrecht | 0.86 | werknemer, werkgever, arbeidsovereenkomst, ontslag, staande voet, voet, ontslag op staande |
-| fine:Belastingrecht | 0.66 | belanghebbende, eiseres, inspecteur, geschil, woz, beroep, inkomen |
-| fine:Insolventierecht | 0.85 | fw, schuldsaneringsregeling, wsnp, verzoek, schulden, toelating, lid |
-| fine:Intellectueel-eigendomsrecht | 0.79 | inbreuk, eigendom, intellectuele eigendom, auteursrecht, kort geding, octrooi, kort |
-| fine:Materieel strafrecht | 0.79 | verdachte, gevangenisstraf, maanden, veroordeling, poging, voorwaardelijk, rechtbank |
-| fine:Omgevingsrecht | 0.88 | omgevingsvergunning, college, perceel, verleend, besluit, locatie, omgevingsvergunning verleend |
-| fine:Penitentiair strafrecht | 0.80 | hof, terbeschikkingstelling, maatregel, terbeschikkinggestelde, verlenging, termijn, zal |
-| fine:Personen- en familierecht | 0.71 | gezag, man, 1, bw, moeder, ondertoezichtstelling, verzoek |
-| fine:Socialezekerheidsrecht | 0.82 | appellant, appellante, uitkering, uwv, terecht, geen, niet |
-| fine:Strafprocesrecht | 0.79 | verdachte, beslissing, wrakingsverzoek, hof, rechter, betrokkene, wraking |
-| fine:Verbintenissenrecht | 0.64 | vordering, gedaagde, overeenkomst, partij, procedure, eiseres, partijen |
-| fine:Vreemdelingenrecht | 0.73 | vreemdeling, besluit, staatssecretaris, eiser, verblijfsvergunning, asiel, bepaalde tijd |
-| length:longest-quartile | 0.60 | verdachte, gevangenisstraf, maanden, poging, voorwaardelijk, inbreuk, mishandeling |
+| coarse:Bestuursrecht | 0.82 | besluit, beroep, omgevingsvergunning, appellant, college, verweerder, aanvraag |
+| coarse:Civiel recht | 0.64 | bw, werknemer, werkgever, verzoek, arbeidsovereenkomst, inbreuk, kort geding |
+| coarse:Strafrecht | 0.75 | verdachte, hof, maatregel, beslissing, gevangenisstraf, terbeschikkingstelling, jaar |
+| fine:Arbeidsrecht | 0.87 | werknemer, werkgever, arbeidsovereenkomst, ontslag, staande voet, voet, ontslag op staande |
+| fine:Belastingrecht | 0.73 | belanghebbende, woz, inspecteur, eiseres, wet, ib, waarde |
+| fine:Insolventierecht | 0.85 | schuldsaneringsregeling, fw, verzoek, wsnp, schulden, dwangakkoord, toelating |
+| fine:Intellectueel-eigendomsrecht | 0.83 | inbreuk, auteursrecht, intellectuele, eigendom, intellectuele eigendom, kort geding, kort |
+| fine:Materieel strafrecht | 0.77 | verdachte, gevangenisstraf, maanden, rechtbank, voorwaardelijk, veroordeling, veroordeeld |
+| fine:Omgevingsrecht | 0.89 | omgevingsvergunning, college, perceel, besluit, verleend, locatie, omgevingsvergunning verleend |
+| fine:Penitentiair strafrecht | 0.81 | hof, maatregel, terbeschikkingstelling, terbeschikkinggestelde, verlenging, overheidswege, beslissing |
+| fine:Personen- en familierecht | 0.70 | moeder, gezag, minderjarige, 1, bw, vader, machtiging |
+| fine:Socialezekerheidsrecht | 0.85 | appellant, appellante, uitkering, uwv, geen, terecht, bijstand |
+| fine:Strafprocesrecht | 0.76 | verdachte, beslissing, wrakingsverzoek, slachtoffer, hof, rechter, rechters |
+| fine:Verbintenissenrecht | 0.65 | gedaagde, vordering, overeenkomst, ontruiming, eiseres, bw, ontbinding |
+| fine:Vreemdelingenrecht | 0.75 | vreemdeling, staatssecretaris, eiser, asiel, besluit, verblijfsvergunning, verweerder |
+| length:longest-quartile | 0.63 | verdachte, gevangenisstraf, inbreuk, slachtoffer, maanden, poging, medeplegen |
 
 Examples, `ruling_excerpt`
 
 | group | held-out AUC | top contrast phrases |
 |---|---:|---:|
-| coarse:Bestuursrecht | 0.99 | uitspraak, besluit, verweerder, college, beroep, eiser, belanghebbende |
-| coarse:Civiel recht | 0.93 | 2, gedaagde, producties, hierna, 1, procedure, noemen |
-| coarse:Strafrecht | 0.96 | verdachte, of, officier van justitie, justitie, beslissing, terechtzitting, slachtoffer |
-| fine:Arbeidsrecht | 0.99 | arbeidsovereenkomst, werknemer, verzoekster, 2, 1, kantonrechter, verweerster |
-| fine:Belastingrecht | 0.98 | belanghebbende, inspecteur, uitspraak, heffingsambtenaar, bezwaar, aanslag, beroep |
-| fine:Insolventierecht | 0.95 | schuldsaneringsregeling, bewindvoerder, verzoekster, verzoeker, schuldeisers, fw, verzoek |
-| fine:Intellectueel-eigendomsrecht | 0.94 | producties, c, gedaagde, v, b, s, akte |
-| fine:Materieel strafrecht | 0.97 | verdachte, of, slachtoffer, officier van justitie, justitie, terechtzitting, feit |
-| fine:Omgevingsrecht | 0.99 | college, besluit, omgevingsvergunning, uitspraak, perceel, verweerder, appellant |
-| fine:Penitentiair strafrecht | 0.92 | terbeschikkinggestelde, beslissing, hof, verdachte, of, maatregel, terbeschikkingstelling |
-| fine:Personen- en familierecht | 0.97 | minderjarige, moeder, beschikking, vader, noemen, hierna te noemen, vrouw |
-| fine:Socialezekerheidsrecht | 0.98 | besluit, uwv, appellante, appellant, uitspraak, uitkering, raad |
-| fine:Strafprocesrecht | 0.92 | betrokkene, verdachte, beslissing, rechter, of, officier van justitie, kantonrechter |
-| fine:Verbintenissenrecht | 0.92 | gedaagde, 2, geïntimeerde, 1, procedure, vonnis, producties |
-| fine:Vreemdelingenrecht | 0.98 | eiser, vreemdeling, staatssecretaris, uitspraak, verweerder, besluit, niet |
-| length:longest-quartile | 0.75 | of, producties, verdachte, 1, slachtoffer, 2, vonnis |
+| coarse:Bestuursrecht | 0.99 | uitspraak, besluit, verweerder, eiser, college, beroep, belanghebbende |
+| coarse:Civiel recht | 0.94 | 2, gedaagde, producties, 1, procedure, hierna, c |
+| coarse:Strafrecht | 0.98 | verdachte, of, officier van justitie, justitie, beslissing, terechtzitting, slachtoffer |
+| fine:Arbeidsrecht | 0.98 | werknemer, arbeidsovereenkomst, 2, verweerster, kantonrechter, verzoekster, 1 |
+| fine:Belastingrecht | 0.97 | belanghebbende, inspecteur, uitspraak, heffingsambtenaar, bezwaar, aanslag, waarde |
+| fine:Insolventierecht | 0.96 | verzoeker, schuldsaneringsregeling, verzoekster, schuldeisers, bewindvoerder, fw, verzoek |
+| fine:Intellectueel-eigendomsrecht | 0.97 | producties, c, gedaagde, s, v, akte, b |
+| fine:Materieel strafrecht | 0.96 | verdachte, of, slachtoffer, officier van justitie, justitie, feit, terechtzitting |
+| fine:Omgevingsrecht | 0.99 | college, besluit, omgevingsvergunning, perceel, verweerder, uitspraak, appellant |
+| fine:Penitentiair strafrecht | 0.97 | terbeschikkinggestelde, beslissing, hof, verdachte, maatregel, veroordeelde, of |
+| fine:Personen- en familierecht | 0.96 | minderjarige, moeder, beschikking, vader, noemen, man, vrouw |
+| fine:Socialezekerheidsrecht | 0.98 | besluit, appellante, uwv, appellant, uitspraak, raad, uitkering |
+| fine:Strafprocesrecht | 0.92 | betrokkene, verdachte, of, beslissing, rechter, officier van justitie, justitie |
+| fine:Verbintenissenrecht | 0.91 | gedaagde, 2, 1, partij, procedure, vonnis, geïntimeerde |
+| fine:Vreemdelingenrecht | 0.98 | eiser, vreemdeling, staatssecretaris, verweerder, uitspraak, besluit, aanvraag |
+| length:longest-quartile | 0.73 | of, verdachte, producties, 1, vonnis, 2, gedaagde |
 
 ## Clusters and maps, `summary`
 
 | run | clusters | unassigned | legal_area ARI / NMI | legal_subarea ARI / NMI | procedure ARI / NMI | court_type ARI / NMI | year ARI / NMI | length quartile ARI / NMI | shuffled fine ARI / NMI |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| minibatch (coarse, k=3) | 3 | 0% | 0.12 / 0.19 | 0.05 / 0.16 | 0.03 / 0.10 | 0.00 / 0.09 | 0.00 / 0.00 | 0.01 / 0.03 | 0.00 / 0.01 |
-| minibatch (fine, k=12) | 12 | 0% | 0.08 / 0.22 | 0.16 / 0.32 | 0.03 / 0.17 | 0.03 / 0.16 | 0.00 / 0.02 | 0.02 / 0.05 | 0.00 / 0.02 |
-| agglomerative (coarse, k=3) | 3 | 0% | 0.13 / 0.20 | 0.04 / 0.16 | 0.00 / 0.08 | 0.06 / 0.08 | -0.00 / 0.00 | 0.01 / 0.04 | 0.00 / 0.01 |
-| agglomerative (fine, k=12) | 12 | 0% | 0.09 / 0.23 | 0.15 / 0.34 | 0.03 / 0.17 | 0.05 / 0.20 | -0.00 / 0.02 | 0.02 / 0.06 | 0.00 / 0.02 |
-| hdbscan (density) | 17 | 54% | 0.06 / 0.26 | 0.04 / 0.35 | 0.00 / 0.20 | 0.10 / 0.22 | 0.00 / 0.05 | 0.01 / 0.08 | -0.00 / 0.04 |
+| minibatch (coarse, k=3) | 3 | 0% | 0.18 / 0.22 | 0.07 / 0.18 | 0.03 / 0.10 | 0.00 / 0.06 | -0.00 / 0.00 | 0.02 / 0.04 | -0.00 / 0.00 |
+| minibatch (fine, k=12) | 12 | 0% | 0.14 / 0.30 | 0.27 / 0.42 | 0.05 / 0.19 | 0.02 / 0.16 | 0.00 / 0.02 | 0.03 / 0.06 | 0.00 / 0.01 |
+| agglomerative (coarse, k=3) | 3 | 0% | 0.11 / 0.23 | 0.02 / 0.18 | 0.02 / 0.10 | 0.06 / 0.13 | 0.00 / 0.00 | 0.01 / 0.05 | 0.00 / 0.00 |
+| agglomerative (fine, k=12) | 12 | 0% | 0.12 / 0.27 | 0.17 / 0.38 | 0.04 / 0.19 | 0.05 / 0.19 | 0.00 / 0.01 | 0.03 / 0.08 | 0.00 / 0.01 |
+| hdbscan (density) | 27 | 54% | 0.04 / 0.27 | 0.05 / 0.39 | 0.02 / 0.23 | 0.09 / 0.24 | 0.00 / 0.04 | 0.01 / 0.09 | -0.00 / 0.03 |
 
 | representation | kNN purity coarse | kNN purity fine |
 |---|---:|---:|
-| 32-d text vectors | 0.76 (chance 0.35) | 0.50 (chance 0.08) |
-| PCA (2-d) | 0.50 (chance 0.35) | 0.20 (chance 0.09) |
-| SVD (2-d) | 0.48 (chance 0.35) | 0.18 (chance 0.08) |
-| UMAP (2-d) | 0.75 (chance 0.34) | 0.48 (chance 0.08) |
+| 32-d text vectors | 0.82 (chance 0.35) | 0.58 (chance 0.09) |
+| PCA (2-d) | 0.51 (chance 0.36) | 0.21 (chance 0.08) |
+| SVD (2-d) | 0.50 (chance 0.35) | 0.19 (chance 0.09) |
+| UMAP (2-d) | 0.80 (chance 0.35) | 0.56 (chance 0.08) |
 
 ## Clusters and maps, `ruling_excerpt`
 
 | run | clusters | unassigned | legal_area ARI / NMI | legal_subarea ARI / NMI | procedure ARI / NMI | court_type ARI / NMI | year ARI / NMI | length quartile ARI / NMI | shuffled fine ARI / NMI |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| minibatch (coarse, k=3) | 3 | 0% | 0.59 / 0.71 | 0.25 / 0.55 | 0.10 / 0.19 | 0.01 / 0.13 | -0.00 / 0.00 | 0.05 / 0.06 | -0.00 / 0.00 |
-| minibatch (fine, k=12) | 12 | 0% | 0.33 / 0.58 | 0.57 / 0.75 | 0.10 / 0.31 | 0.11 / 0.35 | -0.00 / 0.02 | 0.05 / 0.11 | 0.00 / 0.02 |
-| agglomerative (coarse, k=3) | 3 | 0% | 0.54 / 0.66 | 0.23 / 0.50 | 0.10 / 0.23 | 0.08 / 0.26 | -0.00 / 0.00 | 0.02 / 0.04 | 0.00 / 0.01 |
-| agglomerative (fine, k=12) | 12 | 0% | 0.30 / 0.57 | 0.48 / 0.69 | 0.15 / 0.37 | 0.15 / 0.44 | 0.00 / 0.02 | 0.05 / 0.10 | -0.00 / 0.02 |
-| hdbscan (density) | 21 | 18% | 0.20 / 0.45 | 0.34 / 0.63 | 0.09 / 0.41 | 0.18 / 0.48 | 0.00 / 0.06 | 0.04 / 0.12 | -0.00 / 0.04 |
+| minibatch (coarse, k=3) | 3 | 0% | 0.80 / 0.76 | 0.22 / 0.50 | 0.07 / 0.17 | 0.06 / 0.15 | -0.00 / 0.00 | 0.03 / 0.04 | -0.00 / 0.00 |
+| minibatch (fine, k=12) | 12 | 0% | 0.27 / 0.55 | 0.48 / 0.68 | 0.13 / 0.35 | 0.15 / 0.43 | 0.00 / 0.02 | 0.06 / 0.10 | -0.00 / 0.01 |
+| agglomerative (coarse, k=3) | 3 | 0% | 0.58 / 0.69 | 0.24 / 0.50 | 0.10 / 0.23 | 0.08 / 0.27 | -0.00 / 0.00 | 0.03 / 0.04 | -0.00 / 0.00 |
+| agglomerative (fine, k=12) | 12 | 0% | 0.33 / 0.59 | 0.49 / 0.69 | 0.17 / 0.38 | 0.15 / 0.44 | 0.00 / 0.02 | 0.05 / 0.10 | -0.00 / 0.01 |
+| hdbscan (density) | 33 | 15% | 0.20 / 0.44 | 0.30 / 0.63 | 0.09 / 0.42 | 0.14 / 0.44 | 0.00 / 0.07 | 0.05 / 0.13 | -0.00 / 0.03 |
 
 | representation | kNN purity coarse | kNN purity fine |
 |---|---:|---:|
-| 32-d text vectors | 0.99 (chance 0.35) | 0.84 (chance 0.08) |
-| PCA (2-d) | 0.98 (chance 0.35) | 0.46 (chance 0.08) |
-| SVD (2-d) | 0.94 (chance 0.35) | 0.42 (chance 0.08) |
-| UMAP (2-d) | 0.99 (chance 0.34) | 0.84 (chance 0.09) |
+| 32-d text vectors | 0.99 (chance 0.35) | 0.86 (chance 0.09) |
+| PCA (2-d) | 0.98 (chance 0.35) | 0.45 (chance 0.08) |
+| SVD (2-d) | 0.94 (chance 0.35) | 0.39 (chance 0.08) |
+| UMAP (2-d) | 0.99 (chance 0.35) | 0.85 (chance 0.08) |

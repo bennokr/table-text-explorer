@@ -46,36 +46,36 @@ def timed(label, function, *args):
     return result
 
 
-def screens(subject):
-    variants = {"naive": False, "length-controlled": True}
-    return {
-        name: grade_screen(screen_columns(subject, stratified), subject.manifest)
-        for name, stratified in variants.items()
-    }
+def column_screen(subject):
+    results = screen_columns(subject)
+    return grade_screen(results, subject.manifest, subject.text_field)
+
+
+SECTIONS = {
+    "columns": column_screen,
+    "descriptions": evaluate_descriptions,
+    "structure": evaluate_structure,
+}
 
 
 def main():
-    manifest_path = (
-        Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).parent / "rechtspraak-gold.json"
-    )
+    default = Path(__file__).parent / "rechtspraak-gold-v2.json"
+    manifest_path = Path(sys.argv[1]) if len(sys.argv) > 1 else default
     output = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / ".cache/eval"
     manifest = load_manifest(manifest_path)
     rows = load_rows(manifest)
     modules = (load_module("terms"), load_module("analysis"), load_clustering())
-    sections = {"columns": {}, "descriptions": {}, "structure": {}}
+    wanted = manifest.get("sections", list(SECTIONS))
+    sections = {name: {} for name in wanted}
     for text_field in manifest["text_fields"]:
         subject = make_subject(modules, rows, manifest, text_field)
-        sections["columns"][text_field] = timed(f"columns {text_field}", screens, subject)
-        sections["descriptions"][text_field] = timed(
-            f"descriptions {text_field}", evaluate_descriptions, subject
-        )
-        sections["structure"][text_field] = timed(
-            f"structure {text_field}", evaluate_structure, subject
-        )
+        for name in wanted:
+            sections[name][text_field] = timed(f"{name} {text_field}", SECTIONS[name], subject)
     output.mkdir(parents=True, exist_ok=True)
-    (output / "rechtspraak-results.json").write_text(json.dumps(sections, indent=1, default=float))
-    (output / "rechtspraak-report.md").write_text(full_report(sections, rows, manifest))
-    print((output / "rechtspraak-report.md").read_text())
+    stem = manifest["name"]
+    (output / f"{stem}-results.json").write_text(json.dumps(sections, indent=1, default=float))
+    (output / f"{stem}-report.md").write_text(full_report(sections, rows, manifest))
+    print((output / f"{stem}-report.md").read_text())
 
 
 if __name__ == "__main__":

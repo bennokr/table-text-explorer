@@ -1,0 +1,21 @@
+{
+  "name": "dbrd",
+  "revision": 1,
+  "revision_note": "Column screen only. DBRD is where the length confound was first seen: the naive chi-square screen ranked word and character count above sentiment and rating.",
+  "dataset": "examples/dbrd-test.json",
+  "sections": ["columns"],
+  "text_fields": {"text": "Dutch book review text."},
+  "columns": {
+    "sentiment": {"expected": "strong", "why": "Positive or negative review: very different vocabulary."},
+    "rating": {"expected": "strong", "why": "1-5 stars, closely tied to sentiment."},
+    "word_count": {"expected": "length", "why": "Length of the analysed text."},
+    "character_count": {"expected": "length", "why": "Length of the analysed text."},
+    "review_id": {"expected": "null", "why": "File name of the review; arbitrary."}
+  },
+  "controls": {
+    "shuffled": ["sentiment", "rating"],
+    "shuffles_per_column": 8,
+    "noise_categories": [2, 4, 8],
+    "noise_numeric": 3
+  }
+}
