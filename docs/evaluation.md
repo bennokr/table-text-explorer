@@ -45,8 +45,9 @@ random noise columns.
    app's defaults) are scored by the share of each record's 10 nearest neighbours that share
    its label, against a shuffled-label baseline.
 
-Both text fields are run. The summary often names the legal area and can leak the label; the
-excerpt leaks less.
+Both text fields are run. The summary is short (median 27 words) and sometimes names the legal
+area. The excerpt is 2,500 characters of header and opening text. I expected the excerpt to leak
+less; the first run does not support that (it recovers the labels better, see below).
 
 ## Results of the first run
 
