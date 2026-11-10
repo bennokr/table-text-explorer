@@ -2,6 +2,7 @@ import { temporal } from './dates.js';
 import { missing, numberOf } from './schema.js';
 import { fieldDescription } from './field-metadata.js';
 import { descriptionEnabled, groupName } from './group-vectors.js';
+import { defaultSentenceModel } from './sentence-models.js';
 
 export const isEmbeddingMode = mode => ['words', 'sentences'].includes(mode);
 
@@ -48,7 +49,7 @@ function featureDescriptor(field, config) {
 function featureSettings(model, method) {
   const fields = featureFields(model);
   const lexical = ['text', 'words'].includes(model.config.mode);
-  return { revision: model.revision, sentence: { model: model.config.sentenceModel ?? 'multilingual', chunking: model.config.sentenceChunking,
+  return { revision: model.revision, sentence: { model: model.config.sentenceModel ?? defaultSentenceModel(model.config.language), chunking: model.config.sentenceChunking,
     size: model.config.sentenceChunkSize, overlap: model.config.sentenceOverlap },
     fields: fields.map(field => featureDescriptor(field, model.config)), method, mode: model.config.mode,
     stopwords: lexical ? stopwordList(model.phraseConfig ?? model.config, true) : [],

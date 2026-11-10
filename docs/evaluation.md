@@ -119,6 +119,38 @@ have not investigated why. Compare columns and representations within one table.
 - 13 of 2,360 summaries have no matched word vectors; the app would drop those rows, the harness
   keeps them as zero vectors.
 
+## Defaults taken from the evaluation
+
+| Default | Evidence |
+|---|---|
+| Text maps start from TF-IDF; demos use it | Static word vectors were weakest everywhere; TF-IDF needs no model download. |
+| Exact K-means with 10 restarts up to 5,000 records | On 80% subsamples the k = 3 ARI spread on summaries fell from +-0.10 (MiniBatch, 3 restarts) to +-0.02, and on excerpts the mean rose from 0.68 to 0.90. Twenty restarts added nothing. |
+| 32 SVD dimensions kept | Tested 32, 64 and 128 for every embedding: K-means ARI and neighbourhood purity were flat, and the column screen peaked at 64 (+0.01-0.03) and fell at 128. The gain on unreduced vectors came from a classifier using all dimensions, not from clustering or maps. |
+| Linear maps use PCA | PCA was better than SVD in 27 of 30 cells, tied in 2 and 0.006 behind in 1. |
+| Dutch sentence model for Dutch text | Quality tied with the multilingual model; half the size, about twice as fast. |
+| No single-character phrase edges | `1`, `2`, `c`, `v` appeared as distinctive phrases on excerpts. Digits of two or more characters stay, because they can be statute references. |
+| Balanced splits moved to Advanced | Identical to common phrases when no phrase occurs in more than half the records (all 2,360 summaries); weakest ranking elsewhere. |
+
+## Next dataset: Tweede Kamer motions
+
+Light exploration of the open OData API (`gegevensmagazijn.tweedekamer.nl/OData/v4/2.0`, no key needed):
+
+- **66,426 motions** (`Zaak` with `Soort eq 'Motie'`). Fields include the one-line subject (`Onderwerp`, median
+  22 words), the parent dossier title, start date and parliamentary year.
+- **Decision and votes**: `Besluit` (`Stemmen - aangenomen` / `verworpen` / `aangehouden`, withdrawn, ...) and
+  `Stemming` per party with seat count. In a 200-motion sample about half had a vote, and aangenomen and verworpen
+  were nearly balanced (50 against 45). Per-party votes exist for hand votes (about 47% of motions); pick the
+  right `Besluit` because the list is unordered and includes `Ingediend`.
+- **Submitters**: `ZaakActor` with party and relation (`Indiener`, `Medeindiener`); median 2, maximum 9. The lead
+  committee is `TK` for every motion, so there is no committee topic label; the ministry code in the dossier
+  number is a possible topic proxy.
+- **Full text**: each motion has a PDF (about 20 KB) at `Document({id})/resource`; `pdftotext` gives about 130
+  clean words. The substance sits between "De Kamer," and "en gaat over tot de orde van de dag"; the header and
+  signatures echo the date, the dossier and the submitters' names and need scrubbing.
+- **Fit**: mixed types (text twice, numeric seat counts and submitter numbers, party, outcome, date) with a diffuse,
+  party-confounded outcome signal, which makes it a test for a conditional column screen. Coalition membership is
+  not in the API. Not built yet.
+
 ## Controls on the harness
 
 `npm run test:eval` runs `tests/eval/check_harness.py` on synthetic data with planted structure:

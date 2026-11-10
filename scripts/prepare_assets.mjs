@@ -1,4 +1,5 @@
 import { prepareDutchModel } from './prepare_dutch_model.mjs';
+import { restoreModelRelease } from './restore_model_release.mjs';
 import { sentenceModel } from '../src/sentence-vectors.js';
 import { copyFile, mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -80,7 +81,11 @@ if (!process.argv.includes('--model-only')) {
   await browserAssets();
   await import('./prepare_examples.mjs');
 }
-if (process.argv.includes('--model') || process.argv.includes('--model-only')) { await modelAssets(); await prepareDutchModel(); }
+if (process.argv.includes('--model') || process.argv.includes('--model-only')) {
+  // The pinned release avoids the Hugging Face download and the torch export of the Dutch model.
+  const restored = await restoreModelRelease();
+  if (restored) { manifest.push(...restored); } else { await modelAssets(); await prepareDutchModel(); }
+}
 const previous = JSON.parse(await readFile(`${root}/manifest.json`, 'utf8').catch(error => {
   if (error.code === 'ENOENT') { return '[]'; }
   throw error;

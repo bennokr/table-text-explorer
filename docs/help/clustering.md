@@ -20,7 +20,7 @@ Saved representations retain semantic/numeric features; a saved similarity map u
 
 ## Methods
 
-K-means is the fast default; agglomerative clustering builds a hierarchy; HDBSCAN finds density groups and an Other group.
+K-means is the fast default; agglomerative clustering builds a hierarchy; HDBSCAN finds density groups and an Other group; it is experimental because on text vectors it often leaves most records in Other.
 
 K-means requires a group count and assigns every usable record. Hierarchical cuts let you explore different granularity. Density selection controls reuse a saved tree. Other is not the same as missing: records without vectors have no cluster.
 
@@ -40,4 +40,4 @@ For sparse data, compare [aggregation strategies](combining.md) and missingness 
 
 All current clustering methods use Euclidean distance; optional vector normalization changes its interpretation.
 
-K-means uses seed 42 and three initializations. Agglomerative clustering is limited to 5,000 usable records to bound memory. Current prepared features use up to 32 dimensions, independently of the 2D display. Embeddings and results remain local and can be [exported](data.md#exports).
+K-means is exact up to 5,000 records, with seed 42 and ten restarts, which keeps repeated runs close together; larger data uses MiniBatch K-means. Batch size, iterations and vector normalization are fixed (normalization is on for text inputs and off for 2D maps and table columns). Agglomerative clustering is limited to 5,000 usable records to bound memory. Current prepared features use up to 32 dimensions, independently of the 2D display. Embeddings and results remain local and can be [exported](data.md#exports).

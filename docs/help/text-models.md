@@ -10,7 +10,7 @@ Use multilingual sentence embeddings for mixed Dutch/English text; compare Dutch
 
 1. Use TF-IDF for shared words and phrases, static vectors for pooled word meaning, or sentence embeddings for contextual meaning.
 2. Select the language/model when applicable.
-3. Start with complete text and default chunk settings.
+3. Start with complete text and the default chunking.
 
 ## Interpreting the result
 
@@ -30,7 +30,7 @@ First-chunk mode omits later text; coverage is saved with the result. Sentence t
 
 ## Settings
 
-Chunk size and overlap are advanced controls; leave their defaults unless you need a specific comparison.
+Chunks hold 126 tokens with no overlap. These are fixed; the only choice is whether to use all chunks or the first one.
 
 Static vectors support ordinary or TF-IDF-weighted word means. Their language models occupy separate spaces. Empty text and words absent from the model contribute no vector.
 

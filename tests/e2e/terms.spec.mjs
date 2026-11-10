@@ -59,7 +59,7 @@ async function semanticAndClusters(page) {
   await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toHaveCount(1);
   await page.selectOption('#terms-ranking', 'auto');
   await page.click('#cluster');
-  await page.selectOption('#cluster-method', 'minibatch');
+  await page.selectOption('#cluster-method', 'kmeans');
   await page.fill('#cluster-count', '2');
   await page.click('#cluster-submit');
   await idle(page);

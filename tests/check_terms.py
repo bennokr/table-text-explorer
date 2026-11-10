@@ -89,6 +89,10 @@ class TermTests(unittest.TestCase):
         result = json.loads(terms.describe_terms(request([0], [1, 2, 3], support=2)))
         self.assertEqual(result["fields"][0]["terms"], [])
 
+    def test_phrases_do_not_start_or_end_with_a_single_character(self):
+        grams = set(terms.analyze_terms("c 1 camera 2024 x", set(), (1, 2)))
+        self.assertEqual(grams, {"camera", "2024", "camera 2024"})
+
     def test_boundaries_and_internal_stopwords(self):
         grams = set(terms.analyze_terms("goede en slechte. batterij\nscherm", {"en"}, (1, 3)))
         self.assertIn("goede en slechte", grams)

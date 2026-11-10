@@ -1,6 +1,6 @@
 import './variable-picker.js';
 import { variableOptions } from './variable-options.js';
-import { $, options } from './dom.js';
+import { $, element, options } from './dom.js';
 import { phraseSettings } from './phrase-config.js';
 
 export class PhraseSettings {
@@ -27,8 +27,20 @@ export class PhraseSettings {
     $('#phrase-dialog').showModal();
   }
 
+  // The select offers three presets. A setting outside them (an older saved preset) gets a one-off
+  // option, so it is shown and kept instead of silently replaced.
+  showSizes(sizes) {
+    const select = $('#terms-sizes');
+    const value = sizes.join(':');
+    for (const extra of select.querySelectorAll('option[data-custom]')) { extra.remove(); }
+    if (![...select.options].some(option => option.value === value)) {
+      select.append(element('option', { value, text: `${sizes[0]}–${sizes[1]} words (custom)`, 'data-custom': '' }));
+    }
+    select.value = value;
+  }
+
   fill(config) {
-    $('#terms-sizes').value = config.sizes.join(':');
+    this.showSizes(config.sizes);
     $('#terms-language').value = config.language;
     $('#terms-stopwords').value = config.stopwords;
     $('#terms-fields').selected = config.fields;

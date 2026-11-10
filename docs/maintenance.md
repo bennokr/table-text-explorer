@@ -49,7 +49,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
 each authored module at 250 statements, Python at 2600 total and JavaScript at
-10200 total. Imports, nested bodies, tooling and tests count. Generated files,
+10400 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -61,6 +61,11 @@ focused regression coverage. Existing worker, cache and dialog paths are reused;
 these additions introduce no UI framework. Prefer deleting obsolete paths and
 splitting responsibilities over compressing code. Any future increase needs a
 written rationale here; function and module limits stay unchanged.
+
+The JavaScript budget rose from 10200 to 10400 for tooling and tests, not app code (`src/` grew by about 15
+net statements): the offline embedding runner for the evaluation (`tests/eval/embed.mjs`, `umap-map.mjs`, 78),
+the model-release packaging and restore scripts (85) and unit tests for the new defaults, map method and
+progress arithmetic (62). Nothing here ships in the app.
 
 The Python budget rose from 2500 to 2600 for the evaluation harness (`tests/eval/`, `scripts/prepare_rechtspraak.py`,
 about 800 statements). It is tooling the budget counts but not product code: a seeded sampler, a gold-manifest
@@ -95,6 +100,24 @@ source hashes, invokes `prepare_dutch_sentences.py`, and verifies the quantized 
 hash. Export dependencies are pinned separately and use CPU. Raw weights stay in
 ignored `vendor/`; the ~59 MB model/tokenizer assets, Apache-2.0 license, model card
 and provenance are bundled for offline use.
+
+The export needs torch, transformers and onnx, and `uv` downloads about 40 packages including NVIDIA CUDA
+wheels (several GB) even though inference runs on CPU. To avoid that on every machine and in CI, package the
+two prepared models once and publish them as a GitHub release:
+
+```sh
+npm run prepare:sentences                 # once, on a machine that can run the export
+node scripts/package_model_release.mjs    # writes .cache/model-release/*.tar.gz, SHA256SUMS, scripts/model-release.json
+gh release create models-v1 .cache/model-release/*.tar.gz .cache/model-release/SHA256SUMS
+```
+
+The archives are deterministic, so repackaging the same files gives the same hashes, which
+`scripts/model-release.json` pins. `prepare_assets.mjs --model-only` first calls
+`scripts/restore_model_release.mjs`: it uses a matching archive from `.cache/model-release/`, otherwise
+`gh release download` (works for private repositories; CI needs `GH_TOKEN`) or a plain download, verifies the
+SHA-256 and extracts into `public/vendor/models/`. If the release is unavailable it falls back to Hugging Face
+and the torch export. The Pages workflow does not prepare any pretrained assets yet; once the release exists,
+add `node scripts/prepare_assets.mjs --model-only` (with `GH_TOKEN`) before the build step.
 
 The export retains full-precision embedding tables and checks native/quantized
 agreement on synthetic Dutch text. This is a parity probe, not a quality benchmark.

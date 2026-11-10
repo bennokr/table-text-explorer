@@ -63,7 +63,7 @@ export async function mapForm(page, mode, method = 'pca') {
   await page.click('#analysis-inputs');
   await page.selectOption('#feature-mode', mode);
   if (!['text', 'words'].includes(mode)) { await fields(page, ['text']); }
-  await page.selectOption('#map-method', method);
+  await page.selectOption('#map-method', method === 'umap' ? 'umap' : 'linear');
 }
 
 export async function finishMap(page) {

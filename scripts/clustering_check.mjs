@@ -9,6 +9,7 @@ const python = await loadPyodide({ indexURL });
 await python.loadPackage('scikit-learn');
 python.FS.writeFile('/home/pyodide/lexical.py', await readFile(new URL('../src/workers/lexical.py', import.meta.url), 'utf8'));
 python.FS.writeFile('/home/pyodide/text_indexes.py', await readFile(new URL('../src/workers/text_indexes.py', import.meta.url), 'utf8'));
+python.FS.writeFile('/home/pyodide/term_ranking.py', await readFile(new URL('../src/workers/term_ranking.py', import.meta.url), 'utf8'));
 for (const name of ['analysis', 'density', 'clustering', 'terms', 'term_groups']) {
   await python.runPythonAsync(await readFile(new URL(`../src/workers/${name}.py`, import.meta.url), 'utf8'));
 }
@@ -16,10 +17,11 @@ const tests = await readFile(new URL('../tests/check_clustering.py', import.meta
 const numerical = tests.slice(tests.indexOf('class ClusteringChecks'), tests.indexOf('\ndef timings'));
 await python.runPythonAsync(`
 import unittest
+from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.datasets import make_blobs
 from sklearn.metrics import adjusted_rand_score
 from types import SimpleNamespace
-clustering = SimpleNamespace(cluster=cluster, select_density=select_density)
+clustering = SimpleNamespace(cluster=cluster, select_density=select_density, estimator=estimator)
 ${numerical}
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(ClusteringChecks)
 assert unittest.TextTestRunner().run(suite).wasSuccessful()
@@ -28,7 +30,7 @@ const timings = JSON.parse(await python.runPythonAsync(`
 from sklearn.datasets import make_blobs
 from sklearn.metrics import adjusted_rand_score
 evidence = []
-for count, methods in ((2000, ('minibatch', 'agglomerative', 'hdbscan')), (20000, ('minibatch',))):
+for count, methods in ((2000, ('kmeans', 'minibatch', 'agglomerative', 'hdbscan')), (20000, ('kmeans', 'minibatch'))):
     features, truth = make_blobs(n_samples=count, n_features=32, centers=8, random_state=42)
     for method in methods:
         output = cluster({'method': method, 'normalize': False}, features)
@@ -36,7 +38,7 @@ for count, methods in ((2000, ('minibatch', 'agglomerative', 'hdbscan')), (20000
         evidence.append({'method': method, 'records': count, 'dimensions': 32, 'seconds': output['seconds']})
 json.dumps(evidence)
 `));
-assert.equal(timings.length, 4);
+assert.equal(timings.length, 6);
 // Exercise the same JsProxy.to_py bridge as the browser worker.
 python.globals.set('embedding_values', [[0, 0], [0, 1], [10, 10], [10, 11]]);
 const result = JSON.parse(await python.runPythonAsync(`run_clustering('{"method":"minibatch","clusters":2,"normalize":false}')`));

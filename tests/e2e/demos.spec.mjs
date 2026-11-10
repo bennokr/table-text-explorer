@@ -1,4 +1,4 @@
-import { test, expect, snapshot, importRows } from './fixtures.mjs';
+import { test, expect, snapshot, importRows, records } from './fixtures.mjs';
 
 async function expectCards(page, count) {
   await expect(page.locator('.view-card')).toHaveCount(count);
@@ -53,10 +53,11 @@ test('demo codebooks and views replace previous cards completely and reset on or
   expect(demo.fields.find(field => field.name === 'text').kind).toBe('text');
   expect(demo.views.map(view => view.x)).toEqual(['word_count', 'sentiment', 'word_count']);
   await page.click('#analysis-inputs');
-  await expect(page.locator('#feature-mode')).toHaveValue('words');
+  await expect(page.locator('#feature-mode')).toHaveValue('text');
   await page.locator('#map-dialog [data-close]').click();
   await removeCards(page);
-  await importRows(page);
+  // Rows without a text column go back to the table input; with text the default is TF-IDF.
+  await importRows(page, records.map(row => ({ id: row.id, x: row.x, y: row.y, group: row.group })));
   await expectCards(page, 3);
   await page.click('#analysis-inputs');
   await expect(page.locator('#feature-mode')).toHaveValue('table');

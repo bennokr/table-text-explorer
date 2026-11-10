@@ -7,12 +7,18 @@ import { initializeTree } from './cluster-tree.js';
 import { nameClusters } from './cluster-names.js';
 import { complete } from './status.js';
 
+// Fixed, not user settings: neither changes what a clustering finds, only how long it takes.
+const MINIBATCH_SIZE = 1024;
+const MAX_ITERATIONS = 100;
+
 function inputSummary(model, source) {
   if (!source) { return `${model.rows.length} records · ${model.config.mode} · current map settings`; }
   return `${source.rowIds.length} records · ${source.kind === 'projection' ? '2D coordinates' : 'saved feature space'}`;
 }
 
 export class Clustering {
+  normalize = true;
+
   constructor(model, analysis) {
     this.model = model;
     this.analysis = analysis;
@@ -55,13 +61,13 @@ export class Clustering {
     $('#cluster-count').value = Math.min(8, count);
     $('#cluster-min-size').value = Math.min(15, count);
     $('#cluster-min-samples').value = Math.min(5, count);
-    $('#cluster-normalize').checked = source?.kind !== 'projection' && (source?.config?.mode ?? this.model.config.mode) !== 'table';
+    // Unit-length vectors suit text representations; 2D maps and table columns keep their scale.
+    this.normalize = source?.kind !== 'projection' && (source?.config?.mode ?? this.model.config.mode) !== 'table';
     this.name();
   }
 
   controls() {
     const method = $('#cluster-method').value;
-    $('#cluster-centroids').hidden = method !== 'minibatch';
     $('#cluster-linkage-label').hidden = method !== 'agglomerative';
     $('#cluster-density').hidden = method !== 'hdbscan';
     $('#cluster-count-label').hidden = method === 'hdbscan';
@@ -83,9 +89,9 @@ export class Clustering {
 
   parameters() {
     return { method: $('#cluster-method').value, clusters: Number($('#cluster-count').value),
-      batchSize: Number($('#cluster-batch').value), iterations: Number($('#cluster-iterations').value),
+      batchSize: MINIBATCH_SIZE, iterations: MAX_ITERATIONS,
       linkage: $('#cluster-linkage').value, minClusterSize: Number($('#cluster-min-size').value),
-      minSamples: Number($('#cluster-min-samples').value), normalize: $('#cluster-normalize').checked };
+      minSamples: Number($('#cluster-min-samples').value), normalize: this.normalize };
   }
 
   async source(id, name) {

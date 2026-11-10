@@ -13,6 +13,11 @@ def tokenize_text(text):
     ]
 
 
+def usable_edge(word, stopwords):
+    """A phrase may not start or end with a stopword or a single character such as "c" or "1"."""
+    return word not in stopwords and len(word) > 1
+
+
 def analyze_tokens(tokens, stopwords, sizes):
     window = []
     for word in tokens:
@@ -22,7 +27,7 @@ def analyze_tokens(tokens, stopwords, sizes):
         window = [*window, word][-sizes[1] :]
         for size in range(sizes[0], min(sizes[1], len(window)) + 1):
             words = window[-size:]
-            if words[0] not in stopwords and words[-1] not in stopwords:
+            if usable_edge(words[0], stopwords) and usable_edge(words[-1], stopwords):
                 yield " ".join(words)
 
 

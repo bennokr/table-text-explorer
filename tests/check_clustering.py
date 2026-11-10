@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 
 import numpy as np
-from sklearn.cluster import HDBSCAN
+from sklearn.cluster import HDBSCAN, KMeans, MiniBatchKMeans
 from sklearn.datasets import make_blobs
 from sklearn.metrics import adjusted_rand_score
 
@@ -28,7 +28,7 @@ spec.loader.exec_module(clustering)
 class ClusteringChecks(unittest.TestCase):
     def test_separated_groups_and_repeatability(self):
         features, truth = make_blobs(n_samples=200, n_features=8, centers=4, random_state=42)
-        for method in ("minibatch", "agglomerative", "hdbscan"):
+        for method in ("kmeans", "minibatch", "agglomerative", "hdbscan"):
             config = {"method": method, "clusters": 4, "normalize": False}
             first = clustering.cluster(config, features)["labels"]
             second = clustering.cluster(config, features)["labels"]
@@ -116,10 +116,19 @@ class ClusteringChecks(unittest.TestCase):
             {"method": "unknown"},
             {"method": "minibatch", "clusters": 3.2},
             {"method": "minibatch", "clusters": 21},
+            {"method": "kmeans", "clusters": 21},
             {"method": "agglomerative", "linkage": "invalid"},
         ):
             with self.assertRaises(ValueError):
                 clustering.cluster(config, np.eye(20))
+
+    def test_kmeans_is_exact_with_restarts_up_to_the_limit_and_minibatch_beyond(self):
+        small = clustering.estimator({"method": "kmeans", "clusters": 3}, 100)
+        large = clustering.estimator({"method": "kmeans", "clusters": 3}, 5001)
+        self.assertIsInstance(small, KMeans)
+        self.assertEqual(small.n_init, 10)
+        self.assertIsInstance(large, MiniBatchKMeans)
+        self.assertIsInstance(clustering.estimator({"method": "minibatch"}, 100), MiniBatchKMeans)
 
     def test_agglomerative_memory_guard(self):
         with self.assertRaisesRegex(ValueError, "5,000"):
@@ -129,8 +138,8 @@ class ClusteringChecks(unittest.TestCase):
 def timings():
     evidence = []
     for count, methods in (
-        (2000, ("minibatch", "agglomerative", "hdbscan")),
-        (20000, ("minibatch",)),
+        (2000, ("kmeans", "minibatch", "agglomerative", "hdbscan")),
+        (20000, ("kmeans", "minibatch")),
     ):
         features, _ = make_blobs(n_samples=count, n_features=32, centers=8, random_state=42)
         for method in methods:

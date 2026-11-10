@@ -46,7 +46,7 @@
           <select id="terms-tree-node" aria-label="Tree branches to describe" hidden></select>
           <select id="terms-tree-comparison" aria-label="Tree comparison" hidden><option value="siblings">Branch vs siblings</option><option value="rest">Branch vs rest of visible</option></select>
           <select id="terms-group-page" aria-label="Groups to describe" hidden></select>
-          <select id="terms-ranking" aria-label="N-gram ranking"><option value="auto">Automatic</option><option value="frequency">Common phrases</option><option value="balanced">Balanced splits</option><option value="semantic">Semantic splits</option><option value="contrast">c-TF-IDF contrast</option><option value="ctfidf">c-TF-IDF</option><option value="lift">Document lift</option></select>
+          <select id="terms-ranking" aria-label="N-gram ranking"><option value="auto">Automatic</option><option value="frequency">Common phrases</option><option value="semantic">Semantic splits</option><optgroup label="Advanced"><option value="balanced">Balanced splits</option><option value="contrast">c-TF-IDF contrast</option><option value="ctfidf">c-TF-IDF</option><option value="lift">Document lift</option></optgroup></select>
           <select id="terms-embedding" aria-label="Semantic split embeddings" title="Reuse original embeddings from a saved result; no new model is fitted" hidden></select>
           <select id="terms-display" aria-label="Phrase field display"><option value="separate">Separate field clouds</option><option value="combined">Combined · color by field</option></select>
           <label title="Minimum matching records; split rankings require this many records on both sides">Min records <input id="terms-support" type="number" min="1" max="20000" value="2" required></label>
@@ -89,7 +89,7 @@
         <section id="terms-settings"><h3>Text fields and phrases</h3>
         <fieldset id="terms-index-controls" aria-label="Phrase counting">
           <variable-picker id="terms-fields" multiple aria-label="Phrase fields" caption="Text fields"></variable-picker>
-          <div class="term-controls term-stopwords"><label>N-grams <select id="terms-sizes"><option value="1:5">1–5 words</option><option value="2:4">2–4 words</option><option value="3:5">3–5 words</option><option value="1:3">1–3 words</option><option value="1:1">Words</option><option value="2:2">Bigrams</option><option value="3:3">Trigrams</option><option value="1:2">1–2 words</option></select></label>
+          <div class="term-controls term-stopwords"><label>N-grams <select id="terms-sizes"><option value="1:1">Words</option><option value="1:3">Short phrases (1–3 words)</option><option value="1:5">Longer phrases (1–5 words)</option></select></label>
           <label>Stoplist <select id="terms-language"><option value="nl">Dutch · basic</option><option value="en">English · basic</option><option value="nl,en">Dutch + English</option><option value="none">None</option></select></label>
           <input id="terms-stopwords" aria-label="Additional n-gram stopwords" placeholder="Additional stopwords"></div>
           <button type="button" class="help-hint" data-help="descriptions#phrase-counting">?</button>
@@ -107,14 +107,11 @@
     <label class="analysis-name">Name <input id="cluster-name" required maxlength="120"></label>
     <label>Input <select id="cluster-source"></select></label>
     <output id="cluster-source-summary"></output><button type="button" class="help-hint" data-help="clustering">?</button>
-    <label>Method <select id="cluster-method"><option value="minibatch">MiniBatch K-means · fast default</option><option value="agglomerative">Agglomerative · hierarchical</option><option value="hdbscan">HDBSCAN · density with Other</option></select></label>
+    <label>Method <select id="cluster-method"><option value="kmeans">K-means · default</option><option value="agglomerative">Agglomerative · hierarchical</option><option value="hdbscan">HDBSCAN · density with Other (experimental)</option></select></label>
     <div id="cluster-parameters"><label id="cluster-count-label">Groups <input id="cluster-count" type="number" min="2" step="1" value="8" required></label>
     <div id="cluster-density" hidden><label>Minimum group size <input id="cluster-min-size" type="number" min="2" step="1" value="15" required></label>
       <label>Minimum neighbors <input id="cluster-min-samples" type="number" min="1" step="1" value="5" required></label></div>
-    <details><summary>Advanced tuning</summary><div id="cluster-centroids"><label>Batch size <input id="cluster-batch" type="number" min="16" max="65536" step="1" value="1024" required></label>
-      <label>Max iterations <input id="cluster-iterations" type="number" min="1" max="1000" step="1" value="100" required></label></div>
-    <label id="cluster-linkage-label" hidden>Linkage <select id="cluster-linkage"><option value="ward">Ward</option><option value="average">Average</option><option value="complete">Complete</option><option value="single">Single</option></select></label>
-    <label title="Normalize each input vector to unit length"><input id="cluster-normalize" type="checkbox">Normalize vectors</label></details></div>
+    <label id="cluster-linkage-label" hidden>Linkage <select id="cluster-linkage"><option value="ward">Ward</option><option value="average">Average</option><option value="complete">Complete</option><option value="single">Single</option></select></label></div>
     <div id="cluster-naming" class="cluster-naming"><label title="Reuse a compatible all-record text index, or build one automatically. Edited names are preserved."><input id="cluster-suggest-names" type="checkbox">Suggest phrase names</label></div>
     <button type="button" class="help-hint" data-help="clustering#technical-details">?</button>
     <p id="cluster-error" role="alert"></p>
@@ -136,7 +133,7 @@
   <dialog id="map-dialog" aria-labelledby="map-title"><form id="map-form">
     <h2 id="map-title">New similarity map</h2>
     <div class="analysis-name-row">
-      <label>Method <select id="map-method"><option value="umap">UMAP</option><option value="pca">PCA</option><option value="svd">SVD</option></select></label>
+      <label>Method <select id="map-method"><option value="umap">UMAP</option><option value="linear">Linear projection</option></select></label>
       <label class="analysis-name">Name <input id="map-name" required maxlength="120"></label>
     </div>
     <fieldset><legend>Input features <button type="button" class="help-hint" data-help="maps">?</button></legend>
@@ -151,8 +148,6 @@
         <label>Sentence model <select id="sentence-model"></select></label><button type="button" class="help-hint" data-help="text-models">?</button>
         <details data-map-fold><summary>Long text settings <button type="button" class="help-hint" data-help="text-models#long-text">?</button></summary>
           <label>Long text <select id="sentence-chunking"><option value="chunks">Average chunks · use all text</option><option value="truncate">First chunk only</option></select></label>
-          <label>Tokens per chunk <input id="sentence-chunk-size" type="number" min="16" max="126" value="126"></label>
-          <label>Overlapping tokens <input id="sentence-overlap" type="number" min="0" max="125" value="0"></label>
         </details>
       </div>
       <div id="embedding-options" hidden>

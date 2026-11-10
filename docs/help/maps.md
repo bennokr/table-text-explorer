@@ -29,7 +29,7 @@ Their compact summary links to [shared phrase settings](descriptions.md#phrase-c
 Keep defaults initially; open advanced settings when you have a concrete comparison to make.
 
 - UMAP emphasizes local neighborhoods. Neighbors changes their scale; epochs changes optimization effort.
-- PCA provides a linear summary; SVD also provides a linear low-dimensional representation.
+- Linear projection is a fast linear summary of the prepared features. The app chooses the method from the input (currently PCA for every input, because it centres the data first) and does not ask.
 - Use [field weights](combining.md#field-weights) to change relative influence, not record counts.
 
 ## Troubleshooting

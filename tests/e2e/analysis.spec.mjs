@@ -5,7 +5,9 @@ async function buildIndex(page) {
   await idle(page);
   await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toBeVisible();
   await expect(page.locator('#terms-controls')).not.toBeVisible();
-  await page.locator('.term-cloud').getByRole('button').first().click();
+  // Phrases tie at 12 of 24 records and sort alphabetically, so the first one may belong to the
+  // other group. Click a phrase that really occurs in the highlighted camera records.
+  await page.locator('.term-cloud').getByRole('button', { name: /camera maakt scherpe/ }).click();
   await expect(page.locator('#search')).toHaveValue(/AND "text"~/);
   await idle(page);
   expect((await snapshot(page)).selected.length).toBeGreaterThan(0);

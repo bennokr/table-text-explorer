@@ -57,7 +57,8 @@ class SimilarityMaps {
   }
 
   name() {
-    suggestName($('#map-name'), mapName(this.model, readMapConfig(this.model), $('#map-method').value));
+    const config = readMapConfig(this.model);
+    suggestName($('#map-name'), mapName(this.model, config, config.mapMethod));
   }
 
   async make() {

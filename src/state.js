@@ -1,4 +1,4 @@
-import { defaultConfig } from './default-config.js';
+import { defaultConfig, defaultInputMode } from './default-config.js';
 import { inferSchema } from './schema.js';
 import { Results } from './results.js';
 
@@ -40,6 +40,7 @@ export class Dataset extends EventTarget {
     this.fieldRevisions.clear();
     this.fields = inferSchema(this.rows, metadata, this.config);
     this.config.overrides = {};
+    this.config.mode = defaultInputMode(this.fields);
     this.config.features = null;
     this.phraseConfig = null;
     this.annotations.clear();
