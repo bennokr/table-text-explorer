@@ -18,8 +18,11 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent))
 
 from eval_columns import grade_screen, screen_columns
-from eval_common import Subject, build_index, load_clustering, load_module
+from eval_common import load_clustering, load_module
+from eval_common import make_subject as shared_subject
 from eval_descriptions import evaluate_descriptions
+from eval_surfacing import phrase_information
+from scipy.sparse import csc_matrix
 
 GROUPS = ["alpha", "beta", "gamma"]
 MANIFEST = {
@@ -65,12 +68,9 @@ def planted_rows(count=900, seed=0, own_share=0.25):
 
 
 def make_subject(own_share=0.25):
-    terms = load_module("terms")
-    rows = planted_rows(own_share=own_share)
-    field = build_index(terms, rows, "text")
-    return Subject(
-        terms, load_module("analysis"), load_clustering(), rows, MANIFEST, "text", field, 3
-    )
+    modules = (load_module("terms"), load_module("analysis"), load_clustering())
+    manifest = {**MANIFEST, "length_column": "ruling_words"}
+    return shared_subject(modules, planted_rows(own_share=own_share), manifest, "text", 3)
 
 
 def graded(subject):
@@ -95,6 +95,13 @@ class HarnessControls(unittest.TestCase):
         grade = graded(make_subject(own_share=0.04))
         self.assertLessEqual(grade["table"]["signal"]["p"], 0.05)
         self.assertGreater(grade["table"]["signal"]["skill_beyond_length"], grade["null_max"])
+
+    def test_phrase_information_scores_perfect_split_one_and_independence_zero(self):
+        labels = np.array(["a"] * 50 + ["b"] * 50)
+        phrases = np.column_stack([labels == "a", np.tile([1, 0], 50)]).astype(float)
+        information = phrase_information(csc_matrix(phrases), labels)
+        self.assertAlmostEqual(information[0], 1.0, places=6)
+        self.assertAlmostEqual(information[1], 0.0, places=6)
 
     def test_descriptions_recover_planted_groups_but_not_random_ones(self):
         output = evaluate_descriptions(self.subject)["groups"]["contrast"]

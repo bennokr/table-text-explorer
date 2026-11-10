@@ -33,6 +33,8 @@
     "noise_numeric": 3
   },
   "hierarchy": {"coarse": "legal_area", "fine": "legal_subarea"},
+  "length_column": "ruling_words",
+  "extra_labels": ["procedure", "court_type", "year"],
   "scored_as": {
     "primary": "every strong column beats every null control on skill beyond length",
     "secondary": "strong and moderate columns versus null controls (AUC)",

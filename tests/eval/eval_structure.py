@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
-from eval_common import ROOT, text_features
+from eval_common import ROOT
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from sklearn.neighbors import NearestNeighbors
 
@@ -21,18 +21,20 @@ CLUSTER_RUNS = [
 ]
 
 
+def length_values(rows, manifest):
+    return np.array([float(row[manifest["length_column"]]) for row in rows])
+
+
 def label_sets(rows, manifest, rng):
-    names = [*manifest["hierarchy"].values(), "procedure", "court_type", "year"]
+    names = [*manifest["hierarchy"].values(), *manifest.get("extra_labels", [])]
     labels = {name: [str(row[name]) for row in rows] for name in names}
-    labels["length quartile"] = [str(int(v)) for v in length_quartile(rows)]
+    quartiles = np.digitize(
+        length_values(rows, manifest), np.quantile(length_values(rows, manifest), [0.25, 0.5, 0.75])
+    )
+    labels["length quartile"] = [str(int(v)) for v in quartiles]
     fine = np.array(labels[manifest["hierarchy"]["fine"]])
     labels["shuffled fine"] = [rng.permutation(fine) for _ in range(SHUFFLES)]
     return labels
-
-
-def length_quartile(rows):
-    lengths = np.array([row["ruling_words"] for row in rows])
-    return np.digitize(lengths, np.quantile(lengths, [0.25, 0.5, 0.75]))
 
 
 def agreement(predicted, labels):
@@ -115,9 +117,8 @@ def map_runs(analysis, features, labels, manifest, rng):
 
 def evaluate_structure(subject):
     rng = np.random.default_rng(subject.seed)
-    features = text_features(subject.analysis, subject.rows, subject.text_field)
     labels = label_sets(subject.rows, subject.manifest, rng)
     return {
-        "clusters": cluster_runs(subject.clustering, features, labels, subject.manifest),
-        "maps": map_runs(subject.analysis, features, labels, subject.manifest, rng),
+        "clusters": cluster_runs(subject.clustering, subject.features, labels, subject.manifest),
+        "maps": map_runs(subject.analysis, subject.features, labels, subject.manifest, rng),
     }

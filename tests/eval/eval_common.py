@@ -4,7 +4,7 @@ import importlib.util
 import json
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import cache
 from pathlib import Path
 
@@ -66,6 +66,10 @@ def build_index(terms, rows, field):
     return terms.term_indexes[field]
 
 
+EMBEDDINGS = ROOT / ".cache/eval/embeddings"
+EMBEDDING_KINDS = ["words-mean", "words-tfidf", "sentences-multilingual", "sentences-dutch"]
+
+
 @dataclass(frozen=True)
 class Subject:
     """Everything one evaluation needs: app modules, records, gold manifest and one text field."""
@@ -78,6 +82,62 @@ class Subject:
     text_field: str
     field: dict  # The app's phrase index for text_field (its indexId is the field name).
     seed: int
+    representation: str = "tfidf"
+    features: object = None  # The 32-d vectors the app feeds to clusters, maps and analyses.
+    embeddings: object = None  # Raw embeddings (rows x dimensions) for embedding representations.
+
+
+class Saved:
+    """Stands in for the Pyodide proxy the app's Python reads embeddings from."""
+
+    def __init__(self, values):
+        self.values = values
+
+    def to_py(self):
+        return self.values
+
+
+def embedding_path(manifest, text_field, kind):
+    return EMBEDDINGS / f"{manifest['name']}-{text_field}-{kind}"
+
+
+def has_representation(manifest, text_field, kind):
+    return (
+        kind == "tfidf" or embedding_path(manifest, text_field, kind).with_suffix(".f32").exists()
+    )
+
+
+def load_embeddings(manifest, text_field, kind):
+    path = embedding_path(manifest, text_field, kind)
+    meta = json.loads(path.with_suffix(".json").read_text())
+    values = np.fromfile(path.with_suffix(".f32"), dtype="<f4")
+    return values.reshape(-1, meta["dimensions"])
+
+
+def make_subject(modules, rows, manifest, text_field, seed):
+    """Index one text field and attach the TF-IDF representation (the baseline)."""
+    terms, analysis, clustering = modules
+    field = build_index(terms, rows, text_field)
+    subject = Subject(terms, analysis, clustering, rows, manifest, text_field, field, seed)
+    return replace(subject, features=text_features(analysis, rows, text_field))
+
+
+def with_representation(subject, kind):
+    """The same subject seen through an embedding, reduced by the app's own SVD to 32-d."""
+    if kind == "tfidf":
+        return subject
+    values = load_embeddings(subject.manifest, subject.text_field, kind)
+    subject.analysis.embedding_values = Saved(values)
+    mode = "words" if kind.startswith("words") else "sentences"
+    payload = {
+        "mode": mode,
+        "method": "prepare",
+        "rows": [{} for _ in subject.rows],
+        "fields": [{"name": subject.text_field, "kind": "text"}],
+        "dimensions": values.shape[1],
+    }
+    features = np.asarray(subject.analysis.project(payload)["features"], dtype=np.float32)
+    return replace(subject, representation=kind, features=features, embeddings=values)
 
 
 def text_features(analysis, rows, text_field):

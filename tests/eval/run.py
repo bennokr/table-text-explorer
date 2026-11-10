@@ -18,25 +18,22 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from eval_columns import grade_screen, screen_columns
 from eval_common import (
+    EMBEDDING_KINDS,
     ROOT,
-    Subject,
-    build_index,
+    has_representation,
     load_clustering,
     load_manifest,
     load_module,
     load_rows,
+    make_subject,
+    with_representation,
 )
 from eval_descriptions import evaluate_descriptions
 from eval_report import full_report
 from eval_structure import evaluate_structure
+from eval_surfacing import evaluate_surfacing
 
 SEED = 7
-
-
-def make_subject(modules, rows, manifest, text_field):
-    terms, analysis, clustering = modules
-    field = build_index(terms, rows, text_field)
-    return Subject(terms, analysis, clustering, rows, manifest, text_field, field, SEED)
 
 
 def timed(label, function, *args):
@@ -51,11 +48,31 @@ def column_screen(subject):
     return grade_screen(results, subject.manifest, subject.text_field)
 
 
-SECTIONS = {
+# Descriptions use the phrase index only, so they do not depend on the representation.
+PER_REPRESENTATION = {
     "columns": column_screen,
-    "descriptions": evaluate_descriptions,
     "structure": evaluate_structure,
+    "surfacing": evaluate_surfacing,
 }
+ALL_SECTIONS = ["columns", "descriptions", "structure", "surfacing"]
+
+
+def run_field(base, wanted, sections):
+    manifest, text_field = base.manifest, base.text_field
+    if "descriptions" in wanted:
+        label = f"descriptions {text_field}"
+        sections["descriptions"][text_field] = timed(label, evaluate_descriptions, base)
+    for kind in ["tfidf", *EMBEDDING_KINDS]:
+        if not has_representation(manifest, text_field, kind):
+            print(f"skipping {kind} for {text_field}: no embeddings", flush=True)
+            continue
+        subject = with_representation(base, kind)
+        for name in wanted:
+            if name in PER_REPRESENTATION:
+                label = f"{name} {text_field} {kind}"
+                sections[name].setdefault(text_field, {})[kind] = timed(
+                    label, PER_REPRESENTATION[name], subject
+                )
 
 
 def main():
@@ -65,12 +82,11 @@ def main():
     manifest = load_manifest(manifest_path)
     rows = load_rows(manifest)
     modules = (load_module("terms"), load_module("analysis"), load_clustering())
-    wanted = manifest.get("sections", list(SECTIONS))
+    wanted = manifest.get("sections", ALL_SECTIONS)
     sections = {name: {} for name in wanted}
     for text_field in manifest["text_fields"]:
-        subject = make_subject(modules, rows, manifest, text_field)
-        for name in wanted:
-            sections[name][text_field] = timed(f"{name} {text_field}", SECTIONS[name], subject)
+        base = make_subject(modules, rows, manifest, text_field, SEED)
+        run_field(base, wanted, sections)
     output.mkdir(parents=True, exist_ok=True)
     stem = manifest["name"]
     (output / f"{stem}-results.json").write_text(json.dumps(sections, indent=1, default=float))

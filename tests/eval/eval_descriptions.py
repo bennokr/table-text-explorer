@@ -28,7 +28,7 @@ def hierarchy_groups(rows, manifest):
     return groups
 
 
-def control_groups(rows, rng):
+def control_groups(rows, rng, length_column):
     groups = {}
     for fraction in NULL_FRACTIONS:
         size = round(fraction * len(rows))
@@ -36,18 +36,19 @@ def control_groups(rows, rng):
             mask = np.zeros(len(rows), dtype=bool)
             mask[rng.choice(len(rows), size=size, replace=False)] = True
             groups[f"null:{size}-{copy}"] = mask
-    lengths = np.array([row["ruling_words"] for row in rows])
+    lengths = np.array([float(row[length_column]) for row in rows])
     groups["length:longest-quartile"] = lengths >= np.quantile(lengths, LENGTH_QUANTILE)
     return groups
 
 
-def top_phrases(subject, positive, negative, ranking):
+def top_phrases(subject, positive, negative, ranking, extra=None):
     request = {
         "indexId": subject.text_field,
         "subset": positive.tolist(),
         "comparison": negative.tolist(),
         "ranking": ranking,
         "support": SUPPORT,
+        **(extra or {}),
     }
     result = json.loads(subject.terms.describe_terms(json.dumps(request)))
     return [term["phrase"] for term in result["fields"][0]["terms"][:TOP_K]]
@@ -99,7 +100,7 @@ def evaluate_descriptions(subject):
     rng = np.random.default_rng(subject.seed)
     groups = {
         **hierarchy_groups(subject.rows, subject.manifest),
-        **control_groups(subject.rows, rng),
+        **control_groups(subject.rows, rng, subject.manifest["length_column"]),
     }
     results = {
         ranking: {

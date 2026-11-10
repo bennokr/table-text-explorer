@@ -1,7 +1,8 @@
 """Which columns does the text vary with? Held-out skill beyond text length, with null controls.
 
 This is a candidate for the app, not existing behaviour. For each column, predict its groups from
-the app's own text vectors (32-d TF-IDF/SVD) with a regularised logistic regression, scored by
+the app's own 32-d text vectors (TF-IDF, word or sentence embeddings, each reduced by SVD)
+with a regularised logistic regression, scored by
 repeated 5-fold cross-validation. Skill is the proportional reduction in log-loss against a
 baseline. Two baselines are reported:
 
@@ -18,7 +19,6 @@ to resolve p = 0.05).
 """
 
 import numpy as np
-from eval_common import text_features
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
@@ -110,7 +110,7 @@ def screen_columns(subject):
     """Score every real column and every null control; returns {name: result}."""
     rows, manifest = subject.rows, subject.manifest
     rng = np.random.default_rng(subject.seed)
-    vectors = text_features(subject.analysis, rows, subject.text_field)
+    vectors = subject.features
     lengths = length_design(np.array([len(row[subject.text_field].split()) for row in rows]))
     columns = {name: [row[name] for row in rows] for name in manifest["columns"]}
     columns.update(control_columns(rows, manifest, rng))
