@@ -35,8 +35,11 @@ SUB_AREAS = [
     "strafrecht_penitentiairStrafrecht",
 ]
 YEARS = range(2016, 2026)
-SAMPLE_PER_CELL = 25
-DRAWS_PER_CELL = 36  # Spare draws replace multi-area, duplicate and text-less rulings.
+SAMPLE_PER_CELL = 10
+DRAWS_PER_CELL = 16  # Spare draws replace multi-area, duplicate and text-less rulings.
+DRAW_ORDER = (
+    36  # Fixed draw order; only the first DRAWS_PER_CELL are used, so cached searches survive.
+)
 SEED = 20261110
 USER_AGENT = "table-text-explorer-eval/1.0"  # The API rejects the default Python agent.
 EXCERPT_CHARS = 2500
@@ -103,7 +106,7 @@ def draw_eclis(cell):
     size = pool_size(area, year)
     rng = random.Random(f"{SEED}/{area}/{year}")
     eclis = []
-    for offset in rng.sample(range(size), min(size, DRAWS_PER_CELL)):
+    for offset in rng.sample(range(size), min(size, DRAW_ORDER))[:DRAWS_PER_CELL]:
         found = re.search(r"<entry><id>(ECLI:[^<]+)</id>", fetch(search_url(area, year, offset)))
         if found:
             eclis.append(found.group(1))
