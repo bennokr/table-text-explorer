@@ -237,7 +237,8 @@ def structure_tables(structure, manifest):
 
 def full_report(sections, rows, manifest):
     parts = [f"# {manifest['name']} evaluation", sample_summary(rows, manifest)]
-    parts += ["## Which columns does the text vary with?", column_tables(sections["columns"])]
+    if "columns" in sections:
+        parts += ["## Which columns does the text vary with?", column_tables(sections["columns"])]
     for text_field, by_representation in sections.get("columns_raw", {}).items():
         parts += [
             f"Without the 32-d reduction, `{text_field}`",
