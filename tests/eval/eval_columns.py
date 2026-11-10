@@ -84,7 +84,7 @@ def score_column(vectors, lengths, values, seed, tuned=False):
     if not 2 <= len(set(labels)) <= MAX_GROUPS:
         return None
     regression = (
-        LogisticRegressionCV(Cs=TUNED_C, cv=3, max_iter=300)
+        LogisticRegressionCV(Cs=TUNED_C, cv=3, max_iter=300, scoring="neg_log_loss")
         if tuned
         else LogisticRegression(max_iter=500)
     )
