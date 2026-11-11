@@ -1,6 +1,7 @@
 import { withBase } from './base.js';
 import { tableColumns } from './table-columns.js';
 import { demoSettings } from './demo-settings.js';
+import { registerExampleEmbeddings } from './example-embeddings.js';
 import { $, options } from './dom.js';
 import { Dataset } from './state.js';
 import { importTable, importExample, exportTable, cancelImport } from './importers.js';
@@ -55,7 +56,7 @@ async function load(action) {
     await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
     if (version !== importVersion) { return; }
     model.load(table);
-    demoSettings(model, table.demo);
+    demoSettings(model, table.demo, registerExampleEmbeddings(model, table.embeddings));
     const ignored = table.ignoredFields?.length ? ` · ${table.ignoredFields.length} structured columns ignored` : '';
     complete(`${table.name} · ${model.rows.length} records, ${model.fields.length} columns${ignored} · data axes`);
   } catch (error) { if (version === importVersion) { reportError(error); } }

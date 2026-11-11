@@ -24,7 +24,7 @@ The prefix uses the field description, then its label/title, then its column nam
 
 ## Reusing embeddings
 
-Encoding long text takes minutes (about 13 for 2,224 reviews). If you already have the vectors, choose **Sentence embeddings**, then **Import embeddings…** and pick the file. It is read on your machine and never uploaded. Two formats work: a NumPy `.npy` file (float32 or float64, one row per record, in table order) or raw little-endian float32 (`.f32` or `.bin`), whose dimension is the file size divided by the record count. Vectors are scaled to unit length, and all-zero rows count as records without text. The map, clustering and Semantic splits then use them like the built-in model; chunking does not apply. A map's saved result offers **Download embeddings (.npy)** (under Exports) so the same vectors import again later.
+Encoding long text takes minutes (about 13 for 2,224 reviews). If you already have the vectors, choose **Sentence embeddings**, then **Import embeddings…** and pick the file. It is read on your machine and never uploaded. Two formats work: a NumPy `.npy` file (float16, float32 or float64, one row per record, in table order) or raw little-endian float32 (`.f32` or `.bin`), whose dimension is the file size divided by the record count. Vectors are scaled to unit length, and all-zero rows count as records without text. The map, clustering and Semantic splits then use them like the built-in model; chunking does not apply. A map's saved result offers **Download embeddings (.npy)** (under Exports) so the same vectors import again later.
 
 ## Long text
 

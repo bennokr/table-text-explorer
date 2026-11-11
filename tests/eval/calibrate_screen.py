@@ -20,10 +20,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from eval_common import ROOT, app_stopwords, load_module
 
+CLEANED = ".cache/data-release/rechtspraak-sample.json"  # scripts/clean_rechtspraak.py output
 TABLES = {
     "dbrd": ("examples/dbrd-test.json", "text", "sentiment"),
     "rechtspraak": ("fixtures/rechtspraak-sample.json", "summary", "legal_area"),
     "rechtspraak-excerpt": ("fixtures/rechtspraak-sample.json", "ruling_excerpt", "legal_area"),
+    "rechtspraak-clean": (CLEANED, "summary", "legal_area"),
+    "rechtspraak-clean-excerpt": (CLEANED, "ruling_excerpt", "legal_area"),
     "tweedekamer": ("fixtures/tweedekamer-motions-sample.json", "text", "party"),
 }
 IDENTIFIERS = {"id", "review_id", "ecli", "ecli_sequence", "date", "dossier_title"}

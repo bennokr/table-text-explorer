@@ -66,6 +66,32 @@ Dutch examples:
 checking its pinned SHA-256. It is unnecessary for a normal checkout. The Bol probe
 keeps acquisition diagnostics under ignored `.cache/`.
 
+## Example data release (`data-v1`)
+
+Two more example datasets, the Rechtspraak sample (2,360 rulings) and the Tweede Kamer motions sample (3,585 motions),
+and precomputed Dutch sentence embeddings for all three examples are published as release assets, not stored in git.
+They are restored when the site is built, pinned by hash in `scripts/data-release.json`, the same way as the sentence
+models (`scripts/restore_data_release.mjs`; `DATA_RELEASE_REQUIRED=1` makes a missing release fail the build). A
+checkout without the release still works with the tracked examples; an example's `demo.json` lists its embeddings and
+the app skips any that are missing.
+
+- **Rechtspraak** (CC0 1.0 in the data.overheid.nl catalogue): `scripts/clean_rechtspraak.py` removes the echoes of
+  court, court type and year from the text, the same way for every ruling (ECLI codes, case numbers carrying the year,
+  court names, generic court-type words, "Zittingsplaats X", four-digit years). Nothing else is scrubbed, so names the
+  court left in remain: pseudonymised is not anonymous. On the excerpts the year column fell from 0.043 to 0.012 of the
+  text variation, while court (0.237 to 0.204) and court type (0.127 to 0.122) barely moved: courts specialise, so
+  that signal is content, not echo.
+- **Tweede Kamer motions** (CC0 1.0 in the catalogue; read the portal's disclaimer): subject lines without the
+  submitters' header, so no member names, only the lead submitter's party.
+- **Embeddings**: MarkSelles/dutch-minilm-l6-v2 (Apache-2.0), 384 dimensions, half-precision `.npy`, one row per
+  record in table order. Derived from the data, so they carry its licence: the DBRD ones are CC BY-NC-SA 4.0.
+- **Provenance** is in `examples/attribution/<dataset>/` (`source.json`, `README.md`) and is copied into the build.
+- **Size**: about 8 MB of embeddings and 12 MB of JSON. The JSON compresses to under 2 MB per table over the wire, so
+  Parquet (a WASM reader and a second format to maintain) is not worth it; half precision halves the embeddings.
+
+Build the assets with `scripts/package_data_release.py` (after `npm run prepare:rechtspraak`, `prepare:tweedekamer`,
+`scripts/clean_rechtspraak.py` and `tests/eval/embed.mjs`), then upload them with `gh release create data-v1 ...`.
+
 DBRD: Benjamin van der Burgh and Suzan Verberne, *The merits of Universal Language Model
 Fine-tuning for Small Datasets – a case with Dutch book reviews* (2019),
 [dataset](https://github.com/benjaminvdb/DBRD), [paper](https://arxiv.org/abs/1910.00896).

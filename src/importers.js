@@ -4,6 +4,7 @@ import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { Workers } from './workers/client.js';
 import { readBytes } from './workers/assets.js';
+import { fetchExampleEmbeddings } from './example-embeddings.js';
 
 const importer = new Workers();
 
@@ -21,7 +22,8 @@ export async function importExample(name, progress, example) {
   const table = await importer.run('import', { bytes, name }, progress);
   if (!example?.demo) { return table; }
   const [demo, schema] = await Promise.all([example.demo, example.metadata].map(readDescriptor));
-  return { ...table, demo, metadata: schemaMetadata(schema, table.metadata) };
+  const embeddings = await fetchExampleEmbeddings(demo?.embeddings, table.rows.length, progress);
+  return { ...table, demo, embeddings, metadata: schemaMetadata(schema, table.metadata) };
 }
 
 export function exportTable(model, format, scope) {

@@ -24,5 +24,13 @@
       "type": "histogram",
       "x": "word_count"
     }
+  ],
+  "embeddings": [
+    {
+      "file": "dbrd-test.text.dutch-minilm.npy",
+      "field": "text",
+      "model": "dutch",
+      "default": true
+    }
   ]
 }

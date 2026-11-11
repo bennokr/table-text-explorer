@@ -18,6 +18,7 @@
     "prepare:dbrd": "python3 scripts/prepare_dbrd.py && node scripts/prepare_examples.mjs",
     "prepare:rechtspraak": "python3 scripts/prepare_rechtspraak.py",
     "prepare:tweedekamer": "python3 scripts/prepare_tweedekamer.py",
+    "package:data": "uv run --cache-dir .cache/uv --script scripts/package_data_release.py",
     "eval:rechtspraak": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --cache-dir .cache/uv --script tests/eval/run.py",
     "eval:calibrate-screen": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --cache-dir .cache/uv --script tests/eval/calibrate_screen.py",
     "test:eval": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --cache-dir .cache/uv --script tests/eval/check_harness.py",
@@ -38,6 +39,7 @@
     "prepare:runtime": "node scripts/prepare_runtime.mjs",
     "build:feasibility": "node scripts/prepare_examples.mjs && vite build --mode feasibility",
     "check:bundle": "node scripts/bundle_check.mjs",
+    "test:clean-rechtspraak": "python3 tests/check_clean_rechtspraak.py",
     "test:cluster-names": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --offline --cache-dir .cache/uv --script tests/check_cluster_names.py"
   },
   "dependencies": {

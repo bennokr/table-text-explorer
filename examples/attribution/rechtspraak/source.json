@@ -1,0 +1,18 @@
+{
+  "name": "Rechtspraak sample",
+  "source": "Open Data van de Rechtspraak (Raad voor de rechtspraak)",
+  "url": "https://www.rechtspraak.nl/uitspraken/open-data",
+  "catalogue": "https://data.overheid.nl/dataset/uitspraken-rechtspraak-nl",
+  "licence": "CC0 1.0 Universal (public domain dedication), as listed in the data.overheid.nl catalogue",
+  "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "retrieved": "2026-11-10",
+  "method": "scripts/prepare_rechtspraak.py: a seeded, balanced sample of 20 rulings per legal sub-area and year from the open-data API; rulings with one legal area only",
+  "size": "2,360 rulings, 2016-2025",
+  "transformations": [
+    "scripts/clean_rechtspraak.py removes the echoes of court, court type and year from the text (ECLI codes, case numbers carrying the year, court names, generic court-type words, 'Zittingsplaats X', four-digit years), the same way for every ruling",
+    "no names are scrubbed: the text is the court's pseudonymised publication",
+    "every other column keeps its original value"
+  ],
+  "embeddings": "scripts/package_data_release.py: MarkSelles/dutch-minilm-l6-v2 (Apache-2.0), half precision, one row per ruling for `summary` and `ruling_excerpt`",
+  "caveat": "Pseudonymised is not anonymous: residual personal data can remain in the text."
+}

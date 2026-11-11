@@ -53,7 +53,8 @@ test('demo codebooks and views replace previous cards completely and reset on or
   expect(demo.fields.find(field => field.name === 'text').kind).toBe('text');
   expect(demo.views.map(view => view.x)).toEqual(['word_count', 'sentiment', 'word_count']);
   await page.click('#analysis-inputs');
-  await expect(page.locator('#feature-mode')).toHaveValue('text');
+  // The demo starts from its precomputed embeddings when the build has them (data release), else from TF-IDF.
+  await expect(page.locator('#feature-mode')).toHaveValue(/^(text|sentences)$/u);
   await page.locator('#map-dialog [data-close]').click();
   await removeCards(page);
   // Rows without a text column go back to the table input; with text the default is TF-IDF.

@@ -42,3 +42,16 @@ test('a file with the wrong number of records, unsupported type or missing value
   header.set(integers, 10);
   assert.throws(() => readEmbeddings(header.buffer, 'ints.npy', 2), /float32 or float64/);
 });
+
+test('half-precision .npy vectors, the compact form used for the example embeddings, read back to within their precision', () => {
+  // 0.5 and -0.25 and 1 as float16 bit patterns, in a version 1.0 header for a 1 x 3 array.
+  const header = "{'descr': '<f2', 'fortran_order': False, 'shape': (1, 3), }";
+  const text = `${header}${' '.repeat(64 - ((10 + header.length + 1) % 64))}\n`;
+  const bytes = new Uint8Array(10 + text.length + 6);
+  bytes.set([0x93, 0x4e, 0x55, 0x4d, 0x50, 0x59, 1, 0, text.length, 0]);
+  bytes.set(new TextEncoder().encode(text), 10);
+  new Uint16Array(bytes.buffer, 10 + text.length, 3).set([0x3800, 0xb400, 0x3c00]);
+  const { features } = readEmbeddings(bytes.buffer, 'half.npy', 1);
+  const norm = Math.hypot(0.5, 0.25, 1);
+  assert.deepEqual([...features].map(value => Number(value.toFixed(4))), [0.5, -0.25, 1].map(value => Number((value / norm).toFixed(4))));
+});

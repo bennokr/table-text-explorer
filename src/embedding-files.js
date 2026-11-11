@@ -2,7 +2,17 @@
 // Two formats: NumPy .npy (float32 or float64, shape records x dimensions) and raw little-endian
 // float32 (.f32 or .bin), whose dimension is the file size divided by the record count.
 const NPY_MAGIC = [0x93, 0x4e, 0x55, 0x4d, 0x50, 0x59];
-const NPY_TYPES = { '<f4': Float32Array, '<f8': Float64Array };
+const NPY_TYPES = { '<f4': Float32Array, '<f8': Float64Array, '<f2': Uint16Array };
+
+// A half-precision float widened to a number: sign, 5 exponent bits, 10 fraction bits.
+function halfToFloat(bits) {
+  const exponent = (bits >> 10) & 0x1f;
+  const fraction = bits & 0x3ff;
+  const sign = bits & 0x8000 ? -1 : 1;
+  if (exponent === 0) { return sign * 2 ** -14 * (fraction / 1024); }
+  if (exponent === 31) { return fraction ? Number.NaN : sign * Infinity; }
+  return sign * 2 ** (exponent - 15) * (1 + fraction / 1024);
+}
 
 function npyHeader(bytes) {
   const view = new DataView(bytes);
@@ -17,11 +27,11 @@ function npyArray(bytes) {
   const { text, offset } = npyHeader(bytes);
   const type = NPY_TYPES[/'descr':\s*'([^']+)'/u.exec(text)?.[1]];
   const shape = /'shape':\s*\((\d+),\s*(\d+)\s*,?\s*\)/u.exec(text);
-  if (!type) { throw new Error('Save the .npy vectors as float32 or float64.'); }
+  if (!type) { throw new Error('Save the .npy vectors as float16, float32 or float64.'); }
   if (!shape || /'fortran_order':\s*True/u.test(text)) { throw new Error('The .npy file must be a C-ordered records x dimensions array.'); }
   const [rows, dimensions] = [Number(shape[1]), Number(shape[2])];
   const values = new type(bytes.slice(offset, offset + rows * dimensions * type.BYTES_PER_ELEMENT));
-  return { rows, dimensions, values: Float32Array.from(values) };
+  return { rows, dimensions, values: type === Uint16Array ? Float32Array.from(values, halfToFloat) : Float32Array.from(values) };
 }
 
 function rawArray(bytes, rows) {

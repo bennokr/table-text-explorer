@@ -1,0 +1,17 @@
+{
+  "name": "Tweede Kamer motions sample",
+  "source": "Open Data Portaal van de Tweede Kamer",
+  "url": "https://opendata.tweedekamer.nl",
+  "catalogue": "https://data.overheid.nl/dataset/open-data-portaal-van-de-tweede-kamer-der-staten-generaal",
+  "licence": "CC0 1.0 Universal, as listed in the data.overheid.nl catalogue; the portal refers to its disclaimer for terms of use",
+  "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "retrieved": "2026-11-10",
+  "method": "scripts/prepare_tweedekamer.py: 36 blocks of 100 motions spread evenly over 2017-2024 from the OData API",
+  "size": "3,585 motions",
+  "transformations": [
+    "the text is the motion's one-line subject without the header that names the submitters ('Motie van het lid X c.s. over ...'); members' names are not in the table, only the lead submitter's party",
+    "appreciation is empty where the cabinet's stance was not recorded (before April 2019)"
+  ],
+  "embeddings": "scripts/package_data_release.py: MarkSelles/dutch-minilm-l6-v2 (Apache-2.0), half precision, one row per motion for `text`",
+  "caveat": "Read the portal's disclaimer (opendata.tweedekamer.nl) before redistributing."
+}

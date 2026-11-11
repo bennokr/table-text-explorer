@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "analysis": {
+    "mode": "sentences",
+    "language": "nl",
+    "vectorLanguage": "nl",
+    "features": [
+      "summary"
+    ],
+    "neighbors": 15,
+    "epochs": 150
+  },
+  "views": [
+    {
+      "type": "bar",
+      "x": "legal_area"
+    },
+    {
+      "type": "bar",
+      "x": "court_type"
+    },
+    {
+      "type": "histogram",
+      "x": "ruling_words"
+    }
+  ],
+  "embeddings": [
+    {
+      "file": "rechtspraak-sample.summary.dutch-minilm.npy",
+      "field": "summary",
+      "model": "dutch",
+      "default": true
+    },
+    {
+      "file": "rechtspraak-sample.ruling_excerpt.dutch-minilm.npy",
+      "field": "ruling_excerpt",
+      "model": "dutch"
+    }
+  ]
+}
