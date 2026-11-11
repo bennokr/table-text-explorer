@@ -1,6 +1,7 @@
 import { temporal } from './dates.js';
 import { $, display, element, glyph } from './dom.js';
 import { numberOf } from './schema.js';
+import { Events } from './events.js';
 
 const rowHeight = 25;
 
@@ -21,22 +22,22 @@ export class TableView {
     this.body.addEventListener('keydown', event => {
       if (['Enter', ' '].includes(event.key)) { event.preventDefault(); this.click(event); }
     });
-    model.on('data', () => {
+    model.on(Events.DATA, () => {
       this.anchor = undefined;
       this.sortField = null;
       this.container.scrollTop = 0;
       this.container.scrollLeft = 0;
       this.rebuild();
     });
-    model.on('schema', () => this.rebuild());
-    model.on('table-columns', () => this.rebuild());
-    model.on('view', () => { this.container.scrollTop = 0; this.render(true); });
-    model.on('selection', () => {
+    model.on(Events.SCHEMA, () => this.rebuild());
+    model.on(Events.TABLE_COLUMNS, () => this.rebuild());
+    model.on(Events.VIEW, () => { this.container.scrollTop = 0; this.render(true); });
+    model.on(Events.SELECTION, () => {
       if ($('#preview-selection').checked) { this.container.scrollTop = 0; }
       this.render(true);
     });
     $('#preview-selection').onchange = () => { this.container.scrollTop = 0; this.render(true); };
-    model.on('annotation', () => this.render(true));
+    model.on(Events.ANNOTATION, () => this.render(true));
     new ResizeObserver(() => {
       cancelAnimationFrame(this.resizeFrame);
       this.resizeFrame = requestAnimationFrame(() => this.render(true));

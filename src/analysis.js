@@ -2,6 +2,7 @@ import { phraseSettings } from './phrase-config.js';
 import { payload, featureKey, isEmbeddingMode } from './features.js';
 import { TextIndexes } from './text-index.js';
 import { Workers } from './workers/client.js';
+import { Events } from './events.js';
 
 export class Analysis {
   workers = new Workers();
@@ -12,12 +13,12 @@ export class Analysis {
     this.model = model;
     this.textIndexes = new TextIndexes(model, (data, report) => this.workers.run('python', data, report));
     this.workers.addEventListener('reset', () => this.textIndexes.clear());
-    model.on('data', () => { this.cache = null; });
+    model.on(Events.DATA, () => { this.cache = null; });
     this.progress = update => {
       if (model.fittingViewId) {
         const task = typeof update === 'string' ? { message: update } : update;
         model.fitProgress = { ...task, viewId: model.fittingViewId };
-        model.emit('fit-progress');
+        model.emit(Events.FIT_PROGRESS);
       }
       progress(update);
     };
@@ -25,7 +26,7 @@ export class Analysis {
 
   busy(value) {
     this.model.analysisBusy = value;
-    this.model.emit('busy');
+    this.model.emit(Events.BUSY);
   }
 
   async prepare() {
@@ -85,7 +86,7 @@ export class Analysis {
     const saved = this.model.results.add('representation', { ...data,
       config: prepared.config, method: prepared.config.mode, mapName: name, name: `${name}-${suffix}` });
     prepared.representationId = saved.id;
-    this.model.emit('results');
+    this.model.emit(Events.RESULTS);
     return { ...prepared, representationId: saved.id };
   }
 

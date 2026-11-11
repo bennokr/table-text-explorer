@@ -1,4 +1,5 @@
 import { element } from './dom.js';
+import { Events } from './events.js';
 
 export function mountDensityControls(legend) {
   const method = element('select', { 'aria-label': 'Density cluster selection' }, [
@@ -10,7 +11,7 @@ export function mountDensityControls(legend) {
     if (!epsilon.reportValidity()) { return; }
     legend.model.densityRequest = { result: legend.result,
       selection: { method: method.value, epsilon: Number(epsilon.value) } };
-    legend.model.emit('density-selection');
+    legend.model.emit(Events.DENSITY_SELECTION);
   };
   method.onchange = change;
   epsilon.onchange = change;

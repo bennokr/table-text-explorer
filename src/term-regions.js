@@ -1,8 +1,8 @@
 import { categorical, missing } from './schema.js';
+import { OTHER as SPREAD } from './palette.js';
 import { valueColor } from './value-colors.js';
 
 const MIN_SHARE = 0.35; // Below this a phrase's records are spread over several regions.
-const SPREAD = '#999999';
 
 // The column the first map is coloured by, when it is a category (a clustering, say).
 export function mapColumn(model) {

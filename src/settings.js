@@ -6,6 +6,7 @@ import { featureList, readMapConfig, fillMapConfig } from './map-form.js';
 import { mapName, suggestName, uniqueAnalysisName } from './analysis-names.js';
 import { combiningControls } from './map-fields.js';
 import { retainPhraseSettings } from './phrase-config.js';
+import { Events } from './events.js';
 
 function revealInvalidControl(event) {
   for (let parent = event.target.parentElement; parent; parent = parent.parentElement) {
@@ -17,12 +18,12 @@ class SimilarityMaps {
   constructor(model, projection) {
     this.model = model;
     this.projection = projection;
-    model.on('busy', () => { $('#map-submit').disabled = model.analysisBusy; });
+    model.on(Events.BUSY, () => { $('#map-submit').disabled = model.analysisBusy; });
     $('#feature-mode').onchange = () => { featureList(model, this.base); this.name(); };
     $('#field-combine').onchange = combiningControls;
     $('#group-identity').oninput = combiningControls;
     $('#shared-fields').onclick = () => $('#phrase-settings').click();
-    model.on('phrase-settings', () => {
+    model.on(Events.PHRASE_SETTINGS, () => {
       if ($('#map-dialog').open && ['text', 'words'].includes($('#feature-mode').value)) { featureList(model, this.base); this.name(); }
     });
     $('#map-method').onchange = () => this.controls();

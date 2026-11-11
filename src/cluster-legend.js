@@ -5,6 +5,7 @@ import { element } from './dom.js';
 import { mountTreeLegend, describeBranch, revealTreeCut } from './cluster-tree-legend.js';
 import { combineSelection } from './selection.js';
 import { legendRows, renameCluster, colorCluster, clusterMembers } from './cluster-legend-data.js';
+import { Events } from './events.js';
 
 const nameHelp = 'Name up to 100 active groups from all-record text; preserves edited names. Clear a name to unlock it.';
 
@@ -17,7 +18,7 @@ export class ClusterLegend {
     this.root = element('div', { class: 'cluster-legend' });
     this.nameButton = element('button', { type: 'button', text: 'Rename all',
       title: nameHelp,
-      onclick: () => { model.namingResult = this.result; model.emit('name-clusters'); } });
+      onclick: () => { model.namingResult = this.result; model.emit(Events.NAME_CLUSTERS); } });
 
     this.absent = element('p', { class: 'legend-absent', hidden: '' });
     if (this.result.tree) { mountTreeLegend(this); }
@@ -26,11 +27,11 @@ export class ClusterLegend {
     this.nameLength = mountNameLength(naming, this.result.maxNamePhrases);
     this.nameLength.onchange = () => {
       this.result.maxNamePhrases = nameLength(this.nameLength);
-      model.emit('results');
+      model.emit(Events.RESULTS);
     };
     this.root.append(this.absent, naming);
     container.replaceChildren(this.root);
-    this.cleanup = ['view', 'selection', 'results', 'busy'].map(type => model.on(type, () => this.paint()));
+    this.cleanup = [Events.VIEW, Events.SELECTION, Events.RESULTS, Events.BUSY].map(type => model.on(type, () => this.paint()));
     this.paint();
   }
 

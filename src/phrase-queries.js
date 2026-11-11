@@ -1,4 +1,5 @@
 import { parseQuery } from './query.js';
+import { Events } from './events.js';
 
 export class PhraseQueries {
   cache = new Map();
@@ -8,7 +9,7 @@ export class PhraseQueries {
   constructor(model, analysis) {
     this.model = model;
     this.analysis = analysis;
-    for (const event of ['data', 'annotation', 'results']) {
+    for (const event of [Events.DATA, Events.ANNOTATION, Events.RESULTS]) {
       model.on(event, () => { this.epoch += 1; this.cache.clear(); });
     }
   }

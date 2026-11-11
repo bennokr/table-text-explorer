@@ -194,7 +194,6 @@ dialog textarea { display: block; width: 100%; }
 #terms-controls { border-bottom: 1px solid #ddd; margin-bottom: 5px; padding-bottom: 5px; }
 #terms-settings h3 { margin: 0 0 8px; font-size: 14px; }
 #terms-inspector > .term-controls { flex-wrap: wrap; overflow: visible; }
-#terms-scope { max-width: min(240px, 100%); }
 
 #description-kind { text-align: right; }
 #table-count { margin-left: auto; }

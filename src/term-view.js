@@ -1,4 +1,4 @@
-import { $, element, display } from './dom.js';
+import { element, display } from './dom.js';
 import { phraseCloud } from './phrase-cloud.js';
 import { displayFields, fieldColor } from './term-display.js';
 import { descriptionTable, descriptionTooltip } from './term-table.js';
@@ -99,7 +99,7 @@ function withoutPath(fields, path) {
 export function renderTerms(container, result, model, activate, views = new Map()) {
   clearTerms(container);
   const path = conjuncts(model.ast);
-  const combined = !result.separate && $('#terms-display').value === 'combined';
+  const combined = !result.separate && model.termSettings.display === 'combined';
   const fields = displayFields(withoutPath(result.fields, path), combined);
   const facets = displayFields(withoutPath(result.facets ?? [], path).filter(field => field.terms.length), combined)
     .map(field => ({ ...field, kind: 'facets', ...(field.combined ? { name: 'Metadata facets' } : {}) }));

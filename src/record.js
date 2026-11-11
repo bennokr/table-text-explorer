@@ -1,4 +1,5 @@
 import { $, display, element, options } from './dom.js';
+import { Events } from './events.js';
 
 export function recordViewer(model, reportError) {
   const render = () => {
@@ -18,8 +19,8 @@ export function recordViewer(model, reportError) {
     $('#previous').disabled = position <= 0;
     $('#next').disabled = position < 0 || position >= model.visible.length - 1;
   };
-  for (const type of ['data', 'schema', 'view', 'selection', 'annotation']) { model.on(type, render); }
-  model.on('data', () => { $('#record-body').scrollTop = 0; $('#annotation-value').value = ''; });
+  for (const type of [Events.DATA, Events.SCHEMA, Events.VIEW, Events.SELECTION, Events.ANNOTATION]) { model.on(type, render); }
+  model.on(Events.DATA, () => { $('#record-body').scrollTop = 0; $('#annotation-value').value = ''; });
   const navigate = delta => {
     const index = model.visible.indexOf(model.active) + delta;
     if (index >= 0 && index < model.visible.length) { model.select([model.visible[index]]); }

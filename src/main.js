@@ -22,6 +22,7 @@ import { renderResults } from './results-ui.js';
 import { PhraseSettings } from './phrase-settings.js';
 import { runtimeStatus } from './runtime-status.js';
 import { bindHelp } from './help.js';
+import { Events } from './events.js';
 
 const model = new Dataset();
 let importVersion = 0;
@@ -122,7 +123,7 @@ $('#cancel').onclick = () => { projection.cancel(); complete('Analysis cancelled
 bindImportExport();
 bindEmbeddingImport(model);
 bindSearch(model, analysis);
-for (const type of ['data', 'view', 'selection', 'schema', 'busy']) { model.on(type, summary); }
+for (const type of [Events.DATA, Events.VIEW, Events.SELECTION, Events.SCHEMA, Events.BUSY]) { model.on(type, summary); }
 summary();
 examples();
 

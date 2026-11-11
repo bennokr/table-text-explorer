@@ -2,6 +2,8 @@ import { showTermSettings } from './term-settings.js';
 import { mountDensityControls } from './density-controls.js';
 import { element, $ } from './dom.js';
 import { changeTreeCut, branchChildren, treeParents, treeRoot } from './cluster-tree.js';
+import { Events } from './events.js';
+import { setTermSettings } from './term-settings-model.js';
 
 function initialExpansion(result) {
   const parents = treeParents(result), opened = new Set();
@@ -43,10 +45,9 @@ export function mountTreeLegend(legend) {
 
 export function describeBranch(model, result, id) {
   result.descriptionNode = Number(id);
-  $('#terms-scope').value = result.id;
-  model.emit('results');
+  model.emit(Events.RESULTS);
+  setTermSettings(model, { compare: `tree:${result.id}`, groupPage: 0 });
   showTermSettings(true);
-  $('#terms-scope').dispatchEvent(new Event('input', { bubbles: true }));
   $('#description-panel').scrollIntoView({ block: 'nearest' });
 }
 

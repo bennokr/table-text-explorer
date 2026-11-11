@@ -1,6 +1,7 @@
 import { featureFields } from './features.js';
 import { showMap } from './analysis-views.js';
 import { complete } from './status.js';
+import { Events } from './events.js';
 
 export class Projection {
   generation = 0;
@@ -29,14 +30,14 @@ export class Projection {
 
   publish(request, result) {
     this.model.analysisViewId = showMap(this.model, result, request.targetViewId).id;
-    this.model.emit('analysis-card');
-    this.model.emit('results');
-    this.model.emit('views');
+    this.model.emit(Events.ANALYSIS_CARD);
+    this.model.emit(Events.RESULTS);
+    this.model.emit(Events.VIEWS);
   }
 
   feedback(request, message, error = false) {
     this.model.fitProgress = { viewId: request.targetViewId ?? 'new-map', message, error };
-    this.model.emit('fit-progress');
+    this.model.emit(Events.FIT_PROGRESS);
   }
 
   async fit(request) {

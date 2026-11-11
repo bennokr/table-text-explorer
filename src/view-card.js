@@ -5,6 +5,7 @@ import { AggregateView } from './charts.js';
 import { ViewEditor } from './view-editor.js';
 import { ViewPlaceholder } from './view-placeholder.js';
 import { isPointView, isProjection, viewTitle, viewFieldsValid, viewSchemaKey } from './view-config.js';
+import { Events } from './events.js';
 
 export class ViewCard {
   constructor(model, config, actions, reportError) {
@@ -24,7 +25,7 @@ export class ViewCard {
     this.container = element('div', { class: 'view-plot' });
     this.placeholder = new ViewPlaceholder(model, config, this.container, make);
     this.node = element('section', { class: 'view-card', 'data-view-id': config.id }, [this.header, this.menu, this.container]);
-    this.cleanup = model.on('busy', () => this.busy());
+    this.cleanup = model.on(Events.BUSY, () => this.busy());
     this.sync();
   }
 

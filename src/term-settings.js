@@ -1,5 +1,6 @@
 import { $ } from './dom.js';
 import { rankingHelp } from './ranking-help.js';
+import { setTermSettings } from './term-settings-model.js';
 
 export function showTermSettings(open) {
   $('#terms-controls').hidden = !open;
@@ -10,8 +11,8 @@ export function bindTermSettings() {
   $('#terms-options').onclick = () => showTermSettings($('#terms-controls').hidden);
 }
 
-export function refreshDescriptionControls() {
-  const content = $('#terms-content').value;
+export function refreshDescriptionControls(model) {
+  const { content, ranking } = model.termSettings;
   const labels = {
     phrases: ['Common phrases', 'c-TF-IDF contrast', 'c-TF-IDF'],
     facets: ['Common predicates', 'Δ share', 'Subset share'],
@@ -21,12 +22,12 @@ export function refreshDescriptionControls() {
     $(`#terms-ranking option[value="${ranking}"]`).textContent = labels[content][index];
   });
   $('#terms-deduplicate').closest('label').hidden = content === 'facets';
-  $('#description-hint').title = rankingHelp($('#terms-ranking').value, content);
+  $('#description-hint').title = rankingHelp(ranking, content);
   // Even splits ask "what is the most even yes/no question?", which only metadata predicates answer well:
   // for phrases it just repeats the common phrases.
   const even = $('#terms-ranking option[value="balanced"]');
   even.disabled = content === 'phrases';
-  if (even.disabled && $('#terms-ranking').value === 'balanced') { $('#terms-ranking').value = 'auto'; }
+  if (even.disabled && ranking === 'balanced') { setTermSettings(model, { ranking: 'auto' }); }
 }
 
 export function termIndexState(ready, available = ready) {

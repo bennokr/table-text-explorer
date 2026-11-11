@@ -4,6 +4,7 @@ import { formatQuery, appendPredicate } from './query-predicates.js';
 import { conjuncts, withoutConjunct } from './query-path.js';
 import { PhraseQueries } from './phrase-queries.js';
 import { status } from './status.js';
+import { Events } from './events.js';
 
 export function highlightQuery(model, input, context) {
   const parsed = parseQuery(input, model.fields, context);
@@ -32,11 +33,11 @@ class QuerySearch {
     $('#filter-selection').onclick = () => this.filter();
     $('#clear-selection').onclick = () => this.clearSelection();
     $('#clear-filters').onclick = () => this.clear();
-    model.on('description-query', () => this.addPredicate());
-    model.on('description-remove', () => this.removeConjunct());
-    model.on('selection', () => this.selectionChanged());
-    model.on('data', () => { this.lastSelection = model.selected; this.resetQuery(); });
-    model.on('busy', () => { if (!model.analysisBusy && this.queued) { queueMicrotask(() => this.apply()); } });
+    model.on(Events.DESCRIPTION_QUERY, () => this.addPredicate());
+    model.on(Events.DESCRIPTION_REMOVE, () => this.removeConjunct());
+    model.on(Events.SELECTION, () => this.selectionChanged());
+    model.on(Events.DATA, () => { this.lastSelection = model.selected; this.resetQuery(); });
+    model.on(Events.BUSY, () => { if (!model.analysisBusy && this.queued) { queueMicrotask(() => this.apply()); } });
     analysis?.workers.addEventListener('idle', () => { if (this.queued) { this.apply(); } });
   }
 

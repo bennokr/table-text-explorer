@@ -1,10 +1,11 @@
 import { temporal } from './dates.js';
 import { B, dimension, figure, linkRecords, PlotHost, ticks } from './plot.js';
-import { palette } from './palette.js';
+import { HIGHLIGHT, SERIES, UNASSIGNED } from './palette.js';
 import { categoryColors } from './value-colors.js';
 import { keyOf } from './schema.js';
 import { hoverData } from './scatter-hover.js';
 import { axisCoordinates } from './view-config.js';
+import { Events } from './events.js';
 
 const axisType = axis => temporal(axis.field) ? 'datetime' : 'linear';
 
@@ -20,9 +21,9 @@ export class Scatter {
     this.model = model;
     this.config = config;
     this.host = new PlotHost(container, reportError);
-    this.cleanup = [model.on('view', () => this.filter()),
-      model.on('results', () => this.refresh()),
-      model.on('annotation', () => this.refresh())];
+    this.cleanup = [model.on(Events.VIEW, () => this.filter()),
+      model.on(Events.RESULTS, () => this.refresh()),
+      model.on(Events.ANNOTATION, () => this.refresh())];
     this.render();
   }
 
@@ -46,9 +47,9 @@ export class Scatter {
     const result = this.model.results.get(field?.derived);
     if (result) {
       const colors = new Map(result.rowIds.map((id, index) => [id, result.groups[result.labels[index]].color]));
-      return this.model.rows.map((_, id) => colors.get(id) ?? '#cccccc');
+      return this.model.rows.map((_, id) => colors.get(id) ?? UNASSIGNED);
     }
-    if (!name) { return this.model.rows.map(() => palette[0]); }
+    if (!name) { return this.model.rows.map(() => SERIES); }
     const colors = categoryColors(this.model, field);
     return this.model.rows.map(row => colors.get(keyOf(row[name], field)));
   }
@@ -88,7 +89,7 @@ export class Scatter {
       tooltips });
     plot.scatter({ x: { field: 'x' }, y: { field: 'y' }, color: { field: 'color' },
       source: this.source, view: new B.CDSView({ filter: this.mask }), size: 5, alpha: 0.65,
-      selection_color: '#d9772b', nonselection_alpha: 0.13 });
+      selection_color: HIGHLIGHT, nonselection_alpha: 0.13 });
     plot.xaxes[0].axis_label = coordinates.x.name;
     plot.yaxes[0].axis_label = coordinates.y.name;
     if (x.labels) { ticks(plot.xaxes[0], x.labels); }

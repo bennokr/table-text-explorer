@@ -1,4 +1,5 @@
 import { $ } from './dom.js';
+import { Events } from './events.js';
 
 export function status(message, error = false) {
   for (const selector of ['#status', '#panel-status']) {
@@ -42,6 +43,6 @@ export function analysisControls(model) {
     $('#analysis-progress').hidden = !model.analysisBusy;
     if (model.analysisBusy) { progress('Preparing analysis…'); }
   };
-  model.on('busy', update);
+  model.on(Events.BUSY, update);
   update();
 }

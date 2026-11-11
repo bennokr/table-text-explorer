@@ -5,6 +5,7 @@ import { renderCompare } from './compare-render.js';
 import { renderTerms } from './term-view.js';
 import { tintByRegion } from './term-regions.js';
 import { renderGroups, groupDescriptionStatus } from './cluster-descriptions.js';
+import { Events } from './events.js';
 
 function rankingHeading(ranking, phrasesOnly) {
   const named = { frequency: phrasesOnly ? 'Common phrases' : 'Common predicates', balanced: 'Even splits', semantic: 'Semantic splits' };
@@ -40,7 +41,7 @@ function suggestPredicate(model) {
   return (field, phrase, predicate, negate) => {
     const condition = predicate ?? phrasePredicate(field, phrase);
     model.querySuggestion = negate ? negation(condition) : condition;
-    model.emit('description-query');
+    model.emit(Events.DESCRIPTION_QUERY);
   };
 }
 

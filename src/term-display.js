@@ -1,9 +1,9 @@
+import { categoryColor } from './palette.js';
 // Combined presentation keeps every (field, phrase) predicate independent.
-const fieldColors = ['#3979a5', '#b65b16', '#548039', '#9154a0', '#bd4657', '#267f80', '#856817', '#6659ae'];
 export const populationRankings = new Set(['frequency', 'balanced', 'semantic']);
 
 export function fieldColor(index) {
-  return fieldColors[index] ?? `hsl(${Math.round(index * 137.508) % 360}, 55%, 35%)`;
+  return categoryColor(index);
 }
 
 export function displayFields(fields, combined) {

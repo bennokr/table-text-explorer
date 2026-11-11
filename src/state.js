@@ -1,6 +1,8 @@
 import { defaultConfig, defaultInputMode } from './default-config.js';
 import { inferSchema } from './schema.js';
 import { Results } from './results.js';
+import { Events, checkedEvent } from './events.js';
+import { defaultTermSettings } from './term-settings-model.js';
 
 export class Dataset extends EventTarget {
   rows = [];
@@ -24,10 +26,11 @@ export class Dataset extends EventTarget {
   fittingViewId = null;
   fitProgress = null;
   config = defaultConfig();
+  termSettings = defaultTermSettings();
 
-  emit(type) { this.dispatchEvent(new Event(type)); }
+  emit(type) { this.dispatchEvent(new Event(checkedEvent(type))); }
   on(type, callback) {
-    this.addEventListener(type, callback);
+    this.addEventListener(checkedEvent(type), callback);
     return () => this.removeEventListener(type, callback);
   }
 
@@ -60,9 +63,10 @@ export class Dataset extends EventTarget {
     this.embeddingSequence = 0;
     this.ast = null;
     this.populations = new Map();
+    Object.assign(this.termSettings, { compare: 'auto', groupPage: 0 }); // The panel's other settings are kept.
     this.config.weights = {};
     this.visible = rows.map((_, index) => index);
-    this.emit('data');
+    this.emit(Events.DATA);
   }
 
   refresh() {
@@ -70,7 +74,7 @@ export class Dataset extends EventTarget {
       (!this.pinned || this.pinned.has(id)) ? [id] : []);
     if (this.sort) { this.visible.sort(this.sort); }
     if (!this.visible.includes(this.active)) { this.active = this.visible[0] ?? null; }
-    this.emit('view');
+    this.emit(Events.VIEW);
   }
 
   select(ids, active = ids[0]) {
@@ -78,7 +82,7 @@ export class Dataset extends EventTarget {
     const changed = next.size !== this.selected.size || [...next].some(id => !this.selected.has(id));
     this.selected = next;
     if (active !== undefined) { this.active = active; }
-    if (changed || active !== undefined) { this.emit('selection'); }
+    if (changed || active !== undefined) { this.emit(Events.SELECTION); }
   }
 
   configure(config) {
@@ -86,7 +90,7 @@ export class Dataset extends EventTarget {
       config.numericCategoryLimit !== this.config.numericCategoryLimit ||
       JSON.stringify(config.overrides) !== JSON.stringify(this.config.overrides);
     this.config = config;
-    if (!schemaChanged) { this.emit('config'); return; }
+    if (!schemaChanged) { this.emit(Events.CONFIG); return; }
     this.schemaRevision += 1;
     const derived = this.fields.filter(field => field.derived);
     const originals = this.rows.map(row => Object.fromEntries(Object.entries(row)
@@ -94,7 +98,7 @@ export class Dataset extends EventTarget {
     this.fields = [...inferSchema(originals, this.metadata, config), ...derived];
     this.fields = this.fields.map(field => this.annotations.has(field.name)
       ? { ...field, kind: 'categorical', annotation: true } : field);
-    this.emit('schema');
+    this.emit(Events.SCHEMA);
     this.refresh();
   }
 
@@ -110,7 +114,7 @@ export class Dataset extends EventTarget {
         field.missing = values.filter(value => value === null).length;
       }
     }
-    this.emit('results');
+    this.emit(Events.RESULTS);
     if (valuesChanged) { this.refresh(); }
   }
 
@@ -121,7 +125,7 @@ export class Dataset extends EventTarget {
     const field = this.fields.find(field => field.name === name);
     field.unique = [...new Set(this.rows.map(row => row[name]).filter(value => value !== null))];
     field.missing = this.rows.filter(row => row[name] === null).length;
-    this.emit('annotation');
+    this.emit(Events.ANNOTATION);
     this.refresh();
   }
 
@@ -136,7 +140,7 @@ export class Dataset extends EventTarget {
     this.fields.push({ name, kind: 'categorical', unique: [...new Set(this.rows.map(row => row[name]).filter(Boolean))],
       missing: this.rows.filter(row => row[name] === null).length,
       identifier: false, storage: 'string', valueLabels: [], annotation: true });
-    this.emit('schema');
+    this.emit(Events.SCHEMA);
     this.refresh();
   }
 }

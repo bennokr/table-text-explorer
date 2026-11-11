@@ -4,6 +4,7 @@ import { HANDLE, packRows, fittedWidths, fittedHeight, snappedHeight } from './v
 import { viewDivider } from './view-divider.js';
 import { resizeCards } from './view-resize.js';
 import { CardDrag } from './view-card-drag.js';
+import { Events } from './events.js';
 
 export class ViewLayout {
   widths = new Map();
@@ -49,7 +50,7 @@ export class ViewLayout {
   reorder(order) {
     const configs = new Map(this.model.views.map(view => [view.id, view]));
     this.model.views = order.map(card => configs.get(card.id));
-    this.model.emit('views');
+    this.model.emit(Events.VIEWS);
   }
 
   setGroups(groups) {

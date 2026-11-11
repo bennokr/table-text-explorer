@@ -2,6 +2,7 @@ import { $, element } from './dom.js';
 import { resultExport } from './results.js';
 import { npyForRecords } from './embedding-files.js';
 import { complete } from './status.js';
+import { Events } from './events.js';
 
 function downloadResult(result, extension = 'json', records = 0) {
   const blob = extension === 'npy' ? npyForRecords(result.embeddings, result.rowIds, result.embeddingDimensions, records) : resultExport(result);
@@ -34,12 +35,12 @@ function entry(model, result) {
   const name = element('input', { value: result.name, 'aria-label': 'Result name',
     onchange: event => { result.name = event.target.value.trim() || result.id;
       if (result.kind === 'projection') { result.mapName = result.name.replace(/-2d$/u, ''); }
-      model.emit('results'); } });
+      model.emit(Events.RESULTS); } });
   const buttons = [element('button', { type: 'button', text: 'Download JSON', onclick: () => downloadResult(result) }), ...embeddingButton(model, result)];
   if (['projection', 'clustering'].includes(result.kind)) {
     buttons.unshift(element('button', { type: 'button', text: result.kind === 'clustering' ? 'Open legend' : 'Open card', onclick: () => {
       model.openResultId = result.id;
-      model.emit('open-result');
+      model.emit(Events.OPEN_RESULT);
       $('#export-dialog').close();
     } }));
   }

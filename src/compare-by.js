@@ -1,5 +1,8 @@
 import { $, element } from './dom.js';
 import { axisGroups, candidateFields, columnKind, columnPayload, fieldGroups } from './compare-columns.js';
+import { Events } from './events.js';
+import { populationGroup, treeGroup } from './compare-choices.js';
+import { setTermSettings } from './term-settings-model.js';
 
 const MIN_POPULATION = 60;
 const CACHED_SCREENS = 6;
@@ -33,20 +36,20 @@ function columnLabel(field, result) {
 // "Compare by" chooses the column whose values colour the phrase cloud. Auto follows the highlight when
 // there is one and otherwise the strongest column the screen finds, else the main text axis.
 export class CompareBy {
-  value = 'auto';
   screens = new Map();
   indexId = null;
 
   constructor(model, change) {
     this.model = model;
     this.select = $('#terms-compare');
-    this.select.onchange = () => { this.value = this.select.value; change(); };
-    model.on('data', () => { this.screens.clear(); this.value = 'auto'; this.fill(null); });
-    model.on('selection', () => this.fill(this.current()));
-    model.on('views', () => { if (this.value === 'auto') { this.fill(this.current()); change(); } });
-    for (const type of ['schema', 'annotation', 'results']) { model.on(type, () => this.fill(this.current())); }
+    model.on(Events.DATA, () => { this.screens.clear(); this.fill(null); });
+    model.on(Events.SELECTION, () => this.fill(this.current()));
+    model.on(Events.VIEWS, () => { if (this.value === 'auto') { this.fill(this.current()); change(); } });
+    for (const type of [Events.SCHEMA, Events.ANNOTATION, Events.RESULTS]) { model.on(type, () => this.fill(this.current())); }
     this.fill(null);
   }
+
+  get value() { return this.model.termSettings.compare; }
 
   mapColumn() { return this.model.views.find(view => view.type === 'map')?.color; }
 
@@ -56,8 +59,11 @@ export class CompareBy {
   }
 
   mode(indexId) {
-    const ranked = $('#terms-ranking').value !== 'auto'; // A chosen ranking describes one population, not a column's values.
-    if (!indexId || ranked || $('#terms-content').value === 'facets' || this.value === 'highlight') { return 'highlight'; }
+    const settings = this.model.termSettings;
+    const chosenColumn = /^(col|axis):/u.test(this.value);
+    // A chosen ranking, metadata predicates, a population or a tree describe one population, not a column's values.
+    const describing = settings.ranking !== 'auto' || settings.content === 'facets' || (this.value !== 'auto' && !chosenColumn);
+    if (!indexId || describing) { return 'highlight'; }
     return this.value === 'auto' && this.model.selected.size ? 'highlight' : 'columns';
   }
 
@@ -73,7 +79,7 @@ export class CompareBy {
   // inside a highlight, so the dots always describe the records the cloud is about.
   pending(indexId) {
     this.indexId = indexId;
-    if (!indexId || $('#terms-content').value === 'facets') { return null; }
+    if (!indexId || this.model.termSettings.content === 'facets') { return null; }
     const population = this.population();
     const key = this.key(indexId, population);
     return this.screens.has(key) || population.length < MIN_POPULATION ? null : { population, key };
@@ -110,7 +116,8 @@ export class CompareBy {
   resolve(indexId) {
     if (this.mode(indexId) !== 'columns') { return null; }
     const population = this.population();
-    const screen = this.screens.get(this.key(indexId, population));
+    // A column chosen by name works without a screen (small tables are not screened); it just has no dots.
+    const screen = this.screens.get(this.key(indexId, population)) ?? (this.value.startsWith('col:') ? { columns: [], axes: [] } : null);
     if (!screen) { return null; }
     const choice = this.value === 'auto' ? bestChoice(screen, this.mapColumn()) : this.value;
     const groups = this.groupsFor(choice, screen, population);
@@ -136,12 +143,13 @@ export class CompareBy {
   }
 
   fill(screen) {
-    const groups = this.entries(screen).map(([label, list]) => element('optgroup', { label }, list));
+    const ranked = this.model.termSettings.ranking !== 'auto';
+    // Columns colour a cloud by their values; a chosen ranking describes one population, so only populations remain.
+    const columns = ranked ? [] : this.entries(screen).map(([label, list]) => element('optgroup', { label }, list));
+    const groups = [populationGroup(), ...columns, ...treeGroup(this.model)].filter(Boolean);
     this.select.replaceChildren(new Option('Auto', 'auto'), new Option('Highlighted vs previous step', 'highlight'), ...groups);
-    if (![...this.select.options].some(option => option.value === this.value)) { this.value = 'auto'; }
+    if (![...this.select.options].some(option => option.value === this.value)) { setTermSettings(this.model, { compare: 'auto' }); }
     this.select.options[0].text = this.autoLabel(screen);
-    this.select.disabled = $('#terms-ranking').value !== 'auto';
-    this.select.title = this.select.disabled ? 'Compare by applies to the Automatic ranking' : '';
     this.select.value = this.value;
   }
 

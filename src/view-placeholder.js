@@ -1,5 +1,6 @@
 import { element } from './dom.js';
 import { percent } from './status.js';
+import { Events } from './events.js';
 
 export class ViewPlaceholder {
   constructor(model, config, container, make) {
@@ -12,7 +13,7 @@ export class ViewPlaceholder {
     this.node = element('div', { class: 'view-placeholder' }, [this.button,
       element('p', { text: 'Arrange similar records close together, using the inputs you chose. Fits on all records.' }),
       this.bar, this.status]);
-    this.cleanup = model.on('fit-progress', () => this.paint());
+    this.cleanup = model.on(Events.FIT_PROGRESS, () => this.paint());
   }
 
   sync(visible) {

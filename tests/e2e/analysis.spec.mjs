@@ -73,7 +73,7 @@ async function treeAndDescriptions(page) {
   await expect(page.locator('#terms-results details[data-group-id]')).toHaveCount(1);
   await page.click('#terms-options');
   await query(page, 'group:battery');
-  await expect(page.locator('#terms-scope')).toHaveValue('selection');
+  await expect(page.locator('#terms-compare')).toHaveValue('auto');
   await expect(page.locator('#terms-status')).toHaveText(/12 subset \/ 12 comparison/);
   await expect(page.locator('#terms-results details[data-group-id]')).toHaveCount(0);
   await legend.getByRole('spinbutton').fill('1');

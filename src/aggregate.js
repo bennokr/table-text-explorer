@@ -1,4 +1,5 @@
 import { categorical, categoryLabel, keyOf, missing, numberOf } from './schema.js';
+import { HIGHLIGHT } from './palette.js';
 
 function categories(rows, field) {
   const counts = new Map();
@@ -63,5 +64,5 @@ export function countsFor(groups, model) {
   const selected = members.map(ids => ids.filter(id => model.selected.has(id)).length);
   const max = Math.max(1, ...count);
   return { ...groups.data, count, selected, alpha: count.map(value => 0.08 + 0.92 * value / max),
-    outline: selected.map(value => value ? '#d9772b' : '#ffffff') };
+    outline: selected.map(value => value ? HIGHLIGHT : '#ffffff') };
 }

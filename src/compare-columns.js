@@ -2,7 +2,7 @@ import { categorical, categoryLabel, missing, numberOf } from './schema.js';
 import { temporal } from './dates.js';
 import { rangePredicate, valuePredicate } from './query-predicates.js';
 import { rangeValue } from './facet-predicates.js';
-import { palette } from './palette.js';
+import { categoryColor, HIGH, LOW, OTHER } from './palette.js';
 import { valueColor } from './value-colors.js';
 
 // A column is any partition of the records into values. These helpers turn table columns, annotations,
@@ -11,9 +11,6 @@ import { valueColor } from './value-colors.js';
 export const MIN_GROUP = 10;
 const MAX_VALUES = 8;
 const MAX_CLUSTERS = 12; // A clustering has as many colours as this, so its values are not collapsed into Other.
-const OTHER = '#999999';
-const LOW = '#3979a5';
-const HIGH = '#c34e58';
 
 export function candidateFields(model) {
   const usable = field => categorical(field) || field.kind === 'number' || temporal(field);
@@ -65,7 +62,7 @@ function categoricalGroups(model, field, population) {
   const colorOf = valueColor(model, field);
   const groups = chosen.map((group, index) => {
     const inside = new Set(group.ids);
-    return { id: String(index), name: categoryLabel(group.value, field), color: colorOf(group.value) ?? palette[index % palette.length],
+    return { id: String(index), name: categoryLabel(group.value, field), color: colorOf(group.value) ?? categoryColor(index),
       subset: group.ids, comparison: observed.filter(id => !inside.has(id)), predicate: valuePredicate(field.name, group.value) };
   });
   const shown = new Set(chosen.flatMap(group => group.ids));

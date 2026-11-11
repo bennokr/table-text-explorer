@@ -6,6 +6,7 @@ import { showClustering } from './analysis-views.js';
 import { initializeTree } from './cluster-tree.js';
 import { nameClusters } from './cluster-names.js';
 import { complete } from './status.js';
+import { Events } from './events.js';
 
 // Fixed, not user settings: neither changes what a clustering finds, only how long it takes.
 const MINIBATCH_SIZE = 1024;
@@ -31,10 +32,10 @@ export class Clustering {
       event.preventDefault();
       this.fit();
     };
-    model.on('name-clusters', () => this.nameGroups(model.namingResult));
-    model.on('density-selection', () => this.selectDensity(model.densityRequest));
-    model.on('busy', () => this.busy());
-    model.on('data', () => this.busy());
+    model.on(Events.NAME_CLUSTERS, () => this.nameGroups(model.namingResult));
+    model.on(Events.DENSITY_SELECTION, () => this.selectDensity(model.densityRequest));
+    model.on(Events.BUSY, () => this.busy());
+    model.on(Events.DATA, () => this.busy());
     this.busy();
   }
 
@@ -178,9 +179,9 @@ export class Clustering {
     if (generation !== this.analysis.generation || revision !== this.model.revision) { return; }
     const result = this.model.results.add('clustering', data);
     clusterColumns(this.model, result);
-    this.model.emit('schema');
+    this.model.emit(Events.SCHEMA);
     this.model.analysisViewId = showClustering(this.model, result).id;
-    this.model.emit('analysis-card');
+    this.model.emit(Events.ANALYSIS_CARD);
     this.model.resultsChanged();
     complete(`${data.namingError ? 'Phrase naming unavailable; use Rename all to retry. ' : ''}${result.name} · ${new Set(result.labels.filter(id => id !== -1)).size} groups · ${output.labels.filter(id => id === -1).length} Other records. Open the legend to rename groups; downloads are in Exports.`);
   }

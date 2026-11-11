@@ -3,6 +3,7 @@ import { variableOptions } from './variable-options.js';
 import { element, options } from './dom.js';
 import { categorical } from './schema.js';
 import { eligibleFields, isProjection, isResultView, isPointView, viewTypes, changeViewType } from './view-config.js';
+import { Events } from './events.js';
 
 function resultSelect(label, name, change) {
   const select = element('select', { 'aria-label': name, onchange: event => change(event.target.value) });
@@ -36,7 +37,7 @@ export class ViewEditor {
     this.name = element('input', { 'aria-label': 'View name', placeholder: 'Automatic name',
       onchange: event => change({ title: event.target.value.trim() }) });
     this.nameLabel = element('label', { class: 'view-name', text: 'Name' }, [this.name]);
-    this.cleanup = model.on('annotation', () => this.sync());
+    this.cleanup = model.on(Events.ANNOTATION, () => this.sync());
     this.sync();
   }
 

@@ -2,6 +2,7 @@ import './variable-picker.js';
 import { variableOptions } from './variable-options.js';
 import { $, element, options } from './dom.js';
 import { phraseSettings } from './phrase-config.js';
+import { Events } from './events.js';
 
 export class PhraseSettings {
   constructor(model, analysis) {
@@ -11,7 +12,7 @@ export class PhraseSettings {
     $('#terms-config').onchange = () => this.restore();
     $('#terms-save').onclick = () => this.save();
     $('#phrase-form').onsubmit = event => { event.preventDefault(); this.apply(); };
-    model.on('busy', () => {
+    model.on(Events.BUSY, () => {
       $('#phrase-controls').disabled = model.analysisBusy;
       $('#phrase-apply').disabled = model.analysisBusy;
     });
@@ -69,7 +70,7 @@ export class PhraseSettings {
     const config = this.read();
     if (!config.fields.length && this.model.rows.length) { $('#phrase-error').textContent = 'Choose at least one text field.'; return; }
     this.model.phraseConfig = config;
-    this.model.emit('phrase-settings');
+    this.model.emit(Events.PHRASE_SETTINGS);
     $('#phrase-dialog').close();
   }
 }

@@ -3,6 +3,7 @@ import { $ } from './dom.js';
 import { defaultViews, isPointView, isResultView, newView } from './view-config.js';
 import { ViewLayout } from './view-layout.js';
 import { ViewCard } from './view-card.js';
+import { Events } from './events.js';
 
 export class Views {
   cards = new Map();
@@ -17,12 +18,12 @@ export class Views {
     $('#add-chart').onclick = () => this.add();
     $('#clear-views').onclick = () => this.clear();
     this.layout = new ViewLayout(model);
-    model.on('data', () => this.defaults());
-    model.on('views', () => this.sync());
-    model.on('schema', () => this.sync());
-    model.on('open-result', () => this.openResult());
-    model.on('analysis-card', () => this.revealAnalysis());
-    model.on('results', () => this.sync());
+    model.on(Events.DATA, () => this.defaults());
+    model.on(Events.VIEWS, () => this.sync());
+    model.on(Events.SCHEMA, () => this.sync());
+    model.on(Events.OPEN_RESULT, () => this.openResult());
+    model.on(Events.ANALYSIS_CARD, () => this.revealAnalysis());
+    model.on(Events.RESULTS, () => this.sync());
   }
 
   revealAnalysis() {
@@ -63,7 +64,7 @@ export class Views {
     const added = view ?? this.insert({ ...config, id: this.model.nextViewId() });
     if (view) { Object.assign(view, config); }
     if (view && !isResultView(view.type)) { delete view.resultId; }
-    this.model.emit('views');
+    this.model.emit(Events.VIEWS);
     return added;
   }
 
@@ -81,7 +82,7 @@ export class Views {
   clear() {
     this.restore();
     this.model.views = [];
-    this.model.emit('views');
+    this.model.emit(Events.VIEWS);
   }
 
   discardCard(id) {
@@ -135,7 +136,7 @@ export class Views {
   duplicate(view) {
     this.restore();
     this.insert({ ...view, id: this.model.nextViewId() });
-    this.model.emit('views');
+    this.model.emit(Events.VIEWS);
   }
 
   restore() {
@@ -146,7 +147,7 @@ export class Views {
   remove(view) {
     if ($('#views').dataset.expanded === view.id) { this.expand(view); }
     this.model.views = this.model.views.filter(item => item.id !== view.id);
-    this.model.emit('views');
+    this.model.emit(Events.VIEWS);
   }
 
 }

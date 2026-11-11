@@ -35,14 +35,14 @@ async function combinedQueries(page) {
   await page.selectOption('#terms-content', 'both');
   await page.selectOption('#terms-ranking', 'balanced');
   await expect(page.locator('#description-kind')).toHaveText('Even splits');
-  await page.selectOption('#terms-scope', 'all');
+  await page.selectOption('#terms-compare', 'population:all');
   await expect(page.locator('#terms-status')).toHaveText(/24 subset \/ 0 comparison/);
   await expect(page.locator('#terms-results .term-cloud[aria-busy=false]').first()).toBeVisible();
   await page.selectOption('#terms-content', 'phrases');
   await expect(page.locator('#terms-ranking'), 'leaving metadata predicates resets even splits').toHaveValue('auto');
   await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toHaveCount(1);
   await page.click('#filter-selection');
-  await page.selectOption('#terms-scope', 'visible');
+  await page.selectOption('#terms-compare', 'population:visible');
   await expect(page.locator('#terms-status')).toHaveText(/12 subset \/ 0 comparison/);
   await page.click('#clear-filters');
 }
@@ -68,9 +68,10 @@ async function semanticAndClusters(page) {
   await page.fill('#cluster-count', '2');
   await page.click('#cluster-submit');
   await idle(page);
-  await page.selectOption('#terms-scope', { index: 4 });
-  await expect(page.locator('#terms-results details[data-group-id]')).toHaveCount(2);
-  await expect(page.locator('.term-field-legend')).toHaveCount(2);
+  // A flat clustering is a column: Compare by its name column colours one cloud per field by cluster.
+  const column = await page.locator('#terms-compare option[value^="col:"]', { hasText: '· name' }).first().getAttribute('value');
+  await page.selectOption('#terms-compare', column);
+  await expect(page.locator('.compare-legend .legend-value')).toHaveCount(2, { timeout: 60000 });
   await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toHaveCount(2);
 }
 
