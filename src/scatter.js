@@ -1,5 +1,7 @@
 import { temporal } from './dates.js';
-import { B, dimension, figure, linkRecords, palette, PlotHost, ticks } from './plot.js';
+import { B, dimension, figure, linkRecords, PlotHost, ticks } from './plot.js';
+import { palette } from './palette.js';
+import { categoryColors } from './value-colors.js';
 import { keyOf } from './schema.js';
 import { hoverData } from './scatter-hover.js';
 import { axisCoordinates } from './view-config.js';
@@ -46,9 +48,9 @@ export class Scatter {
       const colors = new Map(result.rowIds.map((id, index) => [id, result.groups[result.labels[index]].color]));
       return this.model.rows.map((_, id) => colors.get(id) ?? '#cccccc');
     }
-    const keys = [...new Set(this.model.rows.map(row => keyOf(row[name], field)))];
-    const colors = new Map(keys.map((key, index) => [key, palette[index % palette.length]]));
-    return this.model.rows.map(row => name ? colors.get(keyOf(row[name], field)) : palette[0]);
+    if (!name) { return this.model.rows.map(() => palette[0]); }
+    const colors = categoryColors(this.model, field);
+    return this.model.rows.map(row => colors.get(keyOf(row[name], field)));
   }
 
   paint() {

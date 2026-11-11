@@ -17,10 +17,13 @@ function relatedMap(map, clustering) {
 }
 
 export function showClustering(model, result) {
-  for (const view of model.views.filter(view => view.type === 'map')) {
+  const maps = model.views.filter(view => view.type === 'map');
+  for (const view of maps) {
     if (relatedMap(model.resultFor(view), result)) { view.color = result.columns.name; }
   }
   const view = card(model, { type: 'legend', resultId: result.id });
-  model.views.push(view);
+  // The legend goes right after its map, so the colour key sits next to what it colours.
+  const map = maps.find(candidate => relatedMap(model.resultFor(candidate), result)) ?? maps[0];
+  if (map) { model.views.splice(model.views.indexOf(map) + 1, 0, view); } else { model.views.push(view); }
   return view;
 }

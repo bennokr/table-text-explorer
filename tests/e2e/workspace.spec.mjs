@@ -26,7 +26,7 @@ async function annotateExport(page, testInfo) {
   await page.fill('#annotation-value', 'Checked');
   await page.click('#assign');
   const ids = (await snapshot(page)).selected;
-  const color = page.locator('.view-card').first().locator('variable-picker[aria-label="Color by"]');
+  const color = page.locator('[data-point-index="0"]').locator('variable-picker[aria-label="Color by"]');
   await color.getByRole('button', { name: 'Color by', exact: true }).click();
   await color.getByRole('searchbox').fill('review');
   await expect(color.locator('.vp-option')).toContainText(`${ids.length} non-missing`);
@@ -49,6 +49,7 @@ async function annotateExport(page, testInfo) {
 test('workspace: query highlight, explicit filter, linked brushing, cards and annotation export', async ({ app }, testInfo) => {
   const { page, models } = app;
   await importRows(page, undefined, true);
+  await page.click('#add-chart'); // The default cards are bars and a histogram; brushing needs a scatter.
   await query(page, 'group:camera');
   expect((await snapshot(page)).visible).toBe(24);
   expect((await snapshot(page)).selected).toHaveLength(12);
@@ -68,7 +69,7 @@ test('workspace: query highlight, explicit filter, linked brushing, cards and an
   await page.check('#preview-selection');
   await expect(page.locator('#table-count')).toHaveText(`${(await snapshot(page)).selected.length} shown`);
   await page.uncheck('#preview-selection');
-  const card = page.locator('.view-card').first();
+  const card = page.locator('[data-point-index="0"]');
   await card.getByRole('button', { name: 'View options', exact: true }).click();
   await card.getByLabel('View name', { exact: true }).fill('My scatter');
   await card.getByLabel('View name', { exact: true }).press('Tab');

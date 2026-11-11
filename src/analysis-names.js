@@ -12,13 +12,20 @@ export function uniqueAnalysisName(model, suggested) {
   return name;
 }
 
+const modelTokens = { dutch: 'nl-l6' };
+
+function chunkName(config) {
+  const standard = config.sentenceChunkSize === 126 && config.sentenceOverlap === 0;
+  if (config.sentenceChunking !== 'chunks') { return `first${config.sentenceChunkSize}`; }
+  // Default chunking is left out: a name should say what differs from the defaults.
+  return standard ? '' : `chunks${config.sentenceChunkSize}o${config.sentenceOverlap}`;
+}
+
 function sentenceName(config) {
-  const model = config.sentenceModel === 'dutch' ? 'nl-l6' : '';
-  const chunks = config.sentenceChunking === 'chunks'
-    ? `chunks${config.sentenceChunkSize}o${config.sentenceOverlap}` : `first${config.sentenceChunkSize}`;
+  const model = String(config.sentenceModel).startsWith('import:') ? 'imported' : modelTokens[config.sentenceModel] ?? '';
   const context = descriptionEnabled(config) ? 'descriptions' : '';
   const groups = config.combine === 'group-mean' ? `groups${Math.round(100 * config.groupIdentity)}` : '';
-  return [model, chunks, context, groups].filter(Boolean);
+  return [model, chunkName(config), context, groups].filter(Boolean);
 }
 
 export function mapName(model, config, method) {

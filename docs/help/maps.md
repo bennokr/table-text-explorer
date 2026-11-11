@@ -16,7 +16,7 @@ Choose sentence embeddings and two text columns to explore similar wording or me
 
 Maps fit all records, including filtered-out records. Records with no usable embedding are excluded from a text map. Nearness suggests similarity under these settings; islands are not proof of meaningful themes. Brushing and filtering preserve the fit.
 
-The map and its input representation are saved separately. Choose an existing map with M in a Map card. Removing a card keeps the saved result. [Exports](data.md#exports) include arrays and settings.
+A new clustering's legend is placed right after its map, and the map is coloured by the clusters. The × next to the + in the Visualizations header removes all cards so a map and its legend get the whole area; importing data brings the default cards back (bars for the main categories and a histogram of one measure). The map and its input representation are saved separately. Choose an existing map with M in a Map card. Removing a card keeps the saved result. [Exports](data.md#exports) include arrays and settings.
 
 ## Input columns
 

@@ -28,7 +28,7 @@ K-means requires a group count and assigns every usable record. Hierarchical cut
 
 Leave tuning controls collapsed until you have inspected the first result.
 
-Optional phrase names reuse/build compatible counts. Rename all suggests up to the selected maximum number of phrases; edited names stay locked until cleared. Tree names and descendant colors remain editable. Naming suggestions describe clusters; they do not fit or change membership.
+Phrase names are suggested by default (untick it to keep numbers) and reuse or build compatible counts. Names avoid function words and negations at their edges and phrases found in over a third of the other records. Every cluster gets a name: if no distinctive phrase is free, a looser one is used, and only a cluster with no usable phrase at all keeps its number. Rename all suggests up to the selected maximum number of phrases; edited names stay locked until cleared. Tree names and descendant colors remain editable. Naming suggestions describe clusters; they do not fit or change membership.
 
 ## Troubleshooting
 

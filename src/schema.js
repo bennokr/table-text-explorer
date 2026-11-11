@@ -23,14 +23,28 @@ function kindOf(values, base, limits) {
   const options = { identifier: base.identifier, labelled: base.valueLabels.length > 0, limits };
   const { datatype, level } = inferColumn(values, options);
   if (['boolean', 'date', 'datetime'].includes(datatype)) { return datatype; }
-  if (level === 'categorical') { return 'categorical'; }
+  if (level === 'categorical' || repeatedLabels(base.unique, values.length, datatype, level, limits)) { return 'categorical'; }
   return level === 'numerical' ? 'number' : 'text';
+}
+
+// linked-codebook leaves long labels uncategorised ("Gerecht in eerste aanleg van Curaçao" among 23 courts
+// of 2,360 rulings). A text column whose few values each repeat at least five times is a category.
+function repeatedLabels(unique, count, datatype, level, limits) {
+  return datatype === 'string' && !level && unique.length > 1 && unique.length <= limits.text && count >= 5 * unique.length;
+}
+
+// A column of single tokens that are almost all different (ECLI numbers, codes, user names) identifies records;
+// it is not text to describe, so it stays out of default text fields and views.
+function looksLikeIdentifier(unique, count) {
+  const sample = unique.slice(0, 200).map(String);
+  const tokens = sample.every(value => value.length <= 40 && !/\s/u.test(value));
+  return typeof unique[0] === 'string' && count > 20 && unique.length >= 0.95 * count && tokens;
 }
 
 function inferField(name, rows, metadata, limits = categoryLimits()) {
   const values = rows.map(row => row[name]).filter(value => !missing(value, metadata));
   const unique = [...new Map(values.map(value => [keyOf(value), value])).values()];
-  const base = { ...metadata, name, unique, missing: rows.length - values.length, identifier: metadata?.identifier ?? isIdentifier(name),
+  const base = { ...metadata, name, unique, count: values.length, missing: rows.length - values.length, identifier: metadata?.identifier ?? (isIdentifier(name) || looksLikeIdentifier(unique, values.length)),
     empty: !values.length, constant: unique.length === 1,
     storage: typeof values[0], label: metadata?.label, valueLabels: metadata?.valueLabels ?? [] };
   return { ...base, kind: kindOf(values, base, limits) };

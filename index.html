@@ -32,9 +32,10 @@
         <button id="cluster" title="Cluster all records">New clustering</button></div>
         <div id="analysis-progress" hidden><progress id="panel-progress" aria-label="Analysis progress"></progress><span id="panel-status"></span></div>
         <button id="cancel" hidden title="Cancel analysis" aria-label="Cancel analysis">■</button>
+        <button id="clear-views" class="square" title="Remove all visualization cards (new defaults come with the next import)" aria-label="Remove all visualization cards">×</button>
         <button id="add-chart" class="square" title="New visualization card" aria-label="New visualization card">＋</button>
       </header>
-      <div id="views"><p id="views-empty" class="empty">Import a table, then add visualizations.</p></div>
+      <div id="views"><p id="views-empty" class="empty">No visualizations. Make a similarity map or clustering, or add a chart with ＋.</p></div>
     </section>
     <section id="description-panel" class="panel" aria-label="Subset descriptions">
       <header class="panel-head"><h2>Subset descriptions</h2><small id="description-kind">Distinctive phrases</small><button id="terms-options" class="square" aria-controls="terms-controls" title="Subset description settings" aria-label="Subset description settings" aria-expanded="true">⚙</button></header>
@@ -114,7 +115,7 @@
     <div id="cluster-density" hidden><label>Minimum group size <input id="cluster-min-size" type="number" min="2" step="1" value="15" required></label>
       <label>Minimum neighbors <input id="cluster-min-samples" type="number" min="1" step="1" value="5" required></label></div>
     <label id="cluster-linkage-label" hidden>Linkage <select id="cluster-linkage"><option value="ward">Ward</option><option value="average">Average</option><option value="complete">Complete</option><option value="single">Single</option></select></label></div>
-    <div id="cluster-naming" class="cluster-naming"><label title="Reuse a compatible all-record text index, or build one automatically. Edited names are preserved."><input id="cluster-suggest-names" type="checkbox">Suggest phrase names</label></div>
+    <div id="cluster-naming" class="cluster-naming"><label title="Reuse a compatible all-record text index, or build one automatically. Edited names are preserved."><input id="cluster-suggest-names" type="checkbox" checked>Suggest phrase names</label></div>
     <button type="button" class="help-hint" data-help="clustering#technical-details">?</button>
     <p id="cluster-error" role="alert"></p>
     <div class="dialog-actions"><button type="button" data-close>Close</button><button id="cluster-submit" type="submit">Make clustering</button></div>

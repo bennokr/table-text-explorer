@@ -12,6 +12,15 @@ export function featureCandidates(model) {
     : field.kind !== 'empty' && field.kind !== 'text' && !field.identifier);
 }
 
+// The default text field is the one with the most words per record that differ between records: long, and
+// not a label repeated over many records (a dossier title is shared by dozens of motions).
+function wordsPerValue(field) {
+  const sample = (field.unique ?? []).slice(0, 100);
+  if (!sample.length) { return 0; }
+  const words = sample.reduce((total, value) => total + String(value).split(/\s+/u).length, 0) / sample.length;
+  return words * Math.min(1, (field.unique.length / (field.count || field.unique.length)) * 2);
+}
+
 export function featureFields(model) {
   const candidates = featureCandidates(model);
   if (Array.isArray(model.config.features)) {
@@ -19,7 +28,7 @@ export function featureFields(model) {
   }
   const automatic = candidates.filter(field => !field.annotation);
   if (model.config.mode === 'table') { return automatic; }
-  const text = automatic.filter(field => field.kind === 'text');
+  const text = automatic.filter(field => field.kind === 'text').sort((a, b) => wordsPerValue(b) - wordsPerValue(a));
   return (text.length ? text : automatic).slice(0, 1);
 }
 

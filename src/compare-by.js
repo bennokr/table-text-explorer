@@ -16,8 +16,10 @@ export function dots(column) {
   return column.effect >= BANDS[0] ? '●●○' : '●○○';
 }
 
-function bestChoice(screen) {
+// The column the map is coloured by wins when it is significant, so the cloud explains the colours on the map.
+function bestChoice(screen, mapColumn) {
   const ranked = screen.columns.filter(column => column.significant).sort((a, b) => b.effect - a.effect);
+  if (ranked.some(column => column.name === mapColumn)) { return `col:${mapColumn}`; }
   if (ranked.length) { return `col:${ranked[0].name}`; }
   return screen.axes.length ? 'axis:0' : null;
 }
@@ -41,9 +43,12 @@ export class CompareBy {
     this.select.onchange = () => { this.value = this.select.value; change(); };
     model.on('data', () => { this.screens.clear(); this.value = 'auto'; this.fill(null); });
     model.on('selection', () => this.fill(this.current()));
+    model.on('views', () => { if (this.value === 'auto') { this.fill(this.current()); change(); } });
     for (const type of ['schema', 'annotation', 'results']) { model.on(type, () => this.fill(this.current())); }
     this.fill(null);
   }
+
+  mapColumn() { return this.model.views.find(view => view.type === 'map')?.color; }
 
   population() {
     const highlighted = this.model.visible.filter(id => this.model.selected.has(id));
@@ -107,7 +112,7 @@ export class CompareBy {
     const population = this.population();
     const screen = this.screens.get(this.key(indexId, population));
     if (!screen) { return null; }
-    const choice = this.value === 'auto' ? bestChoice(screen) : this.value;
+    const choice = this.value === 'auto' ? bestChoice(screen, this.mapColumn()) : this.value;
     const groups = this.groupsFor(choice, screen, population);
     return groups.length >= 2 ? { population, groups, choice, label: this.labelFor(choice), screen } : null;
   }
@@ -143,7 +148,7 @@ export class CompareBy {
   // Auto describes the highlight when there is one; the dots then say which column to condition on next.
   autoLabel(screen) {
     if (this.value === 'auto' && this.model.selected.size && this.mode(this.indexId) === 'highlight') { return 'Auto → highlighted records'; }
-    const best = screen ? bestChoice(screen) : null;
+    const best = screen ? bestChoice(screen, this.mapColumn()) : null;
     return best ? `Auto → ${this.labelFor(best)}` : 'Auto';
   }
 }

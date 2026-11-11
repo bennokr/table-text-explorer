@@ -46,7 +46,7 @@ export class Clustering {
     options($('#cluster-source'), [['', 'Current map settings'],
       ...saved.map(result => [result.id, `${result.name} · ${result.kind === 'projection' ? '2D coordinates' : 'Saved inputs'}`])], preferred?.id ?? '');
     $('#cluster-name').value = '';
-    $('#cluster-suggest-names').checked = false;
+    $('#cluster-suggest-names').checked = true;
     this.nameLength.value = '4';
     this.sourceDefaults();
     this.controls();

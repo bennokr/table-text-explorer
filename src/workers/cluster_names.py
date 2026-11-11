@@ -7,13 +7,44 @@ import unicodedata
 import numpy as np
 from text_indexes import get_text_index
 
+# Function words and negations say nothing about a topic. Names avoid them at the edges,
+# so "niet echt" or "over de" never name a cluster, but "zorg voor kinderen" can.
+NAMING_STOPWORDS = frozenset(
+    re.findall(
+        r"\w+",
+        """
+de het een en van in op te dat die is was voor met aan er om als ik je hij zij wij ze
+we niet maar ook dan dit zijn wordt door bij naar tot uit heeft hebben had heb of over
+geen nog wel meer veel zo zich deze kan zal moet worden werd hun hem haar mij me u uw
+nu al toch hoe wat wie waar onder tegen tussen na zonder alle alles even eens niets
+nooit nl dus the a an and on to that for with at as i you he she not but also then this
+are be by from has have or no it its
+""",
+    )
+)
+GENERIC_COVERAGE = 0.35  # In over a third of the other records: not distinctive.
+
+
+def ordered_words(text):
+    normalized = unicodedata.normalize("NFKC", text).casefold().replace("\u2019", "'")
+    return re.findall(r"[^\W_]+(?:'[^\W_]+)*", normalized)
+
 
 def name_words(text):
-    normalized = unicodedata.normalize("NFKC", text).casefold().replace("\u2019", "'")
-    return set(re.findall(r"[^\W_]+(?:'[^\W_]+)*", normalized))
+    return set(ordered_words(text))
 
 
-def phrase_evidence(name, field, subset, comparison):
+def stop_edges(phrase):
+    tokens = ordered_words(phrase)
+    return bool(tokens) and (tokens[0] in NAMING_STOPWORDS or tokens[-1] in NAMING_STOPWORDS)
+
+
+def only_stopwords(phrase):
+    return all(token in NAMING_STOPWORDS for token in ordered_words(phrase))
+
+
+def phrase_evidence(name, field, subset, comparison, strict=True):
+    """Candidate names: strict ones avoid generic words, loose ones are a last resort."""
     if field is None or not subset:
         return []
     matrix = field["matrix"]
@@ -29,6 +60,8 @@ def phrase_evidence(name, field, subset, comparison):
         support = int(scores["support"][column])
         if not usable_phrase(phrase, words, support, len(subset)) or values[column] <= 0:
             continue
+        if not acceptable(phrase, background[column], strict):
+            continue
         ids = matrix[subset, column].nonzero()[0]
         candidates.append(
             {
@@ -42,9 +75,16 @@ def phrase_evidence(name, field, subset, comparison):
                 "comparisonSize": len(comparison),
                 "score": float(values[column]) / (1 + 0.25 * (len(phrase.split()) - 1)),
                 "matches": [subset[int(index)] for index in ids],
+                **({} if strict else {"loose": True}),
             }
         )
     return candidates
+
+
+def acceptable(phrase, background, strict):
+    if strict:
+        return not stop_edges(phrase) and background <= GENERIC_COVERAGE
+    return not only_stopwords(phrase)
 
 
 def usable_phrase(phrase, words, support, size):
@@ -63,6 +103,17 @@ def name_candidates(group, fields):
     candidates.sort(
         key=lambda candidate: (-candidate["score"], candidate["phrase"], candidate["field"])
     )
+    return candidates[:24]
+
+
+def loose_candidates(group, fields):
+    """Names that may repeat words of other names or be common; used when no strict name fits."""
+    candidates = []
+    for name, field in fields.items():
+        candidates.extend(
+            phrase_evidence(name, field, group["subset"], group["comparison"], strict=False)
+        )
+    candidates.sort(key=lambda item: (-item["score"], item["phrase"], item["field"]))
     return candidates[:24]
 
 
@@ -85,19 +136,30 @@ def name_bundles(candidates, counts):
                     "phrases": chosen,
                     "words": sorted(used),
                     "score": sum(item["score"] for item in chosen),
+                    **({"loose": True} if seed.get("loose") else {}),
                 }
             )
     return bundles
 
 
-def extend_names(states, group, candidates):
+def fits(candidate, used, fixed, taken):
+    """Strict names share no word with another; loose ones avoid only locked and sibling words."""
+    words = set(candidate["words"])
+    if candidate.get("loose"):
+        return not words & fixed and candidate["phrase"] not in taken
+    return not words & used
+
+
+def extend_names(states, group, candidates, loose, fixed):
     blocked = set().union(*(name_words(name) for name in group.get("blocked", [])))
     expanded = []
     for score, used, labels in states:
-        for candidate in [*candidates, fallback_name(group, used | blocked)]:
-            words = set(candidate["words"])
-            if words & (used | blocked):
+        taken = {label["phrase"] for label in labels.values()}
+        options = [*candidates, *({**item, "score": item["score"] - 1} for item in loose)]
+        for candidate in [*options, fallback_name(group, used | blocked)]:
+            if not fits(candidate, used | blocked, fixed | blocked, taken):
                 continue
+            words = set(candidate["words"])
             expanded.append(
                 (score + candidate["score"], used | words, {**labels, group["id"]: candidate})
             )
@@ -112,7 +174,7 @@ def fallback_name(group, blocked):
     while name_words(name) & blocked:
         name = f"{base}v{suffix}"
         suffix += 1
-    return {"phrase": name, "words": sorted(name_words(name)), "score": 0}
+    return {"phrase": name, "words": sorted(name_words(name)), "score": -10}
 
 
 def choose_names(groups, fields, counts=None):
@@ -122,9 +184,11 @@ def choose_names(groups, fields, counts=None):
     for group in groups:
         if not group.get("locked"):
             candidates = name_candidates(group, fields)
+            loose = loose_candidates(group, fields)
             if counts is not None:
                 candidates = name_bundles(candidates, counts)
-            states = extend_names(states, group, candidates)
+                loose = name_bundles(loose, [1, counts[1]])
+            states = extend_names(states, group, candidates, loose, reserved)
     return states[0][2]
 
 

@@ -2,28 +2,18 @@ import { categorical, categoryLabel, missing, numberOf } from './schema.js';
 import { temporal } from './dates.js';
 import { rangePredicate, valuePredicate } from './query-predicates.js';
 import { rangeValue } from './facet-predicates.js';
+import { palette } from './palette.js';
+import { valueColor } from './value-colors.js';
 
 // A column is any partition of the records into values. These helpers turn table columns, annotations,
 // clusterings and text axes into the same shape: per value, the records it holds and the records it is
 // compared with, plus the condition a click on that value adds to the query path.
 export const MIN_GROUP = 10;
 export const MAX_VALUES = 8;
-const PALETTE = ['#3979a5', '#d9772b', '#648c51', '#9b62a7', '#c34e58', '#529e9e', '#9d823c', '#707ac1'];
+const MAX_CLUSTERS = 12; // A clustering has as many colours as this, so its values are not collapsed into Other.
 const OTHER = '#999999';
 export const LOW = '#3979a5';
 export const HIGH = '#c34e58';
-
-const channel = (from, to, share) => Math.round(from + (to - from) * share);
-
-// Ordered values run from blue through a neutral grey to red, so low and high read at a glance.
-export function rampColors(count) {
-  const [low, middle, high] = [[57, 121, 165], [170, 170, 170], [195, 78, 88]];
-  return Array.from({ length: count }, (_, index) => {
-    const share = count === 1 ? 0 : index / (count - 1);
-    const [from, to, part] = share < 0.5 ? [low, middle, share * 2] : [middle, high, (share - 0.5) * 2];
-    return `rgb(${from.map((value, channelIndex) => channel(value, to[channelIndex], part)).join(',')})`;
-  });
-}
 
 export function candidateFields(model) {
   const usable = field => categorical(field) || field.kind === 'number' || temporal(field);
@@ -69,13 +59,13 @@ function categoricalGroups(model, field, population) {
   const observed = members.flatMap(group => group.ids);
   const large = members.filter(group => group.ids.length >= MIN_GROUP).sort((a, b) => b.ids.length - a.ids.length);
   // More values than colours: the biggest keep theirs and the rest, with every small group, share a grey "Other".
-  const chosen = large.length > MAX_VALUES ? large.slice(0, MAX_VALUES - 1) : large;
-  const ordered = chosen.every(group => Number.isFinite(Number(group.value)));
-  if (ordered) { chosen.sort((a, b) => Number(a.value) - Number(b.value)); }
-  const colors = ordered ? rampColors(chosen.length) : PALETTE;
+  const limit = field.derived ? MAX_CLUSTERS : MAX_VALUES;
+  const chosen = large.length > limit ? large.slice(0, limit - 1) : large;
+  if (chosen.every(group => Number.isFinite(Number(group.value)))) { chosen.sort((a, b) => Number(a.value) - Number(b.value)); }
+  const colorOf = valueColor(model, field);
   const groups = chosen.map((group, index) => {
     const inside = new Set(group.ids);
-    return { id: String(index), name: categoryLabel(group.value, field), color: colors[index % colors.length],
+    return { id: String(index), name: categoryLabel(group.value, field), color: colorOf(group.value) ?? palette[index % palette.length],
       subset: group.ids, comparison: observed.filter(id => !inside.has(id)), predicate: valuePredicate(field.name, group.value) };
   });
   const shown = new Set(chosen.flatMap(group => group.ids));

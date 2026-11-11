@@ -171,6 +171,25 @@ class ClusterNames(unittest.TestCase):
         self.assertNotIn("0", labels)
         self.assertTrue(labels["1"]["phrase"].startswith("#"))
 
+    def test_names_avoid_function_words_and_negations_at_their_edges(self):
+        texts = ["niet echt goed over", "niet echt goed over", "mooi boek van", "mooi boek van"]
+        payload = request(texts, [group(0, [0, 1], [2, 3]), group(1, [2, 3], [0, 1])], maxPhrases=1)
+        labels = json.loads(names["name_clusters"](payload))["labels"]
+        for item in labels.values():
+            for phrase in item["phrases"]:
+                tokens = phrase["phrase"].split()
+                self.assertNotIn(tokens[0], names["NAMING_STOPWORDS"])
+                self.assertNotIn(tokens[-1], names["NAMING_STOPWORDS"])
+        self.assertFalse(labels["0"]["phrase"].startswith("niet"))
+
+    def test_a_group_whose_best_word_is_common_still_gets_a_name_not_a_number(self):
+        texts = ["camera sharp"] * 2 + ["camera"] * 2 + ["battery"] * 2
+        groups = [group(0, [0, 1], [2, 3, 4, 5]), group(1, [2, 3], [0, 1, 4, 5])]
+        labels = json.loads(names["name_clusters"](request(texts, groups, maxPhrases=1)))["labels"]
+        self.assertEqual(labels["0"]["phrase"], "sharp")
+        self.assertEqual(labels["1"]["phrase"], "camera", "common, but better than #2")
+        self.assertTrue(labels["1"].get("loose"))
+
     def test_identical_empty_numeric_and_other_text_have_honest_fallbacks(self):
         for texts in [["same", "same"], ["", ""], ["123", "456"], ["Other", "Other"]]:
             labels = json.loads(

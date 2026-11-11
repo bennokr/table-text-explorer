@@ -23,7 +23,8 @@ function uniqueColumn(model, suggested) {
 
 export function clusterGroups(labels) {
   const ids = [...new Set(labels)].sort((a, b) => a - b);
-  const colors = ['#3979a5', '#d9772b', '#648c51', '#9b62a7', '#c34e58', '#529e9e', '#9d823c', '#707ac1'];
+  const colors = ['#3979a5', '#d9772b', '#648c51', '#9b62a7', '#c34e58', '#529e9e', '#9d823c', '#707ac1',
+    '#8d6e4a', '#c25b9a', '#5b6b7a', '#8fb339'];
   return Object.fromEntries(ids.map(id => [id, { name: id === -1 ? 'Other' : `#${id + 1}`,
     color: id === -1 ? '#999999' : colors[id % colors.length] }]));
 }

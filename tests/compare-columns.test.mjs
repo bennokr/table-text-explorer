@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { axisGroups, candidateFields, columnKind, columnPayload, fieldGroups, rampColors } from '../src/compare-columns.js';
+import { axisGroups, candidateFields, columnKind, columnPayload, fieldGroups } from '../src/compare-columns.js';
 import { formatQuery } from '../src/query-predicates.js';
 
 const rows = Array.from({ length: 60 }, (_, id) => ({ stars: [1, 2, 4, 5][id % 4], mood: id % 3 === 0 ? 'ja' : 'nee',
@@ -50,6 +50,14 @@ test('values beyond the palette share a grey Other group, small groups included'
   assert.equal(rare.length, 1, 'nine singletons are fewer than a group, so no Other');
 });
 
+test('a cluster column keeps the colours of its legend, not the order of its sizes', () => {
+  const rows = Array.from({ length: 60 }, (_, id) => ({ cluster: id < 40 ? 'zorg' : 'school' }));
+  const results = { get: id => (id === 'r1' ? { groups: { 0: { name: 'school', color: '#111111' }, 1: { name: 'zorg', color: '#222222' } } } : null) };
+  const clusterModel = { rows, results, fields: [field('cluster', { kind: 'categorical', derived: 'r1' })] };
+  const groups = fieldGroups(clusterModel, clusterModel.fields[0], rows.map((_, id) => id));
+  assert.deepEqual(groups.map(group => [group.name, group.color]), [['zorg', '#222222'], ['school', '#111111']]);
+});
+
 test('a missing value is not a group and records without a value are not compared with', () => {
   const [group] = fieldGroups(model, model.fields[3], everyone);
   assert.equal(group.subset.length, 48);
@@ -64,12 +72,9 @@ test('a number is compared at its extremes with matching click conditions', () =
   assert.deepEqual(low.comparison, high.subset);
 });
 
-test('a text axis offers its two sides, and ordered colours run from cool to warm', () => {
+test('a text axis offers its two sides', () => {
   const [a, b] = axisGroups({ high: [1, 2], low: [3] });
   assert.deepEqual([a.subset, a.comparison, b.subset, b.comparison], [[1, 2], [3], [3], [1, 2]]);
-  const [first, , , last] = rampColors(4);
-  assert.notEqual(first, last);
-  assert.equal(rampColors(1).length, 1);
 });
 
 test('strength dots are absolute bands of explained variation, and nothing is shown for insignificant columns', async () => {

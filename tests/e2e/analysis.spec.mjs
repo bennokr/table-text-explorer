@@ -35,28 +35,24 @@ async function indexConfigurations(page) {
   await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toBeVisible();
 }
 
+// The newest legend is placed right after the map, ahead of older ones.
 async function cluster(page, method) {
   await page.click('#cluster');
-  await expect(page.locator('#cluster-suggest-names')).not.toBeChecked();
+  await expect(page.locator('#cluster-suggest-names'), 'names are suggested by default').toBeChecked();
   await expect(page.locator('#cluster-naming .name-length')).toHaveValue('4');
   await page.selectOption('#cluster-method', method);
-  if (method === 'agglomerative') { await page.check('#cluster-suggest-names'); }
   if (method === 'hdbscan') {
     await page.fill('#cluster-min-size', '3');
     await page.fill('#cluster-min-samples', '2');
   } else { await page.fill('#cluster-count', '2'); }
   await page.click('#cluster-submit');
   await idle(page);
-  await page.locator('.cluster-legend').last().waitFor();
+  await page.locator('.cluster-legend').first().waitFor();
 }
 
 async function adjacentLegend(page) {
-  const legend = page.locator('.view-card:has(.cluster-legend)').last();
-  await legend.getByRole('button', { name: 'View options', exact: true }).click();
-  await legend.getByRole('button', { name: 'Move view earlier', exact: true }).click();
-  await legend.getByRole('button', { name: 'Move view earlier', exact: true }).click();
-  await legend.getByRole('button', { name: 'Move view earlier', exact: true }).click();
-  await legend.getByRole('button', { name: 'View options', exact: true }).click();
+  // The legend is placed right after its map, so the map is already coloured by the clusters.
+  expect((await snapshot(page)).views.map(view => view.type).slice(0, 2)).toEqual(['map', 'legend']);
   const color = page.locator('.view-card').first().getByRole('button', { name: 'Color by', exact: true });
   await expect(color).toBeDisabled();
   const selected = await page.locator('.view-card').first().locator('variable-picker[aria-label="Color by"]').evaluate(picker => picker.selected[0]);
@@ -64,7 +60,7 @@ async function adjacentLegend(page) {
 }
 
 async function treeAndDescriptions(page) {
-  const legend = page.locator('.cluster-legend').last();
+  const legend = page.locator('.cluster-legend').first();
   const branch = legend.locator('.active-cut').first();
   const generated = await legend.locator('.active-cut input.cluster-name').evaluateAll(inputs => inputs.map(input => input.value));
   expect(generated.every(value => !value.startsWith('#'))).toBe(true);
@@ -96,7 +92,7 @@ async function treeAndDescriptions(page) {
 
 async function densitySelection(page) {
   await cluster(page, 'hdbscan');
-  const legend = page.locator('.cluster-legend').last();
+  const legend = page.locator('.cluster-legend').first();
   await expect(legend.locator('[data-cluster-id="-1"]')).toBeVisible();
   await expect(legend.locator('[data-cluster-id="-1"] input.cluster-name')).toHaveValue('Other');
   await legend.getByLabel('Density cluster selection', { exact: true }).selectOption('leaf');

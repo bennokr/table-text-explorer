@@ -1,6 +1,6 @@
 import { synchronizeViewColors } from './view-colors.js';
 import { $ } from './dom.js';
-import { defaultViews, isPointView, isResultView } from './view-config.js';
+import { defaultViews, isPointView, isResultView, newView } from './view-config.js';
 import { ViewLayout } from './view-layout.js';
 import { ViewCard } from './view-card.js';
 
@@ -15,6 +15,7 @@ export class Views {
       up: view => this.layout.cardDrag.up(view.id),
       move: view => this.layout.moveEarlier(view.id), duplicate: view => this.duplicate(view), remove: view => this.remove(view) };
     $('#add-chart').onclick = () => this.add();
+    $('#clear-views').onclick = () => this.clear();
     this.layout = new ViewLayout(model);
     model.on('data', () => this.defaults());
     model.on('views', () => this.sync());
@@ -34,14 +35,13 @@ export class Views {
     const result = this.model.results.get(this.model.openResultId);
     if (!result || !['projection', 'clustering'].includes(result.kind)) { return; }
     this.restore();
-    this.save(null, { type: result.kind === 'projection' ? 'map' : 'legend', resultId: result.id, title: '', color: '', x: '', y: '' });
-    const added = result.kind === 'projection' ? this.model.views[0] : this.model.views.at(-1);
+    const added = this.save(null, { type: result.kind === 'projection' ? 'map' : 'legend', resultId: result.id, title: '', color: '', x: '', y: '' });
     this.cards.get(added.id)?.node.scrollIntoView({ block: 'nearest' });
   }
 
   add() {
     this.restore();
-    const view = { ...defaultViews(this.model)[0] };
+    const view = newView(this.model);
     delete view.id;
     this.save(null, view);
     this.cards.get(this.model.views.at(-1).id).node.scrollIntoView({ block: 'nearest' });
@@ -60,13 +60,27 @@ export class Views {
 
   save(id, config) {
     const view = this.model.views.find(view => view.id === id);
+    const added = view ?? this.insert({ ...config, id: this.model.nextViewId() });
     if (view) { Object.assign(view, config); }
-    else {
-      const added = { ...config, id: this.model.nextViewId() };
-      if (added.type === 'map') { this.model.views.unshift(added); }
-      else { this.model.views.push(added); }
-    }
     if (view && !isResultView(view.type)) { delete view.resultId; }
+    this.model.emit('views');
+    return added;
+  }
+
+  // A map goes first and its legend right after it, so the two colour keys sit side by side.
+  insert(added) {
+    const views = this.model.views;
+    const map = views.findIndex(view => view.type === 'map');
+    if (added.type === 'map') { views.unshift(added); }
+    else if (added.type === 'legend' && map >= 0) { views.splice(map + 1, 0, added); }
+    else { views.push(added); }
+    return added;
+  }
+
+  // Starts from an empty canvas so a map and its legend get the space; new defaults return with the next import.
+  clear() {
+    this.restore();
+    this.model.views = [];
     this.model.emit('views');
   }
 
@@ -120,9 +134,7 @@ export class Views {
 
   duplicate(view) {
     this.restore();
-    const added = { ...view, id: this.model.nextViewId() };
-    if (view.type === 'map') { this.model.views.unshift(added); }
-    else { this.model.views.push(added); }
+    this.insert({ ...view, id: this.model.nextViewId() });
     this.model.emit('views');
   }
 
