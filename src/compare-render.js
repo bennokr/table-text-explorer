@@ -27,7 +27,7 @@ function mergeFields(groups, compare, read) {
   }));
 }
 
-export function mergeGroups(result, compare) {
+function mergeGroups(result, compare) {
   const groups = result.groups.filter(group => compare.byId.has(group.id));
   const merged = { subset: compare.population.length, comparison: compare.population.length, ranking: 'contrast', separate: true };
   return { ...merged, fields: mergeFields(groups, compare, description => description.fields),
@@ -52,7 +52,7 @@ function legendNotes({ column }) {
   return notes;
 }
 
-export function compareLegend(compare, activate, model) {
+function compareLegend(compare, activate, model) {
   const notes = legendNotes(compare);
   return element('div', { class: 'compare-legend', 'aria-label': `Values of ${compare.label}` }, [
     element('strong', { text: compare.label }), ...compare.groups.map(group => legendEntry(group, activate, model)),

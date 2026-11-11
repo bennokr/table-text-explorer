@@ -9,11 +9,11 @@ import { valueColor } from './value-colors.js';
 // clusterings and text axes into the same shape: per value, the records it holds and the records it is
 // compared with, plus the condition a click on that value adds to the query path.
 export const MIN_GROUP = 10;
-export const MAX_VALUES = 8;
+const MAX_VALUES = 8;
 const MAX_CLUSTERS = 12; // A clustering has as many colours as this, so its values are not collapsed into Other.
 const OTHER = '#999999';
-export const LOW = '#3979a5';
-export const HIGH = '#c34e58';
+const LOW = '#3979a5';
+const HIGH = '#c34e58';
 
 export function candidateFields(model) {
   const usable = field => categorical(field) || field.kind === 'number' || temporal(field);

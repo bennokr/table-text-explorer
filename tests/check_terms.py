@@ -222,13 +222,46 @@ class TermTests(unittest.TestCase):
             field = json.loads(terms.describe_terms(payload))["fields"][0]
             self.assertEqual(field["textRecords"], 5)
             self.assertEqual(field["population"], 4)
-            self.assertEqual({term["phrase"] for term in field["terms"]}, {"red", "blue"})
+            # "red" and "blue" make the same split, so only one is listed.
+            self.assertEqual(len(field["terms"]), 1)
+            self.assertIn(field["terms"][0]["phrase"], {"red", "blue"})
             self.assertAlmostEqual(field["terms"][0]["semantic"], 1)
             self.assertEqual(field["terms"][0]["partitionSupport"], 2)
         finally:
             terms.embedding_values = None
         with self.assertRaisesRegex(ValueError, "existing embedding"):
             terms.describe_terms(payload)
+
+    def test_semantic_splits_are_distinct_and_report_what_each_adds(self):
+        # Two independent directions: the first coordinate (words a, a2 copy it) and the second.
+        texts = ["a a2", "a a2", "x", "x", "c y", "c y", "z", "z"]
+        build([{"text": text} for text in texts])
+        terms.embedding_values = [
+            [-1, 1],
+            [-1, 1],
+            [1, 1],
+            [1, 1],
+            [-1, -1],
+            [-1, -1],
+            [1, -1],
+            [1, -1],
+        ]
+        try:
+            payload = request(
+                list(range(8)),
+                [],
+                ranking="semantic",
+                embeddingDimensions=2,
+                embeddingRowIds=list(range(8)),
+            )
+            rows = json.loads(terms.describe_terms(payload))["fields"][0]["terms"]
+        finally:
+            terms.embedding_values = None
+        phrases = [row["phrase"] for row in rows]
+        self.assertFalse({"a", "a2"} <= set(phrases), "a copy of a chosen split is dropped")
+        self.assertTrue(phrases[0] in {"a", "a2", "x", "c", "y", "z"})
+        self.assertTrue(all(row["semantic"] > 0 for row in rows))
+        self.assertLessEqual(sum(row["semantic"] for row in rows), 1.0001)
 
 
 class ExactPhraseQueries(unittest.TestCase):

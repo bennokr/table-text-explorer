@@ -280,3 +280,6 @@ variable-picker[hidden] { display: none; }
 .legend-value { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ccc; border-radius: 10px; background: #fff; padding: 1px 8px 1px 4px; cursor: pointer; font-size: 11px; }
 .legend-value:hover, .legend-value:focus { border-color: #426d8d; }
 .legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+
+.status-line { display: flex; align-items: center; gap: 0.3em; }
+.status-line #terms-status { margin: 0; }

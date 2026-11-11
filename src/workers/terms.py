@@ -7,7 +7,12 @@ import numpy as np
 from lexical import analyze_terms as analyze_terms
 from lexical import analyze_tokens, tokenize_text
 from sklearn.feature_extraction.text import CountVectorizer
-from term_ranking import POPULATION_RANKINGS, embedding_population, population_scores
+from term_ranking import (
+    POPULATION_RANKINGS,
+    distinct_splits,
+    embedding_population,
+    population_scores,
+)
 from text_indexes import (
     STEP_ROWS,
     get_text_index,
@@ -195,11 +200,7 @@ def distinct_terms(field, order, values, records):
     return [column for column in order if column in columns][:15]
 
 
-def describe_field(name, field, data, subset, comparison):
-    if field is None:
-        return {"name": name, "vocabulary": 0, "terms": [], "representatives": []}
-    scores = describe_counts(field["matrix"], subset, comparison)
-    scores.update(population_scores(field, subset, data.get("_embeddings")))
+def eligible_columns(data, scores, compared):
     eligible = np.flatnonzero(scores["support"] >= data["support"])
     if data["ranking"] in {"balanced", "semantic"}:
         support = scores["partitionSupport"]
@@ -207,16 +208,33 @@ def describe_field(name, field, data, subset, comparison):
             (support[eligible] >= data["support"])
             & (scores["population"] - support[eligible] >= data["support"])
         ]
-    if data["ranking"] in {"balanced", "semantic"} or (
-        data["ranking"] != "ctfidf" and len(comparison)
-    ):
+    if data["ranking"] in {"balanced", "semantic"} or (data["ranking"] != "ctfidf" and compared):
         eligible = eligible[scores[data["ranking"]][eligible] > 0]
-    order = eligible[np.argsort(-scores[data["ranking"]][eligible], kind="stable")]
-    order = (
-        distinct_terms(field, order, scores[data["ranking"]], np.concatenate([subset, comparison]))
-        if data.get("deduplicate", True)
-        else order[:15]
-    )
+    return eligible
+
+
+def ranked_columns(field, data, scores, eligible, records):
+    """The columns to show, best first. Semantic splits are chosen one after another."""
+    if data["ranking"] == "semantic":
+        if scores["vectors"] is None or not len(eligible):
+            return eligible[:0]
+        order, gains = distinct_splits(scores["presence"], scores["vectors"], eligible)
+        scores["semantic"][order] = gains  # What each split adds beyond the earlier ones.
+        return order
+    values = scores[data["ranking"]]
+    order = eligible[np.argsort(-values[eligible], kind="stable")]
+    if data.get("deduplicate", True):
+        return np.asarray(distinct_terms(field, order, values, records), dtype=int)
+    return order[:15]
+
+
+def describe_field(name, field, data, subset, comparison):
+    if field is None:
+        return {"name": name, "vocabulary": 0, "terms": [], "representatives": []}
+    scores = describe_counts(field["matrix"], subset, comparison)
+    scores.update(population_scores(field, subset, data.get("_embeddings")))
+    eligible = eligible_columns(data, scores, len(comparison))
+    order = ranked_columns(field, data, scores, eligible, np.concatenate([subset, comparison]))
     ranked = representatives(field["matrix"], subset, scores)
     sizes = (len(subset), len(comparison))
     return {

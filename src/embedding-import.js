@@ -2,10 +2,10 @@ import { $, options } from './dom.js';
 import { readEmbeddings } from './embedding-files.js';
 import { sentenceModels, defaultSentenceModel } from './sentence-models.js';
 
-export const isImported = key => String(key).startsWith('import:');
+const isImported = key => String(key).startsWith('import:');
 
 // The sentence-model choices: the built-in encoders, then any embeddings imported for this table.
-export function sentenceChoices(model) {
+function sentenceChoices(model) {
   const imported = [...model.importedEmbeddings].map(([key, item]) => [key, `Imported · ${item.name} · ${item.dimensions}-d`]);
   return [...Object.entries(sentenceModels).map(([key, item]) => [key, item.label]), ...imported];
 }

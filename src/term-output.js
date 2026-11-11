@@ -1,8 +1,9 @@
-import { $ } from './dom.js';
+import { $, element } from './dom.js';
 import { phrasePredicate } from './query-predicates.js';
 import { negation } from './query-path.js';
 import { renderCompare } from './compare-render.js';
 import { renderTerms } from './term-view.js';
+import { tintByRegion } from './term-regions.js';
 import { renderGroups, groupDescriptionStatus } from './cluster-descriptions.js';
 
 function rankingHeading(ranking, phrasesOnly) {
@@ -43,9 +44,19 @@ function suggestPredicate(model) {
   };
 }
 
+// Semantic splits say which phrases separate the records in meaning; colour says where on the map each one sits.
+function renderSemantic(container, result, model, activate, views) {
+  renderTerms(container, result, model, activate, views);
+  const note = result.tinted
+    ? 'Each phrase splits the records in a way the ones before it do not. Colour: the cluster most of its records are in; grey: spread over several.'
+    : 'Each phrase splits the records in a way the ones before it do not. Colour the map by a clustering to see where each sits.';
+  container.prepend(element('small', { class: 'term-note', text: note }));
+}
+
 export function renderResult(container, result, compare, { model, views }) {
   const activate = suggestPredicate(model);
   if (compare) { renderCompare(container, result, compare, { model, activate, views }); }
   else if (result.groups) { renderGroups(container, result.groups, model, activate, views); }
+  else if (result.ranking === 'semantic') { renderSemantic(container, tintByRegion(model, result), model, activate, views); }
   else { renderTerms(container, result, model, activate, views); }
 }

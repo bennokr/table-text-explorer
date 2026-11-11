@@ -6,7 +6,7 @@ export function conjuncts(ast) {
   return ast.kind === 'and' ? [...conjuncts(ast.left), ...conjuncts(ast.right)] : [ast];
 }
 
-export function joinConjuncts(list) {
+function joinConjuncts(list) {
   return list.reduce((left, right) => (left ? { kind: 'and', left, right } : right), null);
 }
 
