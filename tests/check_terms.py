@@ -4,7 +4,6 @@
 # ///
 """Independent numeric and boundary checks for the same module used in Pyodide."""
 
-import importlib.util
 import json
 import math
 import runpy
@@ -16,11 +15,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "src/workers"))
 
-spec = importlib.util.spec_from_file_location(
-    "subset_terms", Path(__file__).parents[1] / "src/workers/terms.py"
-)
-terms = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(terms)
+import bridge
+import terms
 
 
 def build(rows, fields=("text",), sizes=(1, 1), stopwords=()):
@@ -76,7 +72,7 @@ class TermTests(unittest.TestCase):
         self.assertAlmostEqual(weights[1, 1], 6 / 8 * math.log1p(7 / 6))
 
     def test_contrast_support_lift_and_index_reuse(self):
-        matrix = terms.term_indexes["text"]["matrix"]
+        matrix = terms.active.indexes["text"]["matrix"]
         result = json.loads(terms.describe_terms(request([0, 1], [2, 3], support=2)))
         red = result["fields"][0]["terms"][0]
         self.assertEqual(red["phrase"], "red")
@@ -85,7 +81,7 @@ class TermTests(unittest.TestCase):
         self.assertAlmostEqual(red["ctfidf"], 4 / 6 * math.log1p(7 / 4))
         self.assertAlmostEqual(red["lift"], math.log2(5))
         terms.describe_terms(request([2, 3], [0, 1]))
-        self.assertIs(terms.term_indexes["text"]["matrix"], matrix)
+        self.assertIs(terms.active.indexes["text"]["matrix"], matrix)
         result = json.loads(terms.describe_terms(request([0], [1, 2, 3], support=2)))
         self.assertEqual(result["fields"][0]["terms"], [])
 
@@ -99,7 +95,7 @@ class TermTests(unittest.TestCase):
         for absent in ("en", "goede slechte", "slechte batterij", "batterij scherm"):
             self.assertNotIn(absent, grams)
         build([{"text": "alpha"}, {"text": "beta"}], sizes=(2, 2))
-        self.assertIsNone(terms.term_indexes["text"])
+        self.assertIsNone(terms.active.indexes["text"])
 
     def test_fields_stay_separate_and_matches_are_exact(self):
         build(
@@ -209,7 +205,7 @@ class TermTests(unittest.TestCase):
         build(
             [{"text": text} for text in ["red random", "red", "blue random", "blue", "red", None]]
         )
-        terms.embedding_values = [[-1, 0], [1, 0], [-1, 0], [1, 0]]
+        bridge.embedding_values = [[-1, 0], [1, 0], [-1, 0], [1, 0]]
         try:
             payload = request(
                 list(range(6)),
@@ -228,7 +224,7 @@ class TermTests(unittest.TestCase):
             self.assertAlmostEqual(field["terms"][0]["semantic"], 1)
             self.assertEqual(field["terms"][0]["partitionSupport"], 2)
         finally:
-            terms.embedding_values = None
+            bridge.embedding_values = None
         with self.assertRaisesRegex(ValueError, "existing embedding"):
             terms.describe_terms(payload)
 
@@ -236,7 +232,7 @@ class TermTests(unittest.TestCase):
         # Two independent directions: the first coordinate (words a, a2 copy it) and the second.
         texts = ["a a2", "a a2", "x", "x", "c y", "c y", "z", "z"]
         build([{"text": text} for text in texts])
-        terms.embedding_values = [
+        bridge.embedding_values = [
             [-1, 1],
             [-1, 1],
             [1, 1],
@@ -256,7 +252,7 @@ class TermTests(unittest.TestCase):
             )
             rows = json.loads(terms.describe_terms(payload))["fields"][0]["terms"]
         finally:
-            terms.embedding_values = None
+            bridge.embedding_values = None
         phrases = [row["phrase"] for row in rows]
         self.assertFalse({"a", "a2"} <= set(phrases), "a copy of a chosen split is dropped")
         self.assertTrue(phrases[0] in {"a", "a2", "x", "c", "y", "z"})
@@ -314,12 +310,12 @@ class ExactPhraseQueries(unittest.TestCase):
 class IndexProgress(unittest.TestCase):
     def run_build(self, rows, fields=("text",)):
         reports = []
-        terms.terms_progress = lambda *args: reports.append(args)
+        bridge.progress_callback = lambda *args: reports.append(args)
         try:
             texts = [f"word{i} common" for i in range(rows)]
             build([dict.fromkeys(fields, text) for text in texts], fields=fields)
         finally:
-            terms.terms_progress = None
+            bridge.progress_callback = None
         return reports
 
     def test_progress_advances_within_a_column_and_ends_at_the_total(self):

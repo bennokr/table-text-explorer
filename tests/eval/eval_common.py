@@ -14,6 +14,8 @@ ROOT = Path(__file__).parents[2]
 WORKERS = ROOT / "src/workers"
 sys.path.insert(0, str(WORKERS))
 
+import bridge  # noqa: E402
+
 
 def load_module(name, **injected):
     """Import src/workers/<name>.py as the app does, optionally injecting helper names."""
@@ -63,7 +65,7 @@ def build_index(terms, rows, field):
         "columns": [{"name": field, "texts": [row[field] for row in rows]}],
     }
     terms.build_term_index(json.dumps(payload))
-    return terms.term_indexes[field]
+    return terms.active.indexes[field]
 
 
 EMBEDDINGS = ROOT / ".cache/eval/embeddings"
@@ -127,7 +129,7 @@ def with_representation(subject, kind):
     if kind == "tfidf":
         return subject
     values = load_embeddings(subject.manifest, subject.text_field, kind)
-    subject.analysis.embedding_values = Saved(values)
+    bridge.embedding_values = Saved(values)
     mode = "words" if kind.startswith("words") else "sentences"
     payload = {
         "mode": mode,

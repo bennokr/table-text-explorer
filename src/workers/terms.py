@@ -3,6 +3,7 @@
 import json
 from functools import partial
 
+import bridge
 import numpy as np
 from lexical import analyze_terms as analyze_terms
 from lexical import analyze_tokens, tokenize_text
@@ -21,11 +22,20 @@ from text_indexes import (
     tokenize_column,
 )
 
-term_indexes = {}
-term_index_id = None
-term_record_count = 0
-terms_progress = None  # Set by the worker bridge; native tests need no callback.
-embedding_values = None  # Saved embeddings supplied by the worker bridge, never fitted here.
+
+class ActiveIndex:
+    """The text index the last request used: its fields, its identity and its record count."""
+
+    def __init__(self):
+        self.indexes = {}
+        self.index_id = None
+        self.record_count = 0
+
+    def use(self, entry, index_id):
+        self.indexes, self.index_id, self.record_count = entry["fields"], index_id, entry["rows"]
+
+
+active = ActiveIndex()
 
 
 def counting_analyzer(analyzer, step):
@@ -67,19 +77,18 @@ def index_field(column, data):
 
 
 def build_term_index(payload):
-    global term_indexes, term_index_id, term_record_count
     data = json.loads(payload)
     if not 1 <= data["sizes"][0] <= data["sizes"][1] <= 5:
         raise ValueError("Choose n-gram lengths between one and five.")
-    entry = register_text_index(data, index_field, terms_progress)
-    term_indexes, term_index_id, term_record_count = entry["fields"], data["indexId"], entry["rows"]
+    entry = register_text_index(data, index_field, bridge.progress_callback)
+    active.use(entry, data["indexId"])
     return json.dumps(
         {
             "indexId": data["indexId"],
             "reused": entry["reused"],
             "fields": [
                 {"name": name, "vocabulary": len(field["terms"]) if field else 0}
-                for name, field in term_indexes.items()
+                for name, field in active.indexes.items()
             ],
         }
     )
@@ -148,17 +157,17 @@ def membership(field, term, mask):
 
 def term_row(field, column, scores, ranked, sizes):
     phrase = str(field["terms"][column])
-    mask = np.zeros(term_record_count, dtype=bool)
+    mask = np.zeros(active.record_count, dtype=bool)
     mask[ranked] = True
     ids = membership(field, phrase, mask)
-    positions = np.full(term_record_count, term_record_count)
+    positions = np.full(active.record_count, active.record_count)
     positions[ranked] = np.arange(len(ranked))
     examples = ids[np.argsort(positions[ids], kind="stable")[:3]]
     return {
         "phrase": phrase,
         "label": phrase,
         "predicate": {"kind": "term", "field": field["name"], "op": "~", "value": phrase},
-        "ids": membership(field, phrase, np.ones(term_record_count, dtype=bool)).tolist(),
+        "ids": membership(field, phrase, np.ones(active.record_count, dtype=bool)).tolist(),
         "support": int(scores["support"][column]),
         "rest": int(scores["rest"][column]),
         "subsetSize": sizes[0],
@@ -188,7 +197,7 @@ def redundant_phrase(short, long, members, values):
 def distinct_terms(field, order, values, records):
     # A bounded ranking pool keeps repeated brushing cheap; scores/index stay intact.
     phrases = {str(field["terms"][column]): column for column in order[:150]}
-    mask = np.zeros(term_record_count, dtype=bool)
+    mask = np.zeros(active.record_count, dtype=bool)
     mask[records] = True
     members = {phrase: set(membership(field, phrase, mask)) for phrase in phrases}
     scores = {phrase: values[column] for phrase, column in phrases.items()}
@@ -248,13 +257,12 @@ def describe_field(name, field, data, subset, comparison):
 
 
 def description_request(payload):
-    global term_indexes, term_index_id, term_record_count
     data = json.loads(payload)
     entry = get_text_index(data["indexId"])
-    term_indexes, term_index_id, term_record_count = entry["fields"], data["indexId"], entry["rows"]
+    active.use(entry, data["indexId"])
     subset, comparison = [np.unique(data[key]).astype(int) for key in ("subset", "comparison")]
     for ids in (subset, comparison):
-        if (ids < 0).any() or (ids >= term_record_count).any():
+        if (ids < 0).any() or (ids >= active.record_count).any():
             raise ValueError("Invalid record IDs.")
     if np.intersect1d(subset, comparison).size:
         raise ValueError("Subset and comparison must be disjoint.")
@@ -268,10 +276,10 @@ def describe_terms(payload):
         or data["support"] < 1
     ):
         raise ValueError("Choose a ranking and positive record support.")
-    data["_embeddings"] = embedding_population(data, embedding_values)
+    data["_embeddings"] = embedding_population(data, bridge.values())
     result = [
         describe_field(name, field, data, subset, comparison)
-        for name, field in term_indexes.items()
+        for name, field in active.indexes.items()
     ]
     return json.dumps(
         {
@@ -286,8 +294,8 @@ def describe_terms(payload):
 
 def matching_terms(payload):
     data, subset, _ = description_request(payload)
-    field = term_indexes.get(data["field"])
-    mask = np.zeros(term_record_count, dtype=bool)
+    field = active.indexes.get(data["field"])
+    mask = np.zeros(active.record_count, dtype=bool)
     mask[subset] = True
     ids = membership(field, data["phrase"], mask) if field else np.array([], dtype=int)
     return json.dumps({"ids": ids.tolist()})

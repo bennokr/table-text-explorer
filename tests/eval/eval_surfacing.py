@@ -52,7 +52,9 @@ def ranked_columns(subject, ranking):
     everyone = np.arange(len(subject.rows))
     extra = None
     if ranking == "semantic":
-        subject.terms.embedding_values = subject.embeddings.ravel()
+        import bridge
+
+        bridge.embedding_values = subject.embeddings.ravel()
         extra = {
             "embeddingDimensions": subject.embeddings.shape[1],
             "embeddingRowIds": everyone.tolist(),

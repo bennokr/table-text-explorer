@@ -5,15 +5,17 @@
 """Native checks for the exact phrase evidence/assignment code used in the worker."""
 
 import json
-import runpy
 import sys
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1] / "src/workers"
 sys.path.insert(0, str(ROOT))
-terms = runpy.run_path(ROOT / "terms.py")
-names = runpy.run_path(ROOT / "cluster_names.py", init_globals=terms)
+import cluster_names  # noqa: E402
+import terms as terms_module  # noqa: E402
+
+terms = vars(terms_module)
+names = vars(cluster_names)
 
 
 def request(texts, groups, **options):

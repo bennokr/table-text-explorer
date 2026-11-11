@@ -4,7 +4,6 @@
 # ///
 """The closed-form column screen on synthetic text with planted structure and missing values."""
 
-import importlib.util
 import json
 import sys
 import unittest
@@ -15,12 +14,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "src/workers"))
 
-spec = importlib.util.spec_from_file_location(
-    "screen_terms", Path(__file__).parents[1] / "src/workers/terms.py"
-)
-terms = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(terms)
-import column_screen as screen  # noqa: E402
+import column_screen as screen
+import terms
 
 ROWS = 900
 GROUPS = ["alfa", "beta", "gamma"]

@@ -5,6 +5,7 @@ import re
 import unicodedata
 
 import numpy as np
+from terms import describe_counts
 from text_indexes import get_text_index
 
 # Function words and negations say nothing about a topic. Names avoid them at the edges,
@@ -48,7 +49,7 @@ def phrase_evidence(name, field, subset, comparison, strict=True):
     if field is None or not subset:
         return []
     matrix = field["matrix"]
-    scores = globals()["describe_counts"](matrix, subset, comparison)
+    scores = describe_counts(matrix, subset, comparison)
     coverage = scores["support"] / len(subset)
     background = scores["rest"] / max(1, len(comparison))
     values = (coverage - background) * coverage

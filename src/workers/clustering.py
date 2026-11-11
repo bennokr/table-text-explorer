@@ -3,12 +3,11 @@
 import json
 import time
 
+import bridge
 import numpy as np
+from density import density_result
 from sklearn.cluster import HDBSCAN, AgglomerativeClustering, KMeans, MiniBatchKMeans
 from sklearn.preprocessing import normalize
-
-# Density helpers are loaded into this worker namespace before clustering.
-embedding_values = None  # Set by the local worker bridge for each request.
 
 
 def integer(data, name, default, lower, upper):
@@ -79,9 +78,9 @@ def cluster(data, features):
             "distances": fitted.distances_.tolist(),
         }
     if data["method"] == "hdbscan":
-        result.update(globals()["density_result"](fitted))
+        result.update(density_result(fitted))
     return result
 
 
 def run_clustering(payload):
-    return json.dumps(cluster(json.loads(payload), embedding_values.to_py()), allow_nan=False)
+    return json.dumps(cluster(json.loads(payload), bridge.values()), allow_nan=False)

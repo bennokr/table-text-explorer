@@ -2,10 +2,11 @@
 
 import json
 
+from terms import describe_terms
+
 
 def describe_groups(payload, describe=None):
-    if describe is None:
-        describe = globals()["describe_terms"]
+    describe = describe or describe_terms
     groups = json.loads(payload)
     result = []
     for group in groups["groups"]:
