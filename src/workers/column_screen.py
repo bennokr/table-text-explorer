@@ -2,17 +2,17 @@
 
 No model is fitted. The prepared text vectors (the 32-d TF-IDF/SVD ones the maps use) have text
 length regressed out. Each candidate column is then scored by the share of the remaining variance
-its groups explain (adjusted R-squared; ordinary regression R-squared for numbers). The p-value
+its groups explain (adjusted R-squared; numbers are cut into quartiles first). The p-value
 comes from the spread of the score under shuffled labels, so it can be small enough for Holm
 correction across columns. Every column is scored on the records where it has a value, and
 missingness itself is tested too.
 """
 
 import json
-from math import erfc, sqrt
 
 import numpy as np
 from scipy.sparse import hstack
+from scipy.special import gammaincc
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfTransformer
 from text_indexes import get_text_index
@@ -22,18 +22,23 @@ STRATA = 8
 MIN_GROUP = 10  # Smaller groups join one "(other)" group.
 MAX_GROUPS = 50
 MIN_COVERAGE = 0.5  # Columns with fewer values than this are not offered.
-MIN_POPULATION = 30
-EFFECT_FLOOR = 0.01  # Provisional: a trivial effect of 0.003 was "significant" in testing.
+MIN_POPULATION = 60  # A real column of 0.015 is found half the time at 60 records, 85% at 120.
+# Columns the text predicts out of sample start at 0.015; ones it cannot end at 0.0075.
+EFFECT_FLOOR = 0.01
 PERMUTATIONS = 99
 SIGNIFICANCE = 0.05
 MISSING_SIGNIFICANCE = 0.01
+# A present/missing split has two groups, so it explains far less than a column does: missingness
+# of 0.7 against 0.1 by a column the text separates at 0.04 reached 0.007. Shuffled indicators
+# peaked at 0.0003 in 540 tests.
+MISSING_FLOOR = 0.001
 AXES = 3
 
 prepared_cache = {}
 
 
 def prepared(index_id):
-    """Text vectors, a length proxy and a has-text mask for every record, cached per text index."""
+    """Text vectors, the word count and a has-text mask for every record, cached per text index."""
     if index_id not in prepared_cache:
         fields = [f for f in get_text_index(index_id)["fields"].values() if f is not None]
         counts = hstack([field["matrix"] for field in fields], format="csr")
@@ -42,7 +47,9 @@ def prepared(index_id):
         vectors = TruncatedSVD(n_components=components, random_state=42).fit_transform(tfidf)
         usable = np.any([field["present"] for field in fields], axis=0)
         prepared_cache.clear()  # Only the latest index is kept.
-        prepared_cache[index_id] = (vectors, np.asarray(counts.sum(axis=1)).ravel(), usable)
+        # Words, not phrase counts: stopword-heavy short texts make phrase counts a poor length.
+        lengths = np.sum([field["words"] for field in fields], axis=0).astype(float)
+        prepared_cache[index_id] = (vectors, lengths, usable)
     return prepared_cache[index_id]
 
 
@@ -73,39 +80,37 @@ def merged_codes(codes):
 
 
 def group_test(vectors, groups):
-    """Statistic for a grouping: adjusted share of variance explained by the group means."""
+    """Statistic for a grouping: the share of variance the group means explain (R-squared)."""
     centered = vectors - vectors.mean(axis=0)
-    total, count = (centered**2).sum(), len(vectors)
+    total = (centered**2).sum()
 
     def statistic(codes):
         onehot = np.eye(groups)[codes]
         between = ((onehot.T @ centered) ** 2).sum(axis=1) / onehot.sum(axis=0)
-        return 1 - (1 - between.sum() / total) * (count - 1) / (count - groups)
+        return between.sum() / total
 
     return statistic
 
 
-def regression_test(vectors):
-    """Statistic for a number: adjusted R-squared of regressing it on the vectors."""
-    basis = np.linalg.qr(vectors - vectors.mean(axis=0))[0]
-    count, predictors = basis.shape
-
-    def statistic(target):
-        centered = target - target.mean()
-        total = (centered**2).sum()
-        r2 = ((basis.T @ centered) ** 2).sum() / total if total else 0.0
-        return 1 - (1 - r2) * (count - 1) / (count - predictors - 1)
-
-    return statistic
+def adjusted(r2, count, groups):
+    """R-squared less what that many groups explain by chance."""
+    return 1 - (1 - r2) * (count - 1) / (count - groups)
 
 
 def permutation_score(statistic, labels, rng):
-    """Observed statistic and a one-sided p-value from the spread of its shuffled values."""
+    """Observed statistic and a one-sided p-value.
+
+    The p-value is the tail of a gamma curve fitted to the statistic under shuffled labels: the
+    shuffled values are right-skewed, so a normal tail was too generous (0.066 of null columns
+    below 0.05 and 0.024 below 0.01; the gamma tail gave 0.056 and 0.016), and a rank p-value from
+    99 shuffles cannot go below 0.01.
+    """
     observed = statistic(labels)
     null = np.array([statistic(rng.permutation(labels)) for _ in range(PERMUTATIONS)])
-    spread = null.std()
-    z = (observed - null.mean()) / spread if spread > 0 else 0.0
-    return float(observed), 0.5 * erfc(z / sqrt(2))
+    mean, variance = null.mean(), null.var()
+    if variance <= 0:
+        return float(observed), 1.0
+    return float(observed), float(gammaincc(mean**2 / variance, observed * mean / variance))
 
 
 def holm(pvalues):
@@ -121,28 +126,36 @@ def missing_effect(vectors, observed, rng):
     """Does the text differ between records with and without a value? None when untestable."""
     if min(observed.sum(), (~observed).sum()) < MIN_GROUP:
         return None
-    effect, p = permutation_score(group_test(vectors, 2), observed.astype(int), rng)
+    r2, p = permutation_score(group_test(vectors, 2), observed.astype(int), rng)
+    effect = adjusted(r2, len(observed), 2)
     return {
         "effect": effect,
         "p": p,
-        "differs": bool(p <= MISSING_SIGNIFICANCE and effect >= EFFECT_FLOOR),
+        "differs": bool(p <= MISSING_SIGNIFICANCE and effect >= MISSING_FLOOR),
     }
 
 
-def numeric_codes(values):
+def quartile_codes(values):
+    """Quartile bins of a number's observed values (ties stay together); -1 where it is missing.
+
+    Binning puts numbers on the same scale as categories. A regression of the number on the 32
+    text dimensions was not comparable (about 0.2 for a strong number, 0.015 for a strong
+    category) and its null spread was 0.07 at 120 records.
+    """
     numbers = np.array([np.nan if value is None else value for value in values], dtype=float)
-    return numbers, np.isfinite(numbers)
+    observed = np.isfinite(numbers)
+    codes = np.full(len(numbers), -1)
+    if observed.any():
+        edges = np.unique(np.quantile(numbers[observed], [0.25, 0.5, 0.75]))
+        codes[observed] = np.digitize(numbers[observed], edges)
+    return codes
 
 
 def screen_column(vectors, column, rng):
     """Score one column on the records where it has a value."""
     numeric = column["kind"] == "numeric"
-    if numeric:
-        labels, observed = numeric_codes(column["values"])
-        groups = 0
-    else:
-        labels, groups = merged_codes(column["codes"])
-        observed = labels >= 0
+    labels, groups = merged_codes(quartile_codes(column["values"]) if numeric else column["codes"])
+    observed = labels >= 0
     result = {
         "name": column["name"],
         "kind": column["kind"],
@@ -151,17 +164,14 @@ def screen_column(vectors, column, rng):
         "coverage": float(observed.mean()),
         "groups": groups,
     }
-    enough = (
-        observed.sum() >= max(MIN_POPULATION, 3 * vectors.shape[1])
-        if numeric
-        else 2 <= groups <= MAX_GROUPS
-    )
+    enough = observed.sum() >= MIN_POPULATION and 2 <= groups <= MAX_GROUPS
     result["eligible"] = bool(enough and result["coverage"] >= MIN_COVERAGE)
     result["missing"] = missing_effect(vectors, observed, rng) if (~observed).any() else None
     if not result["eligible"]:
         return result
-    test = regression_test(vectors[observed]) if numeric else group_test(vectors[observed], groups)
-    result["effect"], result["p"] = permutation_score(test, labels[observed], rng)
+    test = group_test(vectors[observed], groups)
+    r2, result["p"] = permutation_score(test, labels[observed], rng)
+    result["effect"] = adjusted(r2, int(observed.sum()), groups)
     return result
 
 

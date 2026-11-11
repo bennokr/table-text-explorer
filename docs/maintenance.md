@@ -48,7 +48,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 ## Readability budgets
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
-each authored module at 250 statements, Python at 2900 total and JavaScript at
+each authored module at 250 statements, Python at 3100 total and JavaScript at
 11100 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
@@ -82,6 +82,12 @@ closed-form column screen (`src/workers/column_screen.py`, 148), its self-check 
 data (`tests/check_screen.py`, 88) and the even-split ranking in `facets.py`. The screen replaces nothing that
 shipped before, so there is no deletion to offset it. Modules stay under 250 statements (`terms.js` was split into
 `term-output.js`) and the function limits are unchanged.
+
+The Python budget rose again, from 2900 to 3100, for the calibration of the column screen on three tables
+(about 195 statements, none of it shipped): `scripts/prepare_tweedekamer.py` builds the Tweede Kamer motions
+sample (61) and `tests/eval/calibrate_screen.py` runs the real-column, null, small-population and missingness
+experiments against the app's own screen (126), and the screen's self-check gained two tests. See
+[evaluation](evaluation.md#calibrating-the-column-screen).
 
 ## Codebook reader
 

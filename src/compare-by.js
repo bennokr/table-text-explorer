@@ -1,20 +1,19 @@
 import { $, element } from './dom.js';
 import { axisGroups, candidateFields, columnKind, columnPayload, fieldGroups } from './compare-columns.js';
 
-const MIN_POPULATION = 30;
+const MIN_POPULATION = 60;
 const CACHED_SCREENS = 6;
 const KINDS = ['Columns', 'Clusters', 'Annotations'];
 
-// Strength dots are relative to the strongest significant column, so they rank rather than grade.
-export function dots(column, maximum) {
-  if (!column?.significant || !maximum) { return '○○○'; }
-  const share = column.effect / maximum;
-  if (share >= 0.66) { return '●●●'; }
-  return share >= 0.33 ? '●●○' : '●○○';
-}
+// Dots grade the share of text variation a column explains, in steps of ten and three times the
+// effect floor (0.01, 0.03, 0.10), so the same number of dots means the same thing in every table.
+// Relative dots gave a weak 0.015 column three dots because it was the strongest one in its table.
+const BANDS = [0.03, 0.1];
 
-function strongest(screen) {
-  return Math.max(0, ...(screen?.columns ?? []).filter(column => column.significant).map(column => column.effect));
+export function dots(column) {
+  if (!column?.significant) { return '○○○'; }
+  if (column.effect >= BANDS[1]) { return '●●●'; }
+  return column.effect >= BANDS[0] ? '●●○' : '●○○';
 }
 
 function bestChoice(screen) {
@@ -23,10 +22,10 @@ function bestChoice(screen) {
   return screen.axes.length ? 'axis:0' : null;
 }
 
-function columnLabel(field, result, maximum) {
+function columnLabel(field, result) {
   const coverage = result && result.coverage < 0.995 ? ` ${Math.round(100 * result.coverage)}%` : '';
   const flag = result?.missing?.differs ? ' · missing differs' : '';
-  return `${field.label ?? field.name} ${result ? dots(result, maximum) : ''}${coverage}${flag}`.trim();
+  return `${field.label ?? field.name} ${result ? dots(result) : ''}${coverage}${flag}`.trim();
 }
 
 // "Compare by" chooses the column whose values colour the phrase cloud. Auto follows the highlight when
@@ -114,12 +113,11 @@ export class CompareBy {
   // Columns the screen found too sparse or too coarse to test are not offered at all.
   columnOptions(screen) {
     const results = new Map((screen?.columns ?? []).map(column => [column.name, column]));
-    const maximum = strongest(screen);
     const kinds = Object.fromEntries(KINDS.map(kind => [kind, []]));
     for (const field of candidateFields(this.model)) {
       const result = results.get(field.name);
       if (screen && !result?.eligible) { continue; }
-      kinds[columnKind(field)].push(new Option(columnLabel(field, result, maximum), `col:${field.name}`));
+      kinds[columnKind(field)].push(new Option(columnLabel(field, result), `col:${field.name}`));
     }
     return KINDS.map(kind => [kind, kinds[kind]]);
   }

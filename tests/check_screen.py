@@ -144,8 +144,19 @@ class ColumnScreen(unittest.TestCase):
         self.assertTrue(by["signal"]["significant"])
 
     def test_a_tiny_population_is_not_screened(self):
-        result, _ = run([categorical("signal", self.group)], list(range(10)))
+        result, _ = run([categorical("signal", self.group[:59])], list(range(59)))
         self.assertEqual(result["columns"], [])
+
+    def test_length_is_the_word_count_not_the_phrase_count(self):
+        _, lengths, _ = screen.prepared("screen")
+        self.assertEqual(lengths.tolist(), self.sizes.tolist())
+
+    def test_numbers_are_binned_into_quartiles_with_ties_kept_together(self):
+        codes = screen.quartile_codes([None, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8])
+        self.assertEqual(codes[0], -1, "a missing number stays missing")
+        self.assertEqual(len(set(codes[codes >= 0])), 4)
+        self.assertEqual(len(set(codes[1:4])), 1, "equal values share a bin")
+        self.assertEqual(len(set(screen.quartile_codes([5.0] * 20))), 1, "a constant has no split")
 
     def test_holm_is_monotone_and_capped(self):
         adjusted = screen.holm([0.001, 0.2, 0.01, 0.9])

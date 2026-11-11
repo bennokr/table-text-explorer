@@ -139,26 +139,102 @@ have not investigated why. Compare columns and representations within one table.
 | Dutch sentence model for Dutch text | Quality tied with the multilingual model; half the size, about twice as fast. |
 | No single-character phrase edges | `1`, `2`, `c`, `v` appeared as distinctive phrases on excerpts. Digits of two or more characters stay, because they can be statute references. |
 | Balanced splits moved to Advanced | Identical to common phrases when no phrase occurs in more than half the records (all 2,360 summaries); weakest ranking elsewhere. |
+| Column screen: effect floor 0.01, minimum population 60, absolute dots (0.03, 0.10), gamma p-values, quartile bins for numbers, word-count length | [Calibrating the column screen](#calibrating-the-column-screen). |
+| Missing-value test floor 0.001 | Shuffled indicators peak at 0.0003; random missingness never flagged, 0.6-against-0.2 dependence always. |
 
-## Next dataset: Tweede Kamer motions
+## Tweede Kamer motions
 
-Light exploration of the open OData API (`gegevensmagazijn.tweedekamer.nl/OData/v4/2.0`, no key needed):
+`npm run prepare:tweedekamer` fetches 3,585 motions (36 blocks of 100 spread over 2017-2024, so every year is
+present) from the open OData API (`gegevensmagazijn.tweedekamer.nl/OData/v4/2.0`, no key needed) into
+`fixtures/tweedekamer-motions-sample.json` (ignored by Git). The API has 66,426 motions in total.
 
-- **66,426 motions** (`Zaak` with `Soort eq 'Motie'`). Fields include the one-line subject (`Onderwerp`, median
-  22 words), the parent dossier title, start date and parliamentary year.
-- **Decision and votes**: `Besluit` (`Stemmen - aangenomen` / `verworpen` / `aangehouden`, withdrawn, ...) and
-  `Stemming` per party with seat count. In a 200-motion sample about half had a vote, and aangenomen and verworpen
-  were nearly balanced (50 against 45). Per-party votes exist for hand votes (about 47% of motions); pick the
-  right `Besluit` because the list is unordered and includes `Ingediend`.
-- **Submitters**: `ZaakActor` with party and relation (`Indiener`, `Medeindiener`); median 2, maximum 9. The lead
-  committee is `TK` for every motion, so there is no committee topic label; the ministry code in the dossier
-  number is a possible topic proxy.
-- **Full text**: each motion has a PDF (about 20 KB) at `Document({id})/resource`; `pdftotext` gives about 130
-  clean words. The substance sits between "De Kamer," and "en gaat over tot de orde van de dag"; the header and
-  signatures echo the date, the dossier and the submitters' names and need scrubbing.
-- **Fit**: mixed types (text twice, numeric seat counts and submitter numbers, party, outcome, date) with a diffuse,
-  party-confounded outcome signal, which makes it a test for a conditional column screen. Coalition membership is
-  not in the API. Not built yet.
+- **Text** is the motion's one-line subject without the header that names the submitters ("Motie van het lid X
+  c.s. over ..."), median about 10 words. Full texts exist as PDFs (about 130 words) but were not used.
+- **Columns**: `party` (lead submitter's party, 24 values), `outcome` (first voting decision; 7 values, 8% missing),
+  `appreciation` (the cabinet's stance: `Ontraden`, `Oordeel Kamer`, ...), `vote_type`, `submitters`, `year`.
+  `appreciation` was not recorded before April 2019, so 31% is missing in a way that depends on the year.
+  The lead committee is `TK` for every motion, so there is no topic label.
+- **Character**: short texts, a diffuse outcome signal and party effects the text barely carries. It is the table where
+  the screen should find little, which makes it the check against overclaiming.
+
+## Calibrating the column screen
+
+`npm run eval:calibrate-screen -- <real|null|population|missing> [dataset ...]` runs the app's own
+`column_screen.py` on DBRD, Rechtspraak (summaries and excerpts) and Tweede Kamer. The screen
+measures how much of the text variation, beyond length, a column's groups explain (adjusted R-squared of the 32-d
+text vectors; numbers are cut into quartiles). The constants below were set from these runs.
+
+**What the real columns look like** (effect = share of variation explained):
+
+| Table | Columns the screen flags | Columns it does not |
+|---|---|---|
+| DBRD reviews | rating 0.018, sentiment 0.015 | word count, character count (about -0.001) |
+| Rechtspraak summaries | legal sub-area 0.152, court 0.097, procedure 0.088, court type 0.071, legal area 0.039, ruling length 0.015 | year 0.0035, summary length |
+| Rechtspraak excerpts | sub-area 0.26, court 0.24, procedure 0.13, court type 0.13, legal area 0.064, year 0.043, ruling length 0.017 | summary length 0.008 |
+| Tweede Kamer motions | none | appreciation 0.0075, party 0.0050, year 0.0022, outcome 0.0013, vote type 0.0006, submitters 0.0003 |
+
+The excerpt `year` (0.043) is real: the excerpt prints the ruling date. In summaries year is only 0.0035.
+
+**What changed because of it**
+
+1. **Length is the word count.** The screen first removes text length. Its measure was the n-gram count, which
+   tracks length poorly in short, stopword-heavy text: the correlation with the word count was 0.97-0.99 on DBRD and
+   Rechtspraak but 0.79 on motions. There a column that *is* the word count scored 0.026 (the strongest
+   motion column) and noisy copies of length scored 0.008-0.024, all flagged. With the word count as the measure the
+   same columns score -0.008 to 0.000 and nothing is flagged. Regression on the true word count gave
+   the same result as the fix, so this is the cause.
+2. **Numbers use quartile bins, not a regression.** Regressing a number on the 32 dimensions gave 0.22 for
+   Rechtspraak ruling length, against 0.15 for the best category: a different quantity (how well the text predicts
+   the number), so it topped the ranking and Auto. The null spread was also 0.07 at 120 records, 5 times the
+   floor, and a heavy-tailed random number reached 0.016. Cut into quartiles, ruling length scores 0.015 on the
+   same scale as categories, the null maximum is 0.0007 and power is the same (83-100% from 120 records).
+3. **P-values use a gamma curve.** The 99 shuffled scores are right-skewed. Normal tails flagged 5.2% of null
+   columns at 0.05 and 1.6% at 0.01 (1,438 null categories); a gamma curve fitted to the same shuffles gave
+   4.4% and 1.1% in the committed run, and the empirical p-value with 499 shuffles, which is too slow for every
+   column, gave 5.7% and 0.7%. 49, 99, 199 and 499 shuffles gave the same normal-tail rates, so the count is not
+   the issue and stays 99.
+4. **Dots are absolute.** 0.01-0.03 is one dot, 0.03-0.10 two, above 0.10 three. The relative rule gave DBRD
+   sentiment, at 0.015, three dots because it was the strongest column there, while 0.15 in Rechtspraak also
+   got three.
+5. **Missing-value test has its own floor.** A present/missing split has two groups, so it explains far
+   less than a column. Shuffled missingness indicators peaked at 0.0003 in 540 tests; the floor is now 0.001
+   (was 0.01, which flagged nothing short of 0.9-against-0.1).
+6. **Minimum population is 60** (was 30).
+
+**Evidence for the constants**
+
+- *Effect floor 0.01 stays.* Held-out classification (an exploratory run, not committed) (logistic regression on the same vectors, skill beyond a
+  length-only model, against 8 shuffled copies) predicts DBRD rating and sentiment and every flagged Rechtspraak
+  column out of sample, and none of the Tweede Kamer columns or Rechtspraak summary `year`. Columns the text predicts
+  start at 0.015 and ones it cannot end at 0.0075 (appreciation), so any floor from 0.008 to 0.015 separates them
+  equally well. Margin on DBRD is thin (0.015 against a floor of 0.01).
+  Null columns reach 0.0017 at most (categories, 30 settings) and 0.0007 (numbers).
+- *Calibration of the null.* Across 3 tables, 30 settings of 40 shuffled columns (2-50 groups, uneven sizes,
+  Gaussian and log-normal numbers, 90% and 70% coverage): 4.4% below p = 0.05 and 1.1% below 0.01; no null
+  column was flagged after Holm and the floor, and text length itself is never flagged.
+- *Small populations* (random subsets, 4 noise categories and the table's signal column, 40 runs each):
+
+  | Records | Runs with a false flag (3 tables) | DBRD sentiment found (0.015) | Rechtspraak legal area found (0.039) |
+  |---|---|---|---|
+  | 30 | 7 of 120 | 2 of 40 | 10 of 40 |
+  | 60 | 5 of 120 | 20 of 40 | 33 of 40 |
+  | 120 | 7 of 120 | 34 of 40 | 40 of 40 |
+  | 250 and more | 0 of 360 | 40 of 40 | 40 of 40 |
+
+  False flags track the nominal 5% down to 30 records and vanish from 250 because the floor then exceeds the null
+  spread. Power is the reason for the minimum of 60: a weak but real column is found half the time there. Read "none"
+  below about 120 records as "not detected", not "absent".
+- *Missingness* (a noise column whose missingness depends on the table's signal column, 40 runs each):
+  0.4 against 0.4 (random): 0 of 120 flagged. 0.5 against 0.3: 1 of 40 on DBRD and 5 of 40 on Rechtspraak.
+  0.6 against 0.2 and stronger: 40 of 40 on both. Tweede Kamer party: never, since the text barely carries party
+  (0.005). Real `appreciation` (missing by year) is not flagged: its missing indicator scores 0.0006 at p < 0.001,
+  below the floor.
+
+**Not established**: three tables, one language, one phrase setting (1-3 words) and 32 dimensions.
+Dots at 0.03 and 0.10 are order-of-magnitude bands, not tuned. The ranking is by variance explained, so a
+22-group column outranks a 3-group one (Rechtspraak court 0.097 against legal area 0.039, while legal area is
+the better predictor, held-out skill 0.72 against 0.25). Auto picks the largest effect, which is not always the
+most interpretable column. Timing in the browser (Pyodide) was not measured.
 
 ## Controls on the harness
 

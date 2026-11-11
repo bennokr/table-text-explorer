@@ -1,6 +1,7 @@
 # Compare by: conditional phrase ranking (spec)
 
-Status: proposal. Evidence is in [evaluation](evaluation.md); items marked *untested* have no measurement yet.
+Status: implemented and calibrated on DBRD, Rechtspraak and Tweede Kamer motions ([evaluation](evaluation.md#calibrating-the-column-screen)).
+Where the calibration changed the proposal below, the text says so. Items marked *untested* have no measurement.
 
 ## Idea
 
@@ -23,8 +24,10 @@ Compare by [ Auto → sentiment ●●● ▾ ]
   Text axes:  axis 1 ●●○   "contains verdachte" ●●○
 ```
 
-Each entry shows strength dots and coverage (records with a value). Dots come from the screen below and
-are shown relative to the strongest entry; "none" means not significant or below the effect floor.
+Each entry shows strength dots and coverage (records with a value). Dots come from the screen below and are
+absolute: one dot from 0.01 of the text variation explained, two from 0.03, three from 0.10. "None" means not
+significant or below the effect floor. (The first proposal was relative to the strongest entry; calibration showed
+that gave a weak 0.015 column three dots.)
 
 ## Cloud
 
@@ -61,32 +64,38 @@ Descriptive statistic, no model fit; computed lazily when the picker opens and c
 2,360 records, about 16 times faster than the cross-validated version.
 
 1. Population P is all visible records, or the current highlight.
-2. Take the app's prepared 32-d text vectors for P. Regress out text length (one-hot strata plus log
-   length terms) and standardise each dimension. Once per population.
+2. Take the app's prepared 32-d text vectors for P. Regress out text length, measured in words, not phrase
+   counts (one-hot strata plus log length terms), and standardise each dimension. Once per population.
 3. For each candidate column c, take the observed set O (records in P with a value), merge groups with
    fewer than 10 records into "(other)", and require 2 to 50 groups.
-4. Categorical: adjusted R² = 1 - (1 - R²)(n - 1)/(n - k), with R² the between-group share of
-   variance. Numeric: regression R², adjusted likewise. No binning.
-5. Permutation p-value: shuffle the labels **within O**, 99 times. Re-run 999 times for entries with
-   p <= 0.02. Holm-correct across candidates.
-6. Strength is the adjusted R²; the effect floor is 0.01 (provisional: a trivial `year` effect of 0.003
-   was significant at p = 0.01 on summaries). Order by strength.
+4. Adjusted R² = 1 - (1 - R²)(n - 1)/(n - k), with R² the between-group share of variance. A number is cut
+   into quartiles first (ties stay together) and scored the same way, so every column is on one scale.
+   (The first proposal regressed numbers on the vectors, which gave 0.22 against 0.15 for the best category on
+   Rechtspraak and a null spread seven times the floor at 120 records.)
+5. P-value: shuffle the labels **within O**, 99 times, and take the tail of a gamma curve fitted to the shuffled
+   scores (normal tails were too generous; rank p-values cannot go below 0.01 with 99 shuffles, so Holm could
+   not pass). Holm-correct across candidates.
+6. Strength is the adjusted R²; the effect floor is 0.01 (columns the text predicts out of sample start at
+   0.015, ones it cannot end at 0.0075). Order by strength.
 
-Measured: strong columns beat all null columns in 6 of 6 runs; null columns average 0.000; Spearman
-agreement with the cross-validated screen 0.5 to 0.8. It ranks by variance explained, so a 12-group
-column can outrank a 3-group one; refining the top 3 with cross-validation is optional.
+Measured: see the calibration in evaluation. Null columns average 0.000 and reach 0.0017; no null column was
+flagged; text length itself is never flagged. It ranks by variance explained, so a 22-group column can outrank
+a 3-group one; refining the top 3 with cross-validation is optional. Populations under 60 records are not
+screened; a real column of 0.015 is found half the time at 60 records and 85% at 120.
 
 ## Missingness
 
 - **Complete cases per column.** Each column is scored on the records where it has a value; length is
   regressed out once on all of P, not per column.
 - **Coverage is shown** next to the dots. Entries below 50% coverage or with fewer than 5 records
-  per value are not offered. Strength is never inflated by a small observed set: n in the adjustment is
-  the observed count.
+  per value (groups under 10 merge) are not offered. Strength is never inflated by a small observed set: n in the
+  adjustment is the observed count.
 - **Permutations preserve the missingness pattern** (shuffle within O only).
 - **Missing as a column.** "Has value / missing" is a candidate, scored the same way. When it is
-  significant the entry says "missing values differ in text", the warning that values are not missing
-  at random and that the column's own strength may be biased.
+  significant (p <= 0.01 and an effect of at least 0.001, since a two-group split explains far less than a column)
+  the entry says "missing values differ in text", the warning that values are not missing at random and that
+  the column's own strength may be biased. Measured: random missingness is never flagged; 0.6 against 0.2 by a
+  group the text separates is always flagged; 0.5 against 0.3 rarely.
 - **Conditioning shrinks coverage.** Inside a highlight, coverage and strength are recomputed for the
   subset, so a column that was fine overall can drop out.
 - Records with no usable text are outside P already (as in phrase counts today).

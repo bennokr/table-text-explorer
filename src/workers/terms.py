@@ -57,6 +57,7 @@ def index_field(column, data):
         "terms": vectorizer.get_feature_names_out(),
         "lookup": vectorizer.vocabulary_,
         "present": np.array([any(token[0].isalnum() for token in row) for row in texts]),
+        "words": np.array([sum(token[0].isalnum() for token in row) for row in texts]),
     }
 
 

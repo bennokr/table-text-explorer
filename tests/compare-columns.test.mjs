@@ -56,3 +56,13 @@ test('a text axis offers its two sides, and ordered colours run from cool to war
   assert.notEqual(first, last);
   assert.equal(rampColors(1).length, 1);
 });
+
+test('strength dots are absolute bands of explained variation, and nothing is shown for insignificant columns', async () => {
+  const { dots } = await import('../src/compare-by.js');
+  const column = (effect, significant = true) => ({ effect, significant });
+  assert.equal(dots(column(0.015)), '●○○', 'the weak DBRD sentiment effect is not three dots');
+  assert.equal(dots(column(0.05)), '●●○');
+  assert.equal(dots(column(0.15)), '●●●');
+  assert.equal(dots(column(0.5, false)), '○○○');
+  assert.equal(dots(undefined), '○○○');
+});
