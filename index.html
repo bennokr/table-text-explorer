@@ -46,7 +46,7 @@
           <select id="terms-tree-node" aria-label="Tree branches to describe" hidden></select>
           <select id="terms-tree-comparison" aria-label="Tree comparison" hidden><option value="siblings">Branch vs siblings</option><option value="rest">Branch vs rest of visible</option></select>
           <select id="terms-group-page" aria-label="Groups to describe" hidden></select>
-          <select id="terms-ranking" aria-label="N-gram ranking"><option value="auto">Automatic</option><option value="frequency">Common phrases</option><option value="semantic">Semantic splits</option><optgroup label="Advanced"><option value="balanced">Balanced splits</option><option value="contrast">c-TF-IDF contrast</option><option value="ctfidf">c-TF-IDF</option><option value="lift">Document lift</option></optgroup></select>
+          <select id="terms-ranking" aria-label="N-gram ranking"><option value="auto">Automatic</option><option value="frequency">Common phrases</option><option value="semantic">Semantic splits</option><optgroup label="Advanced"><option value="balanced">Even splits</option><option value="contrast">c-TF-IDF contrast</option><option value="ctfidf">c-TF-IDF</option><option value="lift">Document lift</option></optgroup></select>
           <select id="terms-embedding" aria-label="Semantic split embeddings" title="Reuse original embeddings from a saved result; no new model is fitted" hidden></select>
           <select id="terms-display" aria-label="Phrase field display"><option value="separate">Separate field clouds</option><option value="combined">Combined · color by field</option></select>
           <label title="Minimum matching records; split rankings require this many records on both sides">Min records <input id="terms-support" type="number" min="1" max="20000" value="2" required></label>
@@ -55,6 +55,8 @@
         <button type="button" class="help-hint" data-help="descriptions#settings">?</button>
         </div>
         </div>
+        <label class="compare-by" title="Colour the phrase cloud by the values of a column">Compare by <select id="terms-compare" aria-label="Compare by"></select></label>
+        <div id="terms-path" class="term-path" aria-label="Conditions behind the highlight" hidden></div>
         <p id="terms-empty">Highlight records to prepare phrase descriptions.</p>
         <div id="terms-results"></div>
       </div>

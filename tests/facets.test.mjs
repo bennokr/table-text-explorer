@@ -30,8 +30,9 @@ test('numeric ranges partition usable records once, keep boundary ties and respe
   const field = { name: 'score', kind: 'number', missingValues: [-99] };
   const rows = [0, 1, 1, 2, 3, 4, 5, 6, 7, null, -99].map(score => ({ score }));
   const predicates = assertMatching(field, rows);
-  assert.equal(predicates.length, 6);
-  assert.deepEqual(predicates.filter(item => !['Missing', 'Not missing'].includes(item.label)).flatMap(item => item.ids).sort((a, b) => a - b),
+  // Four quartile bins and two missing predicates, plus three cumulative "at most" thresholds for even splits.
+  assert.equal(predicates.length, 9);
+  assert.deepEqual(predicates.filter(item => item.range).flatMap(item => item.ids).sort((a, b) => a - b),
     Array.from({ length: 9 }, (_, id) => id));
   assert.deepEqual(predicates.find(item => item.label === 'Missing').ids, [9, 10]);
   assert.equal(facetField(field, [{ score: 7 }, { score: 7 }]).predicates.length, 0);
@@ -43,7 +44,7 @@ test('boolean and declared date facets have the same cached and editable-query m
   assert.deepEqual(booleans.map(item => item.ids), [[0], [1], [2], [0, 1]]);
   const dates = assertMatching({ name: 'when', kind: 'date', format: '%d/%m/%Y' },
     ['01/01/2026', '02/01/2026', '03/01/2026', '04/01/2026', null].map(when => ({ when })));
-  assert.equal(dates.length, 6);
+  assert.equal(dates.filter(item => !item.cumulative).length, 6);
 });
 
 test('facet cache is independent of brushes, filters and phrases, but invalidates on edits and worker resets', () => {

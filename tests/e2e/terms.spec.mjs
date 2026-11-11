@@ -31,10 +31,15 @@ async function combinedQueries(page) {
   await expect(page.locator('#terms-status')).toHaveText(/12 subset \/ 12 comparison/);
   await expect(page.locator('.term-field-legend span')).toHaveCount(2);
   await conjoinPhrase(page);
+  await expect(page.locator('#terms-ranking option[value=balanced]'), 'even splits answer metadata questions, not phrases').toBeDisabled();
+  await page.selectOption('#terms-content', 'both');
   await page.selectOption('#terms-ranking', 'balanced');
-  await expect(page.locator('#description-kind')).toHaveText('Balanced splits');
+  await expect(page.locator('#description-kind')).toHaveText('Even splits');
   await page.selectOption('#terms-scope', 'all');
   await expect(page.locator('#terms-status')).toHaveText(/24 subset \/ 0 comparison/);
+  await expect(page.locator('#terms-results .term-cloud[aria-busy=false]').first()).toBeVisible();
+  await page.selectOption('#terms-content', 'phrases');
+  await expect(page.locator('#terms-ranking'), 'leaving metadata predicates resets even splits').toHaveValue('auto');
   await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toHaveCount(1);
   await page.click('#filter-selection');
   await page.selectOption('#terms-scope', 'visible');

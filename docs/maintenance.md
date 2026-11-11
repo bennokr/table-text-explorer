@@ -48,8 +48,8 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 ## Readability budgets
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
-each authored module at 250 statements, Python at 2600 total and JavaScript at
-10400 total. Imports, nested bodies, tooling and tests count. Generated files,
+each authored module at 250 statements, Python at 2900 total and JavaScript at
+11100 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -73,6 +73,15 @@ scorer with null controls, column screening, phrase-description recovery, cluste
 multi-seed stability and a Markdown report, plus a self-check on synthetic planted structure. It is split into
 modules under 250 statements with the usual function limits, and none of it ships in the app. See
 [evaluation](evaluation.md).
+
+The budgets rose again, JavaScript from 10400 to 11100 and Python from 2600 to 2900, for Compare by
+([spec](compare-by-spec.md)). JavaScript grew by about 715 statements: roughly 520 in `src/` (query-path chips and
+NOT, previous-step comparison, the Compare by picker and screen planning, coloured cloud and legend, even-split
+UI) and about 200 in tests (query path, column payloads, three browser journeys). Python grew by about 257: the
+closed-form column screen (`src/workers/column_screen.py`, 148), its self-check on synthetic planted and missing
+data (`tests/check_screen.py`, 88) and the even-split ranking in `facets.py`. The screen replaces nothing that
+shipped before, so there is no deletion to offset it. Modules stay under 250 statements (`terms.js` was split into
+`term-output.js`) and the function limits are unchanged.
 
 ## Codebook reader
 

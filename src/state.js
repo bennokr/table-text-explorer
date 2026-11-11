@@ -9,6 +9,7 @@ export class Dataset extends EventTarget {
   visible = [];
   selected = new Set();
   annotations = new Set();
+  populations = new Map(); // Records highlighted before each path condition, keyed by condition index.
   active = null;
   query = () => true;
   pinned = null;
@@ -56,6 +57,7 @@ export class Dataset extends EventTarget {
     this.fitProgress = null;
     this.results = new Results();
     this.ast = null;
+    this.populations = new Map();
     this.config.weights = {};
     this.visible = rows.map((_, index) => index);
     this.emit('data');

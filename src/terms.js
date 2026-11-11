@@ -1,13 +1,14 @@
-import { phrasePredicate } from './query-predicates.js';
+import { CompareBy } from './compare-by.js';
+import { describeHeading, describeStatus, renderResult } from './term-output.js';
 import { FacetIndex } from './facet-index.js';
 import { phraseSettings } from './phrase-config.js';
 import { bindTermSettings, refreshDescriptionControls } from './term-settings.js';
 import { termIndexState } from './term-settings.js';
 import { $ } from './dom.js';
-import { renderTerms, clearTerms } from './term-view.js';
+import { clearTerms } from './term-view.js';
 import { descriptionQuery, refreshEmbeddingChoices, withEmbeddings } from './term-request.js';
 import { complete, progress } from './status.js';
-import { clusterScopes, renderGroups, groupDescriptionStatus } from './cluster-descriptions.js';
+import { clusterScopes } from './cluster-descriptions.js';
 
 export class Terms {
   version = 0;
@@ -21,6 +22,7 @@ export class Terms {
     this.analysis = analysis;
     this.workers = analysis.workers;
     this.facets = new FacetIndex(model);
+    this.compare = new CompareBy(model, () => this.describe());
     this.lastSelection = model.selected;
     bindTermSettings();
     model.on('phrase-settings', () => this.fields());
@@ -98,8 +100,8 @@ export class Terms {
     $('#terms-empty').textContent = text;
   }
 
-  query() {
-    return { ...descriptionQuery(this.model, this.indexId), facetKey: this.facets.key };
+  query(compare = this.compare.resolve(this.indexId)) {
+    return { ...descriptionQuery(this.model, this.indexId, compare), facetKey: this.facets.key };
   }
 
   describe() {
@@ -117,11 +119,22 @@ export class Terms {
   next() {
     const intent = this.intent;
     this.intent = null;
-    if (intent === 'build') {
-      if (!this.build().fields.length) { throw new Error('Choose at least one text field.'); }
-      return { payload: this.build(), type: 'build' };
-    }
-    const payload = { ...this.query(), task: 'descriptions_describe' };
+    if (intent === 'build') { return this.buildJob(); }
+    // A highlight is described first; its column screen follows without delaying the cloud.
+    const first = this.compare.mode(this.indexId) === 'highlight' ? this.describeJob(null) : null;
+    if (first) { return first; }
+    const screen = this.compare.plan(this.indexId);
+    if (screen) { return { type: 'screen', payload: screen.payload, key: screen.key }; }
+    return this.describeJob(this.compare.resolve(this.indexId));
+  }
+
+  buildJob() {
+    if (!this.build().fields.length) { throw new Error('Choose at least one text field.'); }
+    return { payload: this.build(), type: 'build' };
+  }
+
+  describeJob(compare) {
+    const payload = { ...this.query(compare), task: 'descriptions_describe' };
     if (!payload.subset.length) {
       this.last = null;
       clearTerms($('#terms-results'));
@@ -132,7 +145,7 @@ export class Terms {
     const key = JSON.stringify(payload);
     if (key === this.last) { return null; }
     if (payload.content !== 'phrases') { payload.facets = this.facets.request(this.workers.epoch); }
-    return { payload, type: 'describe', key };
+    return { payload, type: 'describe', key, compare };
   }
 
   async drain() {
@@ -143,6 +156,11 @@ export class Terms {
     }
     try { const job = this.next(); if (job) { await this.execute(job); } }
     catch (error) { this.message(error.message); }
+  }
+
+  run(job, report) {
+    if (job.type === 'build') { return this.analysis.textIndexes.ensure(job.payload, report); }
+    return this.workers.run('python', withEmbeddings(this.model, job.payload), report);
   }
 
   async execute(job) {
@@ -156,9 +174,7 @@ export class Terms {
         progress(update);
         this.message(typeof update === 'string' ? update : update.message);
       };
-      const result = job.type === 'build'
-        ? await this.analysis.textIndexes.ensure(job.payload, report)
-        : await this.workers.run('python', withEmbeddings(this.model, job.payload), report);
+      const result = await this.run(job, report);
       this.facets.accept(job.payload.facets, epoch);
       if (version === this.version) { this.finish(job, result); }
     } catch (error) {
@@ -170,17 +186,20 @@ export class Terms {
     }
   }
 
-  render(result) {
+  render(result, compare = null) {
     this.result = result;
-    const usePredicate = (field, phrase, predicate) => {
-      this.model.querySuggestion = predicate ?? phrasePredicate(field, phrase);
-      this.model.emit('description-query');
-    };
-    if (result.groups) { renderGroups($('#terms-results'), result.groups, this.model, usePredicate, this.views); }
-    else { renderTerms($('#terms-results'), result, this.model, usePredicate, this.views); }
+    renderResult($('#terms-results'), result, compare, { model: this.model, views: this.views });
+  }
+
+  finishScreen(job, result) {
+    this.compare.accept(job.key, result);
+    if (this.compare.mode(this.indexId) !== 'highlight') { this.last = null; }
+    complete('Columns screened against the text.');
+    this.describe();
   }
 
   finish(job, result) {
+    if (job.type === 'screen') { this.finishScreen(job, result); return; }
     if (job.type === 'build') {
       this.indexId = result.indexId;
       this.analysis.textIndexes.activeId = result.indexId;
@@ -191,14 +210,13 @@ export class Terms {
       this.describe();
       return;
     }
-    const key = JSON.stringify({ ...this.query(), task: 'descriptions_describe' });
+    const key = JSON.stringify({ ...this.query(job.compare), task: 'descriptions_describe' });
     if (key !== job.key) { complete('Updating the subset description…'); this.describe(); return; }
     this.last = key;
-    this.render(result);
-    const phrasesOnly = this.query().content === 'phrases';
-    $('#description-kind').textContent = ({ frequency: phrasesOnly ? 'Common phrases' : 'Common predicates', balanced: 'Balanced splits', semantic: 'Semantic splits' })[this.query().ranking]
-      ?? (phrasesOnly ? 'Distinctive phrases' : 'Distinctive predicates');
-    this.message(result.groups ? groupDescriptionStatus(result.groups) : `${result.subset} subset / ${result.comparison} comparison records${result.comparison ? '' : ' · no comparison; subset scores only'}`);
+    this.render(result, job.compare);
+    $('#description-kind').textContent = describeHeading(this.query(job.compare), job.compare);
+    this.message(describeStatus(result, job.compare, this.model));
     complete('Subset description updated. Similarity maps unchanged.');
+    if (this.compare.pending(this.indexId)) { this.describe(); }
   }
 }

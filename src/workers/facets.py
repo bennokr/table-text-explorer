@@ -5,6 +5,7 @@ from scipy.sparse import csc_matrix
 from term_ranking import population_scores
 
 facet_index = None
+MIN_EVEN_RECORDS = 10  # Both sides of an even split need at least this many records.
 
 
 def prepare_facets(data):
@@ -57,18 +58,38 @@ def facet_scores(field, subset, comparison, embeddings):
     }
 
 
-def facet_order(scores, data, compared):
+def usable_predicates(field, ranking):
+    """Quartile bins serve every ranking but even splits, which use "at most" thresholds."""
+    flag = "range" if ranking == "balanced" else "cumulative"
+    return np.array([not predicate.get(flag) for predicate in field["predicates"]])
+
+
+def best_even_split(order, field):
+    """One predicate per column: the most even value split, else a missing-versus-present split."""
+    values = [column for column in order if not field["predicates"][column].get("missing")]
+    return (values or list(order))[:1]
+
+
+def facet_order(scores, data, compared, field):
     ranking = data["ranking"]
-    order = np.flatnonzero(scores["support"] >= data["support"])
+    even_minimum = data.get("evenMinimum", MIN_EVEN_RECORDS)
+    minimum = max(data["support"], even_minimum) if ranking == "balanced" else data["support"]
+    order = np.flatnonzero(
+        (scores["support"] >= data["support"]) & usable_predicates(field, ranking)
+    )
     if ranking in {"balanced", "semantic"}:
         support = scores["partitionSupport"]
         order = order[
-            (support[order] >= data["support"])
-            & (scores["population"] - support[order] >= data["support"])
+            (support[order] >= minimum) & (scores["population"] - support[order] >= minimum)
         ]
     if ranking in {"balanced", "semantic"} or (compared and ranking != "ctfidf"):
         order = order[scores[ranking][order] > 0]
-    return order[np.argsort(-scores[ranking][order], kind="stable")][:15]
+    order = order[np.argsort(-scores[ranking][order], kind="stable")]
+    return (
+        np.asarray(best_even_split(order, field), dtype=int)
+        if ranking == "balanced"
+        else order[:15]
+    )
 
 
 def facet_row(field, column, scores, subset, comparison):
@@ -112,7 +133,7 @@ def describe_facets(index, data, embeddings):
     result = []
     for field in index["fields"]:
         scores = facet_scores(field, subset, comparison, embeddings)
-        order = facet_order(scores, data, len(comparison))
+        order = facet_order(scores, data, len(comparison), field)
         result.append(
             {
                 "name": field["name"],
@@ -123,4 +144,7 @@ def describe_facets(index, data, embeddings):
                 "terms": [facet_row(field, column, scores, subset, comparison) for column in order],
             }
         )
+    if data["ranking"] == "balanced":
+        # Columns with the most even split first, so the list reads as the next question to ask.
+        result.sort(key=lambda item: -(item["terms"][0]["balanced"] if item["terms"] else -1))
     return result

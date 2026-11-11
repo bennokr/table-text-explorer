@@ -22,7 +22,7 @@ function cutpoints(values) {
   return [...new Set(cuts)].filter(value => Number.isFinite(value) && value < sorted.at(-1));
 }
 
-function rangeValue(value, field) {
+export function rangeValue(value, field) {
   if (value === null) { return null; }
   if (temporal(field)) { return new Date(value).toISOString(); }
   return String(value);
@@ -44,11 +44,15 @@ function rangePredicates(field, rows) {
     const bin = cuts.findIndex(cut => value <= cut);
     buckets[bin < 0 ? cuts.length : bin].push(id);
   });
-  return buckets.map((ids, index) => {
+  const bins = buckets.map((ids, index) => {
     const lower = rangeValue(index ? cuts[index - 1] : null, field);
     const upper = rangeValue(index < cuts.length ? cuts[index] : null, field);
-    return { label: rangeLabel(lower, upper), predicate: rangePredicate(field.name, lower, upper), ids };
+    return { label: rangeLabel(lower, upper), predicate: rangePredicate(field.name, lower, upper), ids, range: true };
   });
+  // "At most this value" thresholds let an even split fall anywhere between the quartiles.
+  const thresholds = cuts.map((cut, index) => ({ label: rangeLabel(null, rangeValue(cut, field)),
+    predicate: rangePredicate(field.name, null, rangeValue(cut, field)), ids: buckets.slice(0, index + 1).flat(), cumulative: true }));
+  return [...bins, ...thresholds];
 }
 
 export function facetField(field, rows) {
@@ -57,8 +61,8 @@ export function facetField(field, rows) {
   else if (field.kind === 'number' || temporal(field)) { predicates = rangePredicates(field, rows); }
   const ids = rows.flatMap((row, id) => missing(row[field.name], field) ? [id] : []);
   if (ids.length && ids.length < rows.length) {
-    predicates.push({ label: 'Missing', predicate: missingPredicate(field.name), ids });
-    predicates.push({ label: 'Not missing', predicate: { ...missingPredicate(field.name), op: '!=' },
+    predicates.push({ label: 'Missing', predicate: missingPredicate(field.name), ids, missing: true });
+    predicates.push({ label: 'Not missing', predicate: { ...missingPredicate(field.name), op: '!=' }, missing: true,
       ids: rows.flatMap((row, id) => missing(row[field.name], field) ? [] : [id]) });
   }
   predicates = predicates.filter(item => item.ids.length < rows.length);

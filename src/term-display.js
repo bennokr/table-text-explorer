@@ -19,7 +19,8 @@ export function populationTooltip(term, ranking) {
   const containing = term.partitionSupport;
   const total = term.population;
   const percent = total ? Math.round(100 * containing / total) : 0;
-  const gain = ranking === 'semantic' ? ` · Semantic gain: ${(100 * term.semantic).toPrecision(3)}%` : '';
+  const left = ranking === 'balanced' ? ` · Yes leaves ${containing}, no leaves ${total - containing}` : '';
+  const gain = ranking === 'semantic' ? ` · Semantic gain: ${(100 * term.semantic).toPrecision(3)}%` : left;
   const population = term.kind === 'facet' ? 'Among scored records, including missing values' : 'Among scored records with usable field text';
   return `${population}: contains ${containing}/${total} (${percent}%) · Does not contain: ${total - containing} (${100 - percent}%)${gain}`;
 }

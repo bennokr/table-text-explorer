@@ -20,6 +20,11 @@ export function refreshDescriptionControls() {
     $(`#terms-ranking option[value="${ranking}"]`).textContent = labels[content][index];
   });
   $('#terms-deduplicate').closest('label').hidden = content === 'facets';
+  // Even splits ask "what is the most even yes/no question?", which only metadata predicates answer well:
+  // for phrases it just repeats the common phrases.
+  const even = $('#terms-ranking option[value="balanced"]');
+  even.disabled = content === 'phrases';
+  if (even.disabled && $('#terms-ranking').value === 'balanced') { $('#terms-ranking').value = 'auto'; }
 }
 
 export function termIndexState(ready, available = ready) {

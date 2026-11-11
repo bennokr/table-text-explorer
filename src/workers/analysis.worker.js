@@ -11,6 +11,7 @@ import indexesSource from './text_indexes.py?raw';
 import rankingSource from './term_ranking.py?raw';
 import facetsSource from './facets.py?raw';
 import descriptionsSource from './descriptions.py?raw';
+import screenSource from './column_screen.py?raw';
 
 let runtime;
 let readiness = { python: 'idle', sklearn: 'idle' };
@@ -44,6 +45,7 @@ async function initialize(id) {
   await python.runPythonAsync(namesSource);
   await python.runPythonAsync(phraseQueries);
   await python.runPythonAsync(descriptionsSource);
+  await python.runPythonAsync(screenSource);
   runtime = python;
   return python;
 }
@@ -51,7 +53,7 @@ async function initialize(id) {
 function operationMessage(task) {
   const messages = { phrase_matches: 'Matching exact phrases', density_select: 'Selecting groups from the saved density tree',
     cluster: 'Fitting clustering on all records', terms_build: 'Counting phrases on all records',
-    terms_tokens: 'Reusing lexical tokens for word vectors' };
+    terms_tokens: 'Reusing lexical tokens for word vectors', column_screen: 'Screening columns against the text' };
   return messages[task] ?? 'Preparing analysis';
 }
 
@@ -64,7 +66,7 @@ self.onmessage = async ({ data: { id, payload } }) => {
   try {
     const python = await initialize(id);
     if (payload.task === 'initialize') { self.postMessage({ id, result: true }); return; }
-    const functions = { descriptions_describe: 'describe_descriptions', phrase_matches: 'match_phrases', terms_tokens: 'index_tokens', cluster_names: 'name_clusters', density_select: 'run_density_selection', cluster: 'run_clustering', terms_groups: 'describe_groups', terms_build: 'build_term_index', terms_describe: 'describe_terms', terms_matches: 'matching_terms' };
+    const functions = { descriptions_describe: 'describe_descriptions', phrase_matches: 'match_phrases', terms_tokens: 'index_tokens', cluster_names: 'name_clusters', density_select: 'run_density_selection', cluster: 'run_clustering', terms_groups: 'describe_groups', terms_build: 'build_term_index', terms_describe: 'describe_terms', terms_matches: 'matching_terms', column_screen: 'run_column_screen' };
     const operation = functions[payload.task] ?? 'run_projection';
     self.postMessage({ id, progress: operationMessage(payload.task) });
     python.globals.set('terms_progress', (message, completed, total) => self.postMessage({ id,

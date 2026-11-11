@@ -15,15 +15,25 @@ export function refreshEmbeddingChoices(model) {
   select.hidden = $('#terms-ranking').value !== 'semantic';
 }
 
-export function descriptionQuery(model, indexId) {
-  const support = Number($('#terms-support').value);
-  if (!Number.isInteger(support) || support < 1) { throw new Error('Minimum support must be a positive record count.'); }
+function compareQuery(compare, indexId, support) {
+  const groups = compare.groups.map(({ id, name, subset, comparison }) => ({ id, name, subset, comparison }));
+  return { indexId, subset: compare.population, comparison: [], groups, support, ranking: 'contrast',
+    content: $('#terms-content').value, deduplicate: $('#terms-deduplicate').checked };
+}
+
+function scopeQuery(model, indexId, support) {
   const population = clusterComparison(model, $('#terms-scope').value, Number($('#terms-group-page').value), $('#terms-tree-comparison').value)
     ?? comparisonSets(model, $('#terms-scope').value);
   const chosen = $('#terms-ranking').value;
   const ranking = chosen === 'auto' ? (population.groups || population.comparison.length ? 'contrast' : 'frequency') : chosen;
   return { indexId, ...population, support, ranking, content: $('#terms-content').value, deduplicate: $('#terms-deduplicate').checked,
     ...(ranking === 'semantic' ? { embeddingId: $('#terms-embedding').value } : {}) };
+}
+
+export function descriptionQuery(model, indexId, compare = null) {
+  const support = Number($('#terms-support').value);
+  if (!Number.isInteger(support) || support < 1) { throw new Error('Minimum support must be a positive record count.'); }
+  return compare ? compareQuery(compare, indexId, support) : scopeQuery(model, indexId, support);
 }
 
 export function withEmbeddings(model, payload) {

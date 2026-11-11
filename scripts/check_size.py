@@ -16,7 +16,7 @@ def main():
     for path, count in counts.items():
         print(f"{path}: {count} Python statements")
     oversized = [path for path, count in counts.items() if count > 250]
-    if oversized or sum(counts.values()) > 2600:
+    if oversized or sum(counts.values()) > 2900:
         raise SystemExit(
             "Python statement budget exceeded; split responsibilities, keep readability."
         )
