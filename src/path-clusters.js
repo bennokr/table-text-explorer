@@ -12,6 +12,15 @@ export function clusterCondition(model, node) {
   return { id, color: group.color, name: group.name, negated: node.kind === 'not', shown };
 }
 
+// Lights up (or not) a cluster's row in the legend card, so a chip or a value can be matched with it.
+export function pulseLegendRow(id, on) {
+  document.querySelector(`.cluster-legend [data-cluster-id="${id}"]`)?.classList.toggle('pulse', on);
+}
+
+export function scrollToLegendRow(id) {
+  document.querySelector(`.cluster-legend [data-cluster-id="${id}"]`)?.scrollIntoView({ block: 'nearest' });
+}
+
 // The text of such a chip: the first phrase of the name when the legend shows the whole name, else the whole
 // name without the long column name. The dot's colour does the rest.
 export function clusterChipLabel(condition) {

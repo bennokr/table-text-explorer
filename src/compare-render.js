@@ -1,5 +1,6 @@
 import { element } from './dom.js';
 import { renderTerms } from './term-view.js';
+import { clusterChipLabel, clusterCondition, pulseLegendRow } from './path-clusters.js';
 
 const PER_VALUE = 10; // Phrases each value contributes to the cloud.
 
@@ -34,10 +35,14 @@ function mergeGroups(result, compare) {
     facets: groups[0].description.facets ? mergeFields(groups, compare, description => description.facets) : [] };
 }
 
+// A cluster whose legend card is on screen needs only its dot and first phrase here, as in the search field's tokens.
 function legendEntry(group, activate, model) {
-  const label = `${group.name} · ${group.subset.length.toLocaleString()}`;
-  const swatch = element('span', { class: 'legend-swatch', style: `background: ${group.color}` });
-  return element('button', { type: 'button', class: 'legend-value', title: 'Highlight these records (Alt-click: NOT)',
+  const cluster = group.predicate ? clusterCondition(model, group.predicate) : null;
+  const label = `${cluster?.shown ? clusterChipLabel(cluster) : group.name} · ${group.subset.length.toLocaleString()}`;
+  const swatch = element('span', { class: 'legend-swatch chip-dot', style: `background: ${group.color}` });
+  const hover = cluster?.shown ? { onmouseenter: () => pulseLegendRow(cluster.id, true), onmouseleave: () => pulseLegendRow(cluster.id, false) } : {};
+  return element('button', { type: 'button', class: 'legend-value', ...hover,
+    title: `${group.name}: highlight these records (Alt-click: NOT)`,
     onclick: event => {
       if (group.predicate) { activate(null, null, group.predicate, event.altKey); } else { model.select(group.ids); }
     } }, [swatch, document.createTextNode(label)]);
