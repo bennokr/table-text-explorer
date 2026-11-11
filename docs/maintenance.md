@@ -49,7 +49,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
 each authored module at 250 statements, Python at 3100 total and JavaScript at
-11100 total. Imports, nested bodies, tooling and tests count. Generated files,
+11300 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -88,6 +88,12 @@ The Python budget rose again, from 2900 to 3100, for the calibration of the colu
 sample (61) and `tests/eval/calibrate_screen.py` runs the real-column, null, small-population and missingness
 experiments against the app's own screen (126), and the screen's self-check gained two tests. See
 [evaluation](evaluation.md#calibrating-the-column-screen).
+
+The JavaScript budget rose from 11100 to 11300 for embedding import and export (`src/embedding-files.js`, `src/embedding-import.js`,
+about 120 statements in the app and 39 in tests): vectors made earlier or elsewhere are read from a `.npy` or raw float32 file instead of
+being encoded again, which took about 13 minutes for 2,224 reviews, and a map's embeddings download as `.npy`. Nothing is uploaded. The rest
+is small Compare by fixes found while exploring the Tweede Kamer motions (a grey Other group, a not-significant note, the Auto label, and Compare by
+stepping aside when a ranking is chosen).
 
 ## Codebook reader
 

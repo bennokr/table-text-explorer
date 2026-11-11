@@ -43,10 +43,17 @@ function legendEntry(group, activate, model) {
     } }, [swatch, document.createTextNode(label)]);
 }
 
-export function compareLegend(compare, activate, model) {
+function legendNotes({ column }) {
   const notes = [];
-  if (compare.column?.coverage < 0.995) { notes.push(`${Math.round(100 * compare.column.coverage)}% of records have a value`); }
-  if (compare.column?.missing?.differs) { notes.push('missing values differ in text, so this column may be biased'); }
+  if (!column) { return notes; }
+  if (column.coverage < 0.995) { notes.push(`${Math.round(100 * column.coverage)}% of records have a value`); }
+  if (column.eligible && !column.significant) { notes.push('not significant: these colours may reflect chance'); }
+  if (column.missing?.differs) { notes.push('missing values differ in text, so this column may be biased'); }
+  return notes;
+}
+
+export function compareLegend(compare, activate, model) {
+  const notes = legendNotes(compare);
   return element('div', { class: 'compare-legend', 'aria-label': `Values of ${compare.label}` }, [
     element('strong', { text: compare.label }), ...compare.groups.map(group => legendEntry(group, activate, model)),
     ...(notes.length ? [element('small', { text: notes.join(' · ') })] : [])]);

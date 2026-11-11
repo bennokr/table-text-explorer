@@ -9,6 +9,7 @@ import { rangeValue } from './facet-predicates.js';
 export const MIN_GROUP = 10;
 export const MAX_VALUES = 8;
 const PALETTE = ['#3979a5', '#d9772b', '#648c51', '#9b62a7', '#c34e58', '#529e9e', '#9d823c', '#707ac1'];
+const OTHER = '#999999';
 export const LOW = '#3979a5';
 export const HIGH = '#c34e58';
 
@@ -51,7 +52,7 @@ export function columnPayload(model, field, population) {
   return { name: field.name, kind: 'categorical', codes: list };
 }
 
-function categoricalGroups(model, field, population) {
+function collectMembers(model, field, population) {
   const members = new Map();
   for (const id of population) {
     const value = model.rows[id][field.name];
@@ -60,17 +61,27 @@ function categoricalGroups(model, field, population) {
     if (!members.has(key)) { members.set(key, { value, ids: [] }); }
     members.get(key).ids.push(id);
   }
-  const observed = [...members.values()].flatMap(group => group.ids);
-  const chosen = [...members.values()].filter(group => group.ids.length >= MIN_GROUP)
-    .sort((a, b) => b.ids.length - a.ids.length).slice(0, MAX_VALUES);
+  return [...members.values()];
+}
+
+function categoricalGroups(model, field, population) {
+  const members = collectMembers(model, field, population);
+  const observed = members.flatMap(group => group.ids);
+  const large = members.filter(group => group.ids.length >= MIN_GROUP).sort((a, b) => b.ids.length - a.ids.length);
+  // More values than colours: the biggest keep theirs and the rest, with every small group, share a grey "Other".
+  const chosen = large.length > MAX_VALUES ? large.slice(0, MAX_VALUES - 1) : large;
   const ordered = chosen.every(group => Number.isFinite(Number(group.value)));
   if (ordered) { chosen.sort((a, b) => Number(a.value) - Number(b.value)); }
   const colors = ordered ? rampColors(chosen.length) : PALETTE;
-  return chosen.map((group, index) => {
+  const groups = chosen.map((group, index) => {
     const inside = new Set(group.ids);
     return { id: String(index), name: categoryLabel(group.value, field), color: colors[index % colors.length],
       subset: group.ids, comparison: observed.filter(id => !inside.has(id)), predicate: valuePredicate(field.name, group.value) };
   });
+  const shown = new Set(chosen.flatMap(group => group.ids));
+  const rest = observed.filter(id => !shown.has(id));
+  if (rest.length < MIN_GROUP) { return groups; }
+  return [...groups, { id: 'other', name: 'Other values', color: OTHER, subset: rest, ids: rest, comparison: [...shown] }];
 }
 
 const quantile = (sorted, part) => sorted[Math.floor((sorted.length - 1) * part)];

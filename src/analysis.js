@@ -44,8 +44,18 @@ export class Analysis {
     return result;
   }
 
+  // Embeddings imported from a file stand in for encoding the text again.
+  importedEmbeddings(data) {
+    const imported = data.mode === 'sentences' ? this.model.importedEmbeddings.get(data.sentence.model) : null;
+    if (!imported) { return null; }
+    const label = `Imported · ${imported.name}`;
+    return { features: imported.features, dimensions: imported.dimensions, rowIds: imported.rowIds, coverage: [],
+      sentenceModel: { label, dimensions: imported.dimensions }, aggregation: 'imported' };
+  }
+
   async embed(data) {
-    const embedded = await this.workers.run(data.mode === 'words' ? 'words' : 'sentences', data, this.progress);
+    const embedded = this.importedEmbeddings(data)
+      ?? await this.workers.run(data.mode === 'words' ? 'words' : 'sentences', data, this.progress);
     if (embedded.rowIds.length < 2) { throw new Error('Fewer than two records have usable embeddings. Check text fields, model settings and weights.'); }
     data.features = embedded.features;
     data.dimensions = embedded.dimensions;

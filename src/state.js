@@ -56,6 +56,8 @@ export class Dataset extends EventTarget {
     this.fittingViewId = null;
     this.fitProgress = null;
     this.results = new Results();
+    this.importedEmbeddings = new Map();
+    this.embeddingSequence = 0;
     this.ast = null;
     this.populations = new Map();
     this.config.weights = {};

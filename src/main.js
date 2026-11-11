@@ -16,6 +16,7 @@ import { Projection } from './projection.js';
 import { settings } from './settings.js';
 import { Terms } from './terms.js';
 import { bindPath } from './term-path.js';
+import { bindEmbeddingImport } from './embedding-import.js';
 import { Clustering } from './clustering.js';
 import { renderResults } from './results-ui.js';
 import { PhraseSettings } from './phrase-settings.js';
@@ -119,6 +120,7 @@ bindHelp();
 $('#analysis-inputs').onclick = openProjectionSettings;
 $('#cancel').onclick = () => { projection.cancel(); complete('Analysis cancelled. Existing fits retained.'); };
 bindImportExport();
+bindEmbeddingImport(model);
 bindSearch(model, analysis);
 for (const type of ['data', 'view', 'selection', 'schema', 'busy']) { model.on(type, summary); }
 summary();

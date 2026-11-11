@@ -1,10 +1,12 @@
 import { $, element } from './dom.js';
 import { resultExport } from './results.js';
+import { npyForRecords } from './embedding-files.js';
 import { complete } from './status.js';
 
-function downloadResult(result) {
-  const url = URL.createObjectURL(resultExport(result));
-  const anchor = element('a', { href: url, download: `${result.name.replace(/[^\p{L}\p{N}_-]/gu, '_')}.json` });
+function downloadResult(result, extension = 'json', records = 0) {
+  const blob = extension === 'npy' ? npyForRecords(result.embeddings, result.rowIds, result.embeddingDimensions, records) : resultExport(result);
+  const url = URL.createObjectURL(blob);
+  const anchor = element('a', { href: url, download: `${result.name.replace(/[^\p{L}\p{N}_-]/gu, '_')}.${extension}` });
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -21,12 +23,19 @@ function corrections(model, result) {
   } });
 }
 
+function embeddingButton(model, result) {
+  if (result.kind !== 'representation' || !result.embeddings) { return []; }
+  return [element('button', { type: 'button', text: 'Download embeddings (.npy)',
+    title: 'Float32 vectors, one row per record (zeros where there is no text). Import them again to skip encoding.',
+    onclick: () => downloadResult(result, 'npy', model.rows.length) })];
+}
+
 function entry(model, result) {
   const name = element('input', { value: result.name, 'aria-label': 'Result name',
     onchange: event => { result.name = event.target.value.trim() || result.id;
       if (result.kind === 'projection') { result.mapName = result.name.replace(/-2d$/u, ''); }
       model.emit('results'); } });
-  const buttons = [element('button', { type: 'button', text: 'Download JSON', onclick: () => downloadResult(result) })];
+  const buttons = [element('button', { type: 'button', text: 'Download JSON', onclick: () => downloadResult(result) }), ...embeddingButton(model, result)];
   if (['projection', 'clustering'].includes(result.kind)) {
     buttons.unshift(element('button', { type: 'button', text: result.kind === 'clustering' ? 'Open legend' : 'Open card', onclick: () => {
       model.openResultId = result.id;

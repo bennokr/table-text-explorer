@@ -1,3 +1,4 @@
+import { $ } from './dom.js';
 import { phrasePredicate } from './query-predicates.js';
 import { negation } from './query-path.js';
 import { renderCompare } from './compare-render.js';
@@ -18,6 +19,11 @@ function statusMessage(result, model) {
   const base = `${result.subset} subset / ${result.comparison} comparison records`;
   if (!result.comparison) { return `${base} · no comparison; subset scores only`; }
   return model.populations.size ? `${base} · compared with the records before the last condition` : base;
+}
+
+// The same status line appears in the settings, the index panel and the empty results area.
+export function showMessage(text) {
+  for (const id of ['terms-status', 'terms-index-status', 'terms-empty']) { $(`#${id}`).textContent = text; }
 }
 
 export function describeHeading({ content, ranking }, compare) {

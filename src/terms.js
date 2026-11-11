@@ -1,5 +1,5 @@
 import { CompareBy } from './compare-by.js';
-import { describeHeading, describeStatus, renderResult } from './term-output.js';
+import { describeHeading, describeStatus, renderResult, showMessage } from './term-output.js';
 import { FacetIndex } from './facet-index.js';
 import { phraseSettings } from './phrase-config.js';
 import { bindTermSettings, refreshDescriptionControls } from './term-settings.js';
@@ -94,11 +94,7 @@ export class Terms {
     this.describe();
   }
 
-  message(text) {
-    $('#terms-status').textContent = text;
-    $('#terms-index-status').textContent = text;
-    $('#terms-empty').textContent = text;
-  }
+  message(text) { showMessage(text); }
 
   query(compare = this.compare.resolve(this.indexId)) {
     return { ...descriptionQuery(this.model, this.indexId, compare), facetKey: this.facets.key };
@@ -107,6 +103,7 @@ export class Terms {
   describe() {
     if ($('#terms').hidden || !this.model.rows.length) { return; }
     refreshDescriptionControls();
+    this.compare.fill(this.compare.current());
     refreshEmbeddingChoices(this.model);
     const phrases = $('#terms-content').value !== 'facets' && this.build().fields.length;
     this.intent = phrases && !this.indexId ? 'build' : 'describe';

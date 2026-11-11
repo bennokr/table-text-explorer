@@ -148,6 +148,8 @@
       </div>
       <div id="sentence-options" hidden>
         <label>Sentence model <select id="sentence-model"></select></label><button type="button" class="help-hint" data-help="text-models">?</button>
+        <button type="button" id="embedding-import" title="Use vectors you already have: a .npy file or raw float32 (.f32), one row per record in table order">Import embeddings…</button>
+        <input id="embedding-file" type="file" accept=".npy,.f32,.bin" hidden>
         <details data-map-fold><summary>Long text settings <button type="button" class="help-hint" data-help="text-models#long-text">?</button></summary>
           <label>Long text <select id="sentence-chunking"><option value="chunks">Average chunks · use all text</option><option value="truncate">First chunk only</option></select></label>
         </details>

@@ -1,7 +1,7 @@
 import './variable-picker.js';
 import { variableOptions } from './variable-options.js';
 import { phraseSettings } from './phrase-config.js';
-import { defaultSentenceModel, sentenceModels } from './sentence-models.js';
+import { availableSentenceModel, refreshChoices } from './embedding-import.js';
 import { fieldCombinationOptions } from './sentence-vectors.js';
 import { $, options } from './dom.js';
 import { featureCandidates, featureFields, isEmbeddingMode } from './features.js';
@@ -55,8 +55,8 @@ export function fillMapConfig(model, config, method) {
   resetFieldOptions(config);
   $('#include-descriptions').checked = descriptionEnabled(config);
   $('#group-identity').value = Math.round(100 * (config.groupIdentity ?? 0.2));
-  const sentenceModel = config.sentenceModel ?? defaultSentenceModel(config.language);
-  options($('#sentence-model'), Object.entries(sentenceModels).map(([key, item]) => [key, item.label]), sentenceModel);
+  const sentenceModel = availableSentenceModel(model, config);
+  refreshChoices(model, sentenceModel);
   const controls = { 'feature-mode': config.mode,
     neighbors: config.neighbors, epochs: config.epochs, 'vector-language': config.vectorLanguage,
     'sentence-model': sentenceModel, 'sentence-chunking': config.sentenceChunking,

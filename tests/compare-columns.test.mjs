@@ -35,6 +35,21 @@ test('categorical values become groups compared with the other observed records'
   assert.equal(formatQuery(stars[1].predicate), '"stars"="2"');
 });
 
+test('values beyond the palette share a grey Other group, small groups included', () => {
+  const many = Array.from({ length: 200 }, (_, id) => ({ kind: `k${id % 10}`, rare: id < 191 ? 'x' : `r${id}` }));
+  const manyModel = { rows: many, fields: [field('kind', { kind: 'categorical' }), field('rare', { kind: 'categorical' })] };
+  const ids = many.map((_, id) => id);
+  const groups = fieldGroups(manyModel, manyModel.fields[0], ids);
+  assert.equal(groups.length, 8, 'seven values and Other');
+  const other = groups.at(-1);
+  assert.equal(other.name, 'Other values');
+  assert.equal(other.subset.length, 60, 'three values of twenty records');
+  assert.equal(groups[0].comparison.length, 180);
+  const rare = fieldGroups(manyModel, manyModel.fields[1], ids);
+  assert.deepEqual(rare.map(group => group.name), ['x']);
+  assert.equal(rare.length, 1, 'nine singletons are fewer than a group, so no Other');
+});
+
 test('a missing value is not a group and records without a value are not compared with', () => {
   const [group] = fieldGroups(model, model.fields[3], everyone);
   assert.equal(group.subset.length, 48);

@@ -40,6 +40,7 @@ export class CompareBy {
     this.select = $('#terms-compare');
     this.select.onchange = () => { this.value = this.select.value; change(); };
     model.on('data', () => { this.screens.clear(); this.value = 'auto'; this.fill(null); });
+    model.on('selection', () => this.fill(this.current()));
     for (const type of ['schema', 'annotation', 'results']) { model.on(type, () => this.fill(this.current())); }
     this.fill(null);
   }
@@ -50,7 +51,8 @@ export class CompareBy {
   }
 
   mode(indexId) {
-    if (!indexId || $('#terms-content').value === 'facets' || this.value === 'highlight') { return 'highlight'; }
+    const ranked = $('#terms-ranking').value !== 'auto'; // A chosen ranking describes one population, not a column's values.
+    if (!indexId || ranked || $('#terms-content').value === 'facets' || this.value === 'highlight') { return 'highlight'; }
     return this.value === 'auto' && this.model.selected.size ? 'highlight' : 'columns';
   }
 
@@ -133,6 +135,8 @@ export class CompareBy {
     this.select.replaceChildren(new Option('Auto', 'auto'), new Option('Highlighted vs previous step', 'highlight'), ...groups);
     if (![...this.select.options].some(option => option.value === this.value)) { this.value = 'auto'; }
     this.select.options[0].text = this.autoLabel(screen);
+    this.select.disabled = $('#terms-ranking').value !== 'auto';
+    this.select.title = this.select.disabled ? 'Compare by applies to the Automatic ranking' : '';
     this.select.value = this.value;
   }
 
