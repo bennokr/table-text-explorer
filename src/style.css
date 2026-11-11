@@ -265,9 +265,6 @@ variable-picker[hidden] { display: none; }
 #help-content pre { white-space: pre-wrap; }
 #table-columns .vp-trigger { max-width: 160px; }
 
-.term-path { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 4px 0; font-size: 11px; }
-.term-path[hidden] { display: none; }
-.path-label { font-weight: 600; }
 .path-chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #9db4c8; border-radius: 10px; background: #eef4f9; padding: 0 3px 0 8px; }
 .path-chip button { border: 0; background: transparent; cursor: pointer; padding: 0 4px; font-size: 13px; line-height: 1.3; }
 .path-chip button:hover, .path-chip button:focus { color: #a33; }
@@ -285,3 +282,20 @@ variable-picker[hidden] { display: none; }
 
 .chip-dot { display: inline-block; width: 0.75em; height: 0.75em; margin-right: 0.3em; border-radius: 50%; vertical-align: -0.05em; }
 .cluster-row.pulse { outline: 2px solid #527b9c; outline-offset: 1px; border-radius: 3px; }
+
+/* The search field: conditions as tokens, then the draft, with suggestions under it. */
+.search-box { position: relative; flex: 1; min-width: 160px; display: flex; align-items: center; gap: 4px; min-height: 26px; padding: 0 4px;
+  border: 1px solid #8a969c; border-radius: 3px; background: #fff; }
+.search-box:focus-within { outline: 2px solid #527b9c; outline-offset: -1px; }
+.search-chips { display: contents; }
+.search-box .path-chip { font-size: 11px; white-space: nowrap; }
+.search-box input[type=search] { flex: 1; min-width: 8em; min-height: 22px; border: 0; outline: 0; background: transparent; padding: 0 2px; }
+.search-box [aria-invalid=true] { outline: 0; color: #b64733; }
+.search-count { color: #69747a; white-space: nowrap; font-size: 11px; }
+.suggest-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 30; margin: 2px 0 0; padding: 2px; list-style: none; max-height: 260px; overflow-y: auto;
+  border: 1px solid #8a969c; border-radius: 3px; background: #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); font-size: 12px; }
+.suggest-list[hidden] { display: none; }
+.suggest-list [role=option] { display: flex; justify-content: space-between; gap: 12px; padding: 3px 6px; cursor: pointer; border-radius: 2px; }
+.suggest-list [role=option]:hover, .suggest-list [aria-selected=true] { background: #e3eef7; }
+.suggest-list small { color: #69747a; }
+.suggest-note { padding: 3px 6px; color: #69747a; font-size: 11px; }

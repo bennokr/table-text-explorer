@@ -15,7 +15,6 @@ import { diagnostics } from './diagnostics.js';
 import { Projection } from './projection.js';
 import { settings } from './settings.js';
 import { Terms } from './terms.js';
-import { bindPath } from './term-path.js';
 import { bindEmbeddingImport } from './embedding-import.js';
 import { Clustering } from './clustering.js';
 import { renderResults } from './results-ui.js';
@@ -52,8 +51,6 @@ async function load(action) {
   try {
     const table = await action();
     if (version !== importVersion) { return; }
-    $('#search').value = '';
-    $('#search').removeAttribute('aria-invalid');
     progress({ message: 'Detecting column types and preparing views' });
     await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
     if (version !== importVersion) { return; }
@@ -114,7 +111,6 @@ new PhraseSettings(model, analysis);
 analysis.workers.warmup();
 analysisControls(model);
 new Terms(model, analysis);
-bindPath(model);
 new Clustering(model, analysis);
 layout();
 bindHelp();

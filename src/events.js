@@ -20,7 +20,6 @@ export const Events = Object.freeze({
   TABLE_COLUMNS: 'table-columns',
   TERM_SETTINGS: 'term-settings', // A setting of the description panel changed.
   DESCRIPTION_QUERY: 'description-query', // A phrase or value was clicked: add it to the query.
-  DESCRIPTION_REMOVE: 'description-remove', // A path chip was removed.
 });
 
 const known = new Set(Object.values(Events));

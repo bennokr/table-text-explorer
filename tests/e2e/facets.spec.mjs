@@ -12,7 +12,7 @@ test('facets: numeric-only tables describe missingness and ranges; clicks highli
   await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toHaveCount(1, { timeout: 120000 });
   await expect(page.locator('#terms-results .term-field-legend span')).toHaveText(['score', 'active']);
   await page.locator('.term-cloud text[data-term="Missing"][data-field="active"]').click();
-  await expect(page.locator('#search')).toHaveValue('"active"=null');
+  await expect(page.locator('#search-box')).toHaveAttribute('data-query', '"active"=null');
   await expect.poll(async () => (await snapshot(page)).selected.length).toBe(12);
   expect((await snapshot(page)).visible).toBe(24);
   await expect(page.locator('#terms-status')).toHaveText(/12 subset \/ 12 comparison/);
@@ -20,14 +20,14 @@ test('facets: numeric-only tables describe missingness and ranges; clicks highli
   await expect(page.locator('.term-table thead')).toContainText('Precision');
   await page.click('#filter-selection');
   await expect.poll(async () => (await snapshot(page)).visible).toBe(12);
-  await expect(page.locator('#search')).toHaveValue('');
+  await expect(page.locator('#search-box')).toHaveAttribute('data-query', '');
   expect((await snapshot(page)).selected).toEqual([]);
   await page.selectOption('#terms-ranking', 'balanced');
   const range = page.locator('.term-table tbody button').first();
   await range.click();
-  await expect(page.locator('#search')).not.toHaveValue('');
+  await expect(page.locator('#search-box')).not.toHaveAttribute('data-query', '');
   await page.click('#clear-selection');
-  await expect(page.locator('#search')).toHaveValue('');
+  await expect(page.locator('#search-box')).toHaveAttribute('data-query', '');
   expect((await snapshot(page)).selected).toEqual([]);
   expect((await snapshot(page)).visible).toBe(12);
   await page.click('#clear-filters');

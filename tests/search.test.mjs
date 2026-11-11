@@ -4,6 +4,16 @@ import { Dataset } from '../src/state.js';
 import { highlightQuery, bindSearch } from '../src/search.js';
 import { valuePredicate, appendPredicate, phrasePredicate, formatQuery } from '../src/query-predicates.js';
 
+// A page stand-in with just enough of the DOM for the search field: values, handlers, children.
+function fakeNode() {
+  return { value: '', hidden: false, textContent: '', dataset: {}, focus() {}, removeAttribute() {}, setAttribute() {}, classList: { toggle() {}, add() {}, remove() {} },
+    addEventListener(type, handler) { this[`on${type}`] = handler; }, replaceChildren() {}, append() {}, querySelectorAll: () => [] };
+}
+const fakePage = nodes => ({ querySelector: selector => {
+  if (!nodes.has(selector)) { nodes.set(selector, fakeNode()); }
+  return nodes.get(selector);
+}, createElement: () => fakeNode(), createTextNode: text => ({ textContent: text }) });
+
 test('query changes highlight visible matches, keep filters, and clear highlights for an empty query', () => {
   const model = new Dataset();
   model.load({ name: 'query', rows: [{ text: 'camera' }, { text: 'battery' }, { text: 'camera sharp' }] });
@@ -24,10 +34,7 @@ test('filter button flushes a pending query and applies its highlight only on ex
   model.load({ name: 'query', rows: [{ text: 'camera' }, { text: 'battery' }] });
   const nodes = new Map();
   const previous = globalThis.document;
-  globalThis.document = { querySelector: selector => {
-    if (!nodes.has(selector)) { nodes.set(selector, { removeAttribute() {}, setAttribute() {}, classList: { toggle() {} } }); }
-    return nodes.get(selector);
-  } };
+  globalThis.document = fakePage(nodes);
   try {
     bindSearch(model);
     nodes.get('#search').value = 'camera';
@@ -64,10 +71,7 @@ async function queryFixture(run) {
   model.load({ name: 'exact', rows: [{ text: 'camera sharp' }, { text: 'camera, sharp' }, { text: 'battery' }] });
   const nodes = new Map();
   const previous = globalThis.document;
-  globalThis.document = { querySelector: selector => {
-    if (!nodes.has(selector)) { nodes.set(selector, { value: '', focus() {}, removeAttribute() {}, setAttribute() {}, classList: { toggle() {} } }); }
-    return nodes.get(selector);
-  } };
+  globalThis.document = fakePage(nodes);
   const workers = new EventTarget();
   const jobs = [];
   workers.run = (_, request) => new Promise(resolve => jobs.push({ request, resolve }));
@@ -120,20 +124,20 @@ test('filter commits the brushed membership and clears the preview, including af
 });
 
 test('predicate clicks AND against current edits, preserve OR groups and avoid repeated conjuncts', async () => {
-  await queryFixture(async ({ model, nodes }) => {
+  await queryFixture(async ({ model, nodes, search }) => {
     nodes.get('#search').value = 'text="camera sharp" OR text:battery';
     model.querySuggestion = valuePredicate('text', 'camera sharp');
     model.emit('description-query');
-    const input = nodes.get('#search').value;
-    assert.equal(input, '(("text"="camera sharp" OR "text":"battery") AND "text"="camera sharp")');
+    const input = search.field.text;
+    assert.equal(input, '("text"="camera sharp" OR "text":"battery") AND "text"="camera sharp"');
     assert.deepEqual([...model.selected], [0]);
     assert.equal(model.ast.kind, 'and');
     model.emit('description-query');
-    assert.equal(nodes.get('#search').value, input);
+    assert.equal(search.field.text, input);
     assert.deepEqual(model.visible, [0, 1, 2]);
-    nodes.get('#search').value = '(camera AND';
+    search.field.text = '(camera AND';
     model.emit('description-query');
-    assert.equal(nodes.get('#search').value, '(camera AND');
+    assert.equal(search.field.text, '(camera AND');
     assert.deepEqual([...model.selected], [0]);
   });
 });

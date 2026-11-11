@@ -18,8 +18,14 @@
     <select id="examples" aria-label="Example dataset" title="Load an example from the local fixtures folder"><option value="">Examples…</option></select>
     <button id="phrase-settings" class="square" title="Phrase counting settings" aria-label="Phrase counting settings">⚙</button>
     <button id="export" title="Exports" aria-label="Exports">↧</button>
-    <input id="search" type="search" aria-label="Search records" placeholder='Search · field:value · AND / OR / NOT'
-      title='Highlight matching visible records as you type; use ⏷ to filter. Search every field, or use field:value, field>=10, parentheses and AND / OR / NOT. Quote names containing spaces. Use field~"phrase" for exact n-gram matching.'>
+    <div id="search-box" class="search-box" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-owns="suggest-list">
+      <span id="search-chips" class="search-chips"></span>
+      <input id="search" type="search" aria-label="Search records" placeholder="Search · field:value · AND / OR / NOT" autocomplete="off"
+        aria-autocomplete="list" aria-controls="suggest-list"
+        title='Highlight matching records as you type; Enter turns the condition into a removable token, and the next one narrows it with AND. Suggestions list columns, then operators, then values. Search every field, or use field:value, field>=10, parentheses and AND / OR / NOT. Use field~"phrase" for exact n-gram matching. ⏷ filters to the highlighted records.'>
+      <small id="search-count" class="search-count" hidden></small>
+      <ul id="suggest-list" class="suggest-list" role="listbox" aria-label="Suggestions" hidden></ul>
+    </div>
     <button id="filter-selection" title="Filter to highlighted records" aria-label="Filter to highlighted records">⏷</button>
     <button id="clear-selection" title="Clear selection and query" aria-label="Clear selection and query">×</button>
     <button id="clear-filters" title="Clear all filters" aria-label="Clear all filters">↺</button>
@@ -56,7 +62,6 @@
         </div>
         </div>
         <label class="compare-by" title="Colour the phrase cloud by the values of a column">Compare by <select id="terms-compare" aria-label="Compare by"></select></label>
-        <div id="terms-path" class="term-path" aria-label="Conditions behind the highlight" hidden></div>
         <p id="terms-empty">Highlight records to prepare phrase descriptions.</p>
         <div id="terms-results"></div>
       </div>

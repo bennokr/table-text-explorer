@@ -16,7 +16,7 @@ async function filterBrush(page) {
   await page.click('#filter-selection');
   expect((await snapshot(page)).visible).toBe(selected.length);
   expect((await snapshot(page)).selected).toEqual([]);
-  await expect(page.locator('#search')).toHaveValue('');
+  await expect(page.locator('#search-box')).toHaveAttribute('data-query', '');
   await page.click('#clear-filters');
 }
 
@@ -56,7 +56,7 @@ test('workspace: query highlight, explicit filter, linked brushing, cards and an
   await page.click('#filter-selection');
   expect((await snapshot(page)).visible).toBe(12);
   expect((await snapshot(page)).selected).toEqual([]);
-  await expect(page.locator('#search')).toHaveValue('');
+  await expect(page.locator('#search-box')).toHaveAttribute('data-query', '');
   await query(page, '(camera AND');
   await expect(page.locator('#search')).toHaveAttribute('aria-invalid', 'true');
   expect((await snapshot(page)).visible).toBe(12);

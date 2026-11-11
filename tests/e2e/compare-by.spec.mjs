@@ -36,7 +36,7 @@ test('compare by: the best column colours the cloud, clicking a value conditions
 
   await legend(page).getByRole('button', { name: /negative/ }).click();
   await idle(page);
-  await expect(page.locator('#terms-path .path-chip')).toContainText('sentiment = negative');
+  await expect(page.locator('#search-chips .path-chip')).toContainText('sentiment = negative');
   expect((await snapshot(page)).rows, 'a legend click highlights, it never filters').toBe(2224);
 
   await page.selectOption('#terms-compare', 'col:rating');

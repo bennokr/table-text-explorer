@@ -39,7 +39,10 @@ export async function importRows(page, rows = records, csv = false) {
   await page.locator('.view-card .bk-events').first().waitFor();
 }
 
+// Replaces the whole query: typing in the field narrows the conditions already there, so remove them first.
 export async function query(page, text) {
+  const remove = page.locator('#search-chips .path-chip button');
+  while (await remove.count()) { await remove.first().click(); }
   await page.fill('#search', text);
   await page.press('#search', 'Enter');
 }

@@ -26,7 +26,7 @@ async function combinedQueries(page) {
   await expect(cloud).toHaveCount(1);
   await expect(cloud.locator('text[data-term=camera]')).toHaveCount(2);
   await cloud.locator('text[data-term=camera][data-field=text]').click();
-  await expect(page.locator('#search')).toHaveValue('"text"~"camera"');
+  await expect(page.locator('#search-box')).toHaveAttribute('data-query', '"text"~"camera"');
   await expect.poll(async () => (await snapshot(page)).selected.length).toBe(12);
   await expect(page.locator('#terms-status')).toHaveText(/12 subset \/ 12 comparison/);
   await expect(page.locator('.term-field-legend span')).toHaveCount(2);
@@ -49,7 +49,7 @@ async function combinedQueries(page) {
 
 async function conjoinPhrase(page) {
   await page.locator('.term-cloud[aria-busy=false] text[data-term=battery][data-field=notes]').click();
-  await expect(page.locator('#search')).toHaveValue('("text"~"camera" AND "notes"~"battery")');
+  await expect(page.locator('#search-box')).toHaveAttribute('data-query', '"text"~"camera" AND "notes"~"battery"');
   await expect.poll(async () => (await snapshot(page)).selected.length).toBe(12);
 }
 

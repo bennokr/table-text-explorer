@@ -40,17 +40,17 @@ test('a conditioned cloud hides the conditions and their nested phrases, but not
   assert.ok(!hidden({ phrase: 'Hof', predicate: valuePredicate('court', 'Hof') }, 'court'));
 });
 
-test('a condition on a cluster column becomes a dot and a number while its legend is on screen', async () => {
+test('a condition on a cluster column becomes a dot and the first phrase while its legend is on screen', async () => {
   const { clusterCondition, clusterChipLabel } = await import('../src/path-clusters.js');
   const result = { id: 'r1', groups: { 0: { name: 'zorg · kinderen', color: '#111111' }, 4: { name: 'wet · verbod', color: '#222222' } } };
   const model = { fields: [{ name: 'k · name', derived: 'r1' }], results: { get: id => (id === 'r1' ? result : null) },
     views: [{ type: 'legend', resultId: 'r1' }] };
   const node = { kind: 'term', field: 'k · name', op: '=', value: 'wet · verbod' };
   const shown = clusterCondition(model, node);
-  assert.deepEqual([shown.color, shown.shown, clusterChipLabel(shown)], ['#222222', true, '#5']);
-  assert.equal(clusterChipLabel(clusterCondition(model, { kind: 'not', child: node })), 'NOT #5');
+  assert.deepEqual([shown.color, shown.shown, clusterChipLabel(shown)], ['#222222', true, 'wet']);
+  assert.equal(clusterChipLabel(clusterCondition(model, { kind: 'not', child: node })), 'NOT wet');
   const hidden = clusterCondition({ ...model, views: [] }, node);
-  assert.equal(clusterChipLabel(hidden), 'wet · verbod', 'without the legend the name is spelled out, minus the column');
+  assert.equal(clusterChipLabel(hidden), 'wet · verbod', 'without the legend the whole name is spelled out, minus the column');
   assert.equal(clusterCondition(model, { kind: 'term', field: 'other', op: '=', value: 'x' }), null);
   assert.equal(clusterCondition(model, { kind: 'term', field: 'k · name', op: '~', value: 'wet · verbod' }), null);
 });
