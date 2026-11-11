@@ -63,7 +63,8 @@ test('semantic splits: phrases take the colour of the cluster where their record
   await clusteredMap(page);
   await page.click('#terms-options');
   await page.selectOption('#terms-ranking', 'semantic');
-  await expect(page.locator('.term-note')).toContainText('Colour: the cluster most of its records are in', { timeout: 60000 });
+  await expect(page.locator('#description-hint')).toHaveAttribute('title', /Semantic splits: phrases chosen one after another/, { timeout: 60000 });
+  await expect(page.locator('#terms-compare')).toBeDisabled();
   await expect(page.locator('#terms-compare')).toBeDisabled();
   const allowed = [...await legendRgb(page), 'rgb(153, 153, 153)'];
   const colors = await fills(page);

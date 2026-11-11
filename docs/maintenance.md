@@ -49,7 +49,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
 each authored module at 250 statements, Python at 3200 total and JavaScript at
-11550 total. Imports, nested bodies, tooling and tests count. Generated files,
+11700 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -103,6 +103,9 @@ button, the legend placed after its map, one colour per value shared by the map,
 Semantic splits then raised the budgets once more, JavaScript from 11450 to 11550 and Python from 3150 to 3200: phrases are chosen one after
 another so each adds something the earlier ones do not (Python, about 35 statements with tests), and coloured by the cluster where their
 records sit (JavaScript, about 60 statements with tests). The same pass removed unused exports.
+
+The JavaScript budget rose again, from 11550 to 11700, for the explorer refactor stage: the ranking hint, cluster chip dots, an event list, shared
+colours, a settings object, the query-field tokens and suggestions, and the dataset hook, with their tests (see the list in the commit history).
 
 ## Codebook reader
 

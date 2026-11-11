@@ -44,6 +44,8 @@ export async function restoreModelRelease() {
       entries.push({ url: `release:${release.tag}/${asset.name}`, path: `${destination}/${asset.model}`, bytes: data.length, sha256: asset.sha256 });
     }
   } catch (error) {
+    // In CI a silent fallback would ship a site without models (or try a torch export), so fail loudly there.
+    if (process.env.MODEL_RELEASE_REQUIRED) { throw new Error(`Model release unavailable: ${error.message}`, { cause: error }); }
     console.log(`Model release unavailable (${error.message}); falling back to Hugging Face.`);
     return null;
   }

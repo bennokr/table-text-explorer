@@ -283,3 +283,6 @@ variable-picker[hidden] { display: none; }
 
 .status-line { display: flex; align-items: center; gap: 0.3em; }
 .status-line #terms-status { margin: 0; }
+
+.chip-dot { display: inline-block; width: 0.75em; height: 0.75em; margin-right: 0.3em; border-radius: 50%; vertical-align: -0.05em; }
+.cluster-row.pulse { outline: 2px solid #527b9c; outline-offset: 1px; border-radius: 3px; }

@@ -1,4 +1,5 @@
 import { $ } from './dom.js';
+import { rankingHelp } from './ranking-help.js';
 
 export function showTermSettings(open) {
   $('#terms-controls').hidden = !open;
@@ -20,6 +21,7 @@ export function refreshDescriptionControls() {
     $(`#terms-ranking option[value="${ranking}"]`).textContent = labels[content][index];
   });
   $('#terms-deduplicate').closest('label').hidden = content === 'facets';
+  $('#description-hint').title = rankingHelp($('#terms-ranking').value, content);
   // Even splits ask "what is the most even yes/no question?", which only metadata predicates answer well:
   // for phrases it just repeats the common phrases.
   const even = $('#terms-ranking option[value="balanced"]');

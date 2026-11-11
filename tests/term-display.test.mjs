@@ -29,3 +29,12 @@ test('partition evidence distinguishes scored text coverage from all-record cove
   assert.match(populationTooltip(term, 'semantic'), /3\/4 \(75%\).*1 \(25%\).*50/);
   assert.doesNotMatch(populationTooltip(term, 'frequency'), /Semantic/);
 });
+
+test('the ranking hint explains each ranking and follows the type of predicate', async () => {
+  const { rankingHelp } = await import('../src/ranking-help.js');
+  assert.match(rankingHelp('semantic'), /one after another/);
+  assert.match(rankingHelp('auto', 'facets'), /predicates/);
+  assert.match(rankingHelp('auto', 'phrases'), /phrases/);
+  assert.match(rankingHelp('balanced', 'facets'), /yes\/no question/);
+  assert.equal(rankingHelp('unknown'), rankingHelp('auto'));
+});
