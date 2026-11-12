@@ -46,7 +46,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           MODEL_RELEASE_REQUIRED: '1'
-          # Set DATA_RELEASE_REQUIRED: '1' once data-v1 is uploaded, so a missing release fails the build.
+          DATA_RELEASE_REQUIRED: '1'
       - name: Build for the project site path
         run: npm run build
         env:
