@@ -10,8 +10,8 @@ function fixture(run) {
   model.load({ name: 'scrub', rows: [{ text: 'camera' }, { text: 'battery' }, { text: 'camera sharp' }] });
   const result = model.results.add('clustering', { rowIds: [0, 1, 2], labels: [0, 1, 0], tree: { kind: 'agglomerative' } });
   const descriptions = { count: 0 };
-  const inspector = Object.assign(Object.create(Terms.prototype), { model, lastSelection: model.selected,
-    jobs: { describe: () => { descriptions.count += 1; } } });
+  const inspector = Object.assign(Object.create(Terms.prototype), { model, lastSelection: model.selected, lastPath: '',
+    jobs: { describe: () => { descriptions.count += 1; }, pathKey: () => model.ast ? 'path' : '' } });
   model.on('selection', () => inspector.selectionChanged());
   model.on('term-settings', () => inspector.jobs.describe());
   run({ model, result, inspector, descriptions });
@@ -30,6 +30,18 @@ test('scrubbing resumes live subset descriptions after a clustering or branch de
     assert.equal(model.termSettings.compare, 'auto', 'brushing leaves the branch description');
     assert.equal(descriptions.count, 4);
     assert.deepEqual(result.labels, [0, 1, 0]);
+  });
+});
+
+test('a click that changes only the query path still describes again', () => {
+  fixture(({ model, descriptions }) => {
+    model.select([0]);
+    assert.equal(descriptions.count, 1);
+    model.ast = { kind: 'term', field: 'text', op: '~', value: 'camera' };
+    model.select([0]);
+    assert.equal(descriptions.count, 2, 'the highlight is the same, the path is not');
+    model.select([0]);
+    assert.equal(descriptions.count, 2, 'nothing changed');
   });
 });
 
