@@ -51,9 +51,10 @@ test('layout: the legend sits by the map, names exist and the cloud uses the leg
   expect(names.every(name => !name.startsWith('#'))).toBe(true);
   const clusterOption = await page.locator('#terms-compare option[value^="col:"]', { hasText: '· name' }).first().getAttribute('value');
   await page.selectOption('#terms-compare', clusterOption);
-  await expect(page.locator('.compare-legend strong')).toContainText('· name', { timeout: 60000 });
+  await expect(page.locator('#terms-results .colour-key .legend-value').first()).toBeVisible({ timeout: 60000 });
+  await expect(page.locator('#description-kind')).toHaveAttribute('title', /Distinctive phrases by .*· name/);
   await expect(page.locator('.term-cloud text').first()).toHaveAttribute('style', /fill/);
-  const entries = await page.locator('.compare-legend .legend-value').allTextContents();
+  const entries = await page.locator('#terms-results .colour-key .legend-value').allTextContents();
   expect(entries.every(text => /^[^·]+ · \d+$/u.test(text.trim())), 'a cluster the legend card already names shows its dot and first phrase').toBe(true);
   const cloud = await fills(page);
   expect(cloud, 'every word has a cluster colour').not.toContain('');

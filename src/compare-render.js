@@ -1,4 +1,4 @@
-import { element } from './dom.js';
+import { colourKey, keyChip } from './colour-key.js';
 import { renderTerms } from './term-view.js';
 import { clusterChipLabel, clusterCondition, pulseLegendRow } from './path-clusters.js';
 
@@ -39,13 +39,11 @@ function mergeGroups(result, compare) {
 function legendEntry(group, activate, model) {
   const cluster = group.predicate ? clusterCondition(model, group.predicate) : null;
   const label = `${cluster?.shown ? clusterChipLabel(cluster) : group.name} · ${group.subset.length.toLocaleString()}`;
-  const swatch = element('span', { class: 'legend-swatch chip-dot', style: `background: ${group.color}` });
   const hover = cluster?.shown ? { onmouseenter: () => pulseLegendRow(cluster.id, true), onmouseleave: () => pulseLegendRow(cluster.id, false) } : {};
-  return element('button', { type: 'button', class: 'legend-value', ...hover,
-    title: `${group.name}: highlight these records (Alt-click: NOT)`,
+  return keyChip({ color: group.color, label, hover, title: `${group.name}: highlight these records (Alt-click: NOT)`,
     onclick: event => {
       if (group.predicate) { activate(null, null, group.predicate, event.altKey); } else { model.select(group.ids); }
-    } }, [swatch, document.createTextNode(label)]);
+    } });
 }
 
 function legendNotes({ column }) {
@@ -58,10 +56,9 @@ function legendNotes({ column }) {
 }
 
 function compareLegend(compare, activate, model) {
-  const notes = legendNotes(compare);
-  return element('div', { class: 'compare-legend', 'aria-label': `Values of ${compare.label}` }, [
-    element('strong', { text: compare.label }), ...compare.groups.map(group => legendEntry(group, activate, model)),
-    ...(notes.length ? [element('small', { text: notes.join(' · ') })] : [])]);
+  const key = colourKey(compare.groups.map(group => legendEntry(group, activate, model)), legendNotes(compare));
+  key.setAttribute('aria-label', `Values of ${compare.label}`);
+  return key;
 }
 
 export function renderCompare(container, result, compare, { model, activate, views }) {

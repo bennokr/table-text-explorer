@@ -142,7 +142,7 @@ export class CompareBy {
       .map(([label, list]) => element('optgroup', ranked ? { label, disabled: '' } : { label }, list));
     this.select.title = ranked ? 'A chosen Size ranks the phrases of one population; set Size to Automatic to colour by a column.' : '';
     const groups = [populationGroup(), ...columns, ...treeGroup(this.model)].filter(Boolean);
-    this.select.replaceChildren(new Option('Auto', 'auto'), new Option('Highlighted vs previous step', 'highlight'), ...groups);
+    this.select.replaceChildren(new Option('Auto', 'auto'), ...groups);
     if (this.unavailable(ranked)) { setTermSettings(this.model, { compare: 'auto' }); }
     this.select.options[0].text = this.autoLabel(screen);
     this.select.value = this.value;

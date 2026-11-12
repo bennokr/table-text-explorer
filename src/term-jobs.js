@@ -32,7 +32,14 @@ export class TermJobs {
   // leaves out phrases the path already states. A click that adds a phrase to the path changes neither the
   // subset nor the comparison, and must still redraw the cloud.
   keyFor(payload) {
-    return JSON.stringify({ payload, path: this.model.ast ? formatQuery(this.model.ast) : '' });
+    return JSON.stringify({ payload, path: this.pathKey() });
+  }
+
+  pathKey() { return this.model.ast ? formatQuery(this.model.ast) : ''; }
+
+  // Whether the cloud is about the highlighted records (Automatic with a highlight, or chosen), not a whole population.
+  describesHighlight() {
+    return this.model.selected.size > 0 && ['auto', 'highlight'].includes(this.compare.value);
   }
 
   invalidate(message) {
@@ -168,7 +175,7 @@ export class TermJobs {
     if (key !== job.key) { complete('Updating the subset description…'); this.describe(); return; }
     this.last = key;
     this.render(result, job.compare);
-    this.view.heading(describeHeading(this.query(job.compare), job.compare));
+    this.view.heading(describeHeading(this.query(job.compare), job.compare, this.describesHighlight()));
     this.view.message(describeStatus(result, job.compare, this.model));
     complete('Subset description updated. Similarity maps unchanged.');
     if (this.compare.pending(this.indexId)) { this.describe(); }

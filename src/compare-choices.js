@@ -1,8 +1,10 @@
 import { element } from './dom.js';
 
-// Comparisons that are not a column's values: which records to describe, and a hierarchical clustering's branches.
+// Comparisons that are not a column's values: what the highlighted records are compared with, and a hierarchical
+// clustering's branches.
 export function populationGroup() {
-  return element('optgroup', { label: 'Population' }, [
+  return element('optgroup', { label: 'Compare to' }, [
+    new Option('Highlighted vs previous step', 'highlight'),
     new Option('Entire dataset', 'population:all'),
     new Option('Current filtered records', 'population:visible'),
     new Option('Filtered vs remaining table', 'population:filtered'),

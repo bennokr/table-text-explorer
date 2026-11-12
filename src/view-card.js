@@ -5,6 +5,7 @@ import { AggregateView } from './charts.js';
 import { ViewEditor } from './view-editor.js';
 import { ViewPlaceholder } from './view-placeholder.js';
 import { isPointView, isProjection, viewTitle, viewFieldsValid, viewSchemaKey } from './view-config.js';
+import { CardColourKey } from './colour-key.js';
 import { Events } from './events.js';
 
 export class ViewCard {
@@ -24,7 +25,8 @@ export class ViewCard {
     this.menu = this.options(actions);
     this.container = element('div', { class: 'view-plot' });
     this.placeholder = new ViewPlaceholder(model, config, this.container, make);
-    this.node = element('section', { class: 'view-card', 'data-view-id': config.id }, [this.header, this.menu, this.container]);
+    this.colourKey = new CardColourKey(model, config);
+    this.node = element('section', { class: 'view-card', 'data-view-id': config.id }, [this.header, this.menu, this.container, this.colourKey.node]);
     this.cleanup = model.on(Events.BUSY, () => this.busy());
     this.sync();
   }
@@ -60,6 +62,7 @@ export class ViewCard {
     this.node.setAttribute('aria-label', viewTitle(config, this.model));
     this.settings.hidden = !isProjection(config.type);
     this.renderIfChanged();
+    this.colourKey.sync();
     const description = this.description();
     this.editor.type.title = `${viewTitle(config, this.model)} · ${description}`;
     this.editor.type.setAttribute('aria-description', description);
@@ -106,6 +109,7 @@ export class ViewCard {
     this.cleanup();
     this.editor.destroy();
     this.placeholder.destroy();
+    this.colourKey.destroy();
     this.renderer?.destroy();
     this.node.remove();
   }

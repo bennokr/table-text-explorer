@@ -30,6 +30,19 @@ export function refreshDescriptionControls(model) {
   if (even.disabled && ranking === 'balanced') { setTermSettings(model, { ranking: 'auto' }); }
 }
 
+const DEFAULT_HEADING = 'Distinctive phrases';
+
+// "<ranking> by <column>" in the panel head (the column may be cut short), and what Automatic chose in the Size
+// select. Without a size (nothing is described) the head is the default and the select says plain Automatic.
+export function showDescriptionHeading(model, size = null, by = '') {
+  const text = [size ?? DEFAULT_HEADING, by].filter(Boolean).join(' by ');
+  const heading = $('#description-kind');
+  heading.textContent = text;
+  heading.title = text;
+  const automatic = size !== null && model.termSettings.ranking === 'auto';
+  $('#terms-ranking option[value="auto"]').textContent = automatic ? `Auto → ${size}` : 'Automatic';
+}
+
 export function termIndexState(ready, available = ready) {
   $('#terms-inspector').hidden = !available;
   $('#terms-options').disabled = !available;

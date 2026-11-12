@@ -195,7 +195,7 @@ dialog textarea { display: block; width: 100%; }
 #terms-settings h3 { margin: 0 0 8px; font-size: 14px; }
 #terms-inspector > .term-controls { flex-wrap: wrap; overflow: visible; }
 
-#description-kind { text-align: right; }
+#description-kind { flex: 1 1 0; min-width: 40px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
 #table-count { margin-left: auto; }
 #terms-config-controls { flex-wrap: wrap; overflow: visible; }
 #terms-config { max-width: 180px; }
@@ -276,7 +276,9 @@ variable-picker[hidden] { display: none; }
 .term-fields > label > select { flex: 1; min-width: 0; max-width: 100%; font: inherit; }
 .term-fields abbr { text-decoration: none; cursor: help; }
 .term-fields > select { min-width: 0; max-width: 100%; }
-.compare-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 4px 0; font-size: 11px; }
+.colour-key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 4px 0; font-size: 11px; }
+.view-card > .colour-key { flex: none; margin: 0; padding: 3px 4px; max-height: 56px; overflow-y: auto; border-top: 1px solid #e2e4e5; }
+.view-card > .colour-key[hidden] { display: none; }
 .legend-value { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ccc; border-radius: 10px; background: #fff; padding: 1px 8px 1px 4px; cursor: pointer; font-size: 11px; }
 .legend-value:hover, .legend-value:focus { border-color: #426d8d; }
 .legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }

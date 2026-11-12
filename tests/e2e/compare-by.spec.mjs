@@ -1,7 +1,7 @@
 import { test, expect, importRows, snapshot, idle } from './fixtures.mjs';
 
 const option = (page, value) => page.locator(`#terms-compare option[value="${value}"]`);
-const legend = page => page.locator('.compare-legend');
+const legend = page => page.locator('#terms-results .colour-key');
 
 // Text with group-specific words; `signal` is 40% missing at random, `mnar` is missing exactly where
 // the text belongs to the first group, `noise` is unrelated.
@@ -23,7 +23,10 @@ test('compare by: the best column colours the cloud, clicking a value conditions
   await page.selectOption('#examples', 'dbrd-test.json');
   await expect.poll(async () => (await snapshot(page)).rows, { timeout: 60000 }).toBe(2224);
   await expect(page.locator('#terms-compare option').first()).toHaveText(/Auto → (rating|sentiment)/, { timeout: 90000 });
-  await expect(page.locator('#description-kind')).toHaveText(/By (rating|sentiment)/);
+  await expect(page.locator('#description-kind')).toHaveText(/^Distinctive phrases by (rating|sentiment)/);
+  await expect(page.locator('#terms-ranking option[value="auto"]'), 'Size says what Automatic chose').toHaveText('Auto → Distinctive phrases');
+  await expect(page.locator('#terms-compare optgroup[label="Compare to"] option[value="highlight"]')).toHaveCount(1);
+  await expect(legend(page).locator('strong'), 'the column name is in the select and the heading, not beside the chips').toHaveCount(0);
   await expect(legend(page).locator('.legend-value')).not.toHaveCount(0);
   await expect(option(page, 'col:sentiment')).toContainText('●');
   await expect(option(page, 'col:word_count'), 'length alone is not a finding').toContainText('○○○');
@@ -65,10 +68,10 @@ test('by: with no significant column Auto shows plain phrases, weak columns stay
   const rows = planted().map(({ id, text, noise }) => ({ id, text, noise }));
   await importRows(page, rows);
   await expect(page.locator('#terms-compare option').first()).toHaveText('Auto → no column stands out', { timeout: 90000 });
-  await expect(page.locator('.compare-legend')).toHaveCount(0);
+  await expect(legend(page)).toHaveCount(0);
   await expect(option(page, 'col:noise'), 'an insignificant column can still be chosen').toContainText('○○○');
   await page.selectOption('#terms-compare', 'col:noise');
-  await expect(page.locator('.compare-legend')).toContainText('not significant');
+  await expect(legend(page)).toContainText('not significant');
   await page.selectOption('#terms-ranking', 'frequency');
   await expect(page.locator('#terms-compare')).toHaveValue('auto');
   await expect(page.locator('#terms-compare optgroup:not([disabled]) option[value^="col:"]')).toHaveCount(0);

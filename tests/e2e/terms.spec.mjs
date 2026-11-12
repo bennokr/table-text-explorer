@@ -72,7 +72,7 @@ async function semanticAndClusters(page) {
   // A flat clustering is a column: Compare by its name column colours one cloud per field by cluster.
   const column = await page.locator('#terms-compare option[value^="col:"]', { hasText: '· name' }).first().getAttribute('value');
   await page.selectOption('#terms-compare', column);
-  await expect(page.locator('.compare-legend .legend-value')).toHaveCount(2, { timeout: 60000 });
+  await expect(page.locator('#terms-results .colour-key .legend-value')).toHaveCount(2, { timeout: 60000 });
   await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toHaveCount(2);
 }
 

@@ -1,7 +1,7 @@
 import { CompareBy } from './compare-by.js';
 import { renderResult, showMessage } from './term-output.js';
 import { FacetIndex } from './facet-index.js';
-import { bindTermSettings, refreshDescriptionControls, termIndexState } from './term-settings.js';
+import { bindTermSettings, refreshDescriptionControls, showDescriptionHeading, termIndexState } from './term-settings.js';
 import { bindTermControls } from './term-controls.js';
 import { $ } from './dom.js';
 import { clearTerms } from './term-view.js';
@@ -24,6 +24,7 @@ export class Terms {
     this.compare = new CompareBy(model, () => this.jobs.describe());
     this.jobs = new TermJobs(model, analysis, { compare: this.compare, facets: this.facets, view: this.panel() });
     this.lastSelection = model.selected;
+    this.lastPath = '';
     this.display = model.termSettings.display;
     bindTermSettings();
     bindTermControls(model);
@@ -37,10 +38,10 @@ export class Terms {
   panel() {
     return {
       message: showMessage,
-      clear: () => clearTerms($('#terms-results')),
+      clear: () => { clearTerms($('#terms-results')); showDescriptionHeading(this.model); },
       indexState: ready => termIndexState(ready, Boolean(this.model.rows.length)),
       render: (result, compare) => renderResult($('#terms-results'), result, compare, { model: this.model, views: this.views }),
-      heading: text => { $('#description-kind').textContent = text; },
+      heading: ({ size, by }) => showDescriptionHeading(this.model, size, by),
       hidden: () => $('#terms').hidden,
       refresh: () => {
         refreshDescriptionControls(this.model);
@@ -58,7 +59,7 @@ export class Terms {
     model.on(Events.BUSY, () => { if (!model.analysisBusy) { queueMicrotask(() => jobs.drain()); } });
     model.on(Events.TERM_SETTINGS, () => this.settingsChanged());
     model.on(Events.RESULTS, () => refreshEmbeddingChoices(model));
-    model.on(Events.DATA, () => { this.lastSelection = model.selected; this.fields(); });
+    model.on(Events.DATA, () => { this.lastSelection = model.selected; this.lastPath = ''; this.fields(); });
     for (const type of [Events.SCHEMA, Events.CONFIG]) { model.on(type, () => this.fields()); }
     for (const type of [Events.ANNOTATION, Events.VIEW]) { model.on(type, () => jobs.describe()); }
     model.on(Events.SELECTION, () => this.selectionChanged());
@@ -76,12 +77,16 @@ export class Terms {
     else { this.jobs.describe(); }
   }
 
-  // Brushing leaves a branch description and goes back to describing the highlight.
+  // Brushing leaves a branch description and goes back to describing the highlight. A click that adds a phrase to
+  // the query path can leave the highlight as it was, but the cloud still has to drop that phrase.
   selectionChanged() {
     const selected = this.model.selected;
-    if (selected.size === this.lastSelection.size && [...selected].every(id => this.lastSelection.has(id))) { return; }
+    const moved = selected.size !== this.lastSelection.size || [...selected].some(id => !this.lastSelection.has(id));
+    const path = this.jobs.pathKey();
+    if (!moved && path === this.lastPath) { return; }
     this.lastSelection = selected;
-    if (treeChoice(this.model.termSettings)) { setTermSettings(this.model, { compare: 'auto' }); }
+    this.lastPath = path;
+    if (moved && treeChoice(this.model.termSettings)) { setTermSettings(this.model, { compare: 'auto' }); }
     else { this.jobs.describe(); }
   }
 

@@ -49,7 +49,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
 each authored module at 250 statements, Python at 3300 total and JavaScript at
-12350 total. Imports, nested bodies, tooling and tests count. Generated files,
+12450 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -119,6 +119,11 @@ includes the query path (a click that adds a phrase to the path changes neither 
 greyed-out columns while a Size ranking is chosen, and the "no column stands out" label. About 20 of them are tests (an end-to-end check that
 weak columns stay selectable and that a chosen Size greys the columns out, and the cluster order in the unit tests). Removing text axes took out
 the `text_axes` worker function, `axisGroups`, the axes menu entries and their tests.
+
+The JavaScript budget rose again, from 12350 to 12450, for the colour key (`src/colour-key.js`, about 85 statements, and its end-to-end spec,
+about 25): one chip component and one list of "what the colours mean" shared by the map and scatter cards and the phrase cloud, so a value looks
+and behaves the same wherever it is listed. The cloud's own chip code was replaced by it. The rest of the stage (heading "ranking by column",
+what Automatic chose in the Size select, the highlight option moved into "Compare to") is a handful of statements.
 
 ## Codebook reader
 
