@@ -60,13 +60,13 @@ test('layout: the legend sits by the map, names exist and the cloud uses the leg
   for (const color of cloud) { expect(await legendRgb(page)).toContain(color.replace(/,\s*/gu, ', ')); }
 });
 
-test('semantic splits: phrases take the colour of the cluster where their records are, and Compare by steps aside', async ({ app }) => {
+test('semantic splits: phrases take the colour of the cluster where their records are, and By greys its columns out', async ({ app }) => {
   const { page } = app;
   await clusteredMap(page);
   await page.click('#terms-options');
   await page.selectOption('#terms-ranking', 'semantic');
   await expect(page.locator('#description-hint')).toHaveAttribute('title', /Semantic splits: phrases chosen one after another/, { timeout: 60000 });
-  await expect(page.locator('#terms-compare option[value^="col:"]'), 'columns step aside; populations remain').toHaveCount(0);
+  await expect(page.locator('#terms-compare optgroup:not([disabled]) option[value^="col:"]'), 'columns are greyed out; populations remain').toHaveCount(0);
   await expect(page.locator('#terms-compare option[value="population:all"]')).toHaveCount(1);
   const allowed = [...await legendRgb(page), 'rgb(153, 153, 153)'];
   const colors = await fills(page);

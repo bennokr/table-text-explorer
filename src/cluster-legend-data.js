@@ -1,4 +1,4 @@
-import { treeRows, treeMembers, colorTreeBranch } from './cluster-tree.js';
+import { branchChildren, treeRoot, treeRows, treeMembers, colorTreeBranch } from './cluster-tree.js';
 
 export function legendRows(model, result) {
   if (result.tree) { return treeRows(model, result); }
@@ -39,4 +39,18 @@ export function clusterMembers(model, result, id) {
   if (!result.tree) { return legendRows(model, result).find(group => group.id === id).ids; }
   const visible = new Set(model.visible);
   return treeMembers(result, id).filter(row => visible.has(row));
+}
+
+// The names of a clustering's groups in the order its legend card lists them, so other lists of the
+// same clusters (the colour key above the phrase cloud) can follow it.
+export function legendNames(result) {
+  if (!result.tree) { return Object.values(result.groups).map(group => group.name); }
+  const names = [];
+  const visit = id => {
+    names.push(result.groups[id]?.name);
+    for (const child of branchChildren(result, id)) { visit(child); }
+  };
+  visit(treeRoot(result));
+  if (result.tree.kind === 'density') { names.push(result.groups[-1]?.name); }
+  return names;
 }

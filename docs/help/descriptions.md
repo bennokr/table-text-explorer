@@ -8,8 +8,8 @@ Highlight a map region, inspect its phrases and metadata facets, and click a use
 
 ## Steps
 
-1. Open the panel settings to choose phrases, metadata facets or both.
-2. Choose a population/comparison and minimum support.
+1. Choose Size (how phrases are ranked) and By (what colours them or what they are compared with).
+2. Open the panel settings for phrases, metadata facets or both, the field display and minimum support.
 3. Inspect a cloud or switch it to a table for counts and scores.
 
 ## Interpreting the result
@@ -18,9 +18,9 @@ Without a highlight, Automatic shows common predicates in the current population
 
 Facet candidates include category values, booleans, missing/not-missing and fixed numeric/date ranges. Identifiers, analysis-derived columns and constant predicates are omitted. Facets work without a phrase index.
 
-## Compare by
+## Size and By
 
-Compare by colours the phrase cloud by the values of one column (a table column, an annotation, a cluster or a text axis) and sizes each phrase by how distinctive it is for one value. Auto picks the column the text varies with most, beyond text length, but keeps the column the map is coloured by (a clustering, say) when that column is significant, so the cloud explains the colours on the map. Values of a clustering keep the cluster legend's colours; other columns use the map's colour order. Dots show how much of the text variation the column explains (one dot from 1%, two from 3%, three from 10%), followed by coverage (records with a value). "None" means not detected, which below about 120 records is weaker evidence than it looks. "Missing differs" means the text differs between records with and without a value, so values are probably not missing at random and the column's own strength may be biased. When no column passes, Text axes offers the main directions of variation in the text, split at the median.
+**Size** chooses how phrases are ranked, which sets their size in the cloud; **By** chooses what colours them. By colours the phrase cloud by the values of one column (a table column, an annotation or a cluster) and sizes each phrase by how distinctive it is for one value. Auto picks the column the text varies with most, beyond text length, but keeps the column the map is coloured by (a clustering, say) when that column is significant, so the cloud explains the colours on the map. Values of a clustering keep the cluster legend's colours; other columns use the map's colour order. Dots show how much of the text variation the column explains (one dot from 1%, two from 3%, three from 10%), followed by coverage (records with a value). "None" means not detected, which below about 120 records is weaker evidence than it looks. "Missing differs" means the text differs between records with and without a value, so values are probably not missing at random and the column's own strength may be biased. When no column passes, Auto shows the population's phrases in one colour ("Auto → no column stands out"). Columns that are not significant stay in the list, since a weak column can still be the one worth looking at: the legend notes that its colours may reflect chance. A chosen Size describes one population, so the column entries are greyed out until Size is Automatic.
 
 The screen is a descriptive statistic computed on this machine without fitting a model: text length is regressed out of the text vectors, and each column is scored by the share of the remaining variance its values explain (adjusted R²). Numbers are cut into quartiles first, so every column is on one scale. P-values come from 99 label shuffles within the records that have a value, Holm-corrected across columns; an effect below 0.01 never counts. Populations under 60 records are not screened. After a click adds a condition, the screen reruns inside the highlighted records, and the cloud compares them with the records before the last condition. The chips above the cloud show the path; remove one to widen it.
 

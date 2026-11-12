@@ -49,7 +49,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
 each authored module at 250 statements, Python at 3300 total and JavaScript at
-12300 total. Imports, nested bodies, tooling and tests count. Generated files,
+12350 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -112,6 +112,13 @@ the new behaviour is the field and the folded-in comparisons.
 The Python budget rose from 3200 to 3300 for the example-data release (about 95 statements, none shipped in the app): the Rechtspraak echo
 removal (`scripts/clean_rechtspraak.py`) and the release packaging (`scripts/package_data_release.py`). The JavaScript side of the same work
 (example embeddings, the release restore, shared release download helper) is in the 12300.
+
+The JavaScript budget rose from 12300 to 12350 for the Size/By stage, which removed text axes but still added about 40 statements (the stage
+started 32 under the cap): the order helper that lists a clustering's values in its legend's order (`legendNames`, about 10), the job key that now
+includes the query path (a click that adds a phrase to the path changes neither the subset nor the comparison, so the cloud was not redrawn),
+greyed-out columns while a Size ranking is chosen, and the "no column stands out" label. About 20 of them are tests (an end-to-end check that
+weak columns stay selectable and that a chosen Size greys the columns out, and the cluster order in the unit tests). Removing text axes took out
+the `text_axes` worker function, `axisGroups`, the axes menu entries and their tests.
 
 ## Codebook reader
 

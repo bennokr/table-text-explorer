@@ -5,7 +5,7 @@ export function rankingHelp(ranking, content = 'phrases') {
   const what = content === 'facets' ? 'predicates' : 'phrases';
   const help = {
     auto: `Automatic: compares your highlighted records with the records before the last condition (c-TF-IDF contrast), `
-      + `or lists the most common ${what} when nothing is highlighted. Compare by colours ${what} by the values of a column.`,
+      + `or lists the most common ${what} when nothing is highlighted. By colours ${what} by the values of a column.`,
     frequency: `Common ${what}: the most frequent among these records, without comparing them to anything.`,
     balanced: `Even splits: one yes/no question per column, most even first, with at least the minimum number of records on each side. ${FACET}`,
     semantic: 'Semantic splits: phrases chosen one after another, each splitting the records in a way the ones before it do not, '

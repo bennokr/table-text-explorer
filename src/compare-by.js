@@ -1,5 +1,5 @@
 import { $, element } from './dom.js';
-import { axisGroups, candidateFields, columnKind, columnPayload, fieldGroups } from './compare-columns.js';
+import { candidateFields, columnKind, columnPayload, fieldGroups } from './compare-columns.js';
 import { Events } from './events.js';
 import { populationGroup, treeGroup } from './compare-choices.js';
 import { setTermSettings } from './term-settings-model.js';
@@ -20,11 +20,11 @@ export function dots(column) {
 }
 
 // The column the map is coloured by wins when it is significant, so the cloud explains the colours on the map.
+// When no column is significant there is nothing to colour by, and the cloud shows the population's phrases.
 function bestChoice(screen, mapColumn) {
   const ranked = screen.columns.filter(column => column.significant).sort((a, b) => b.effect - a.effect);
   if (ranked.some(column => column.name === mapColumn)) { return `col:${mapColumn}`; }
-  if (ranked.length) { return `col:${ranked[0].name}`; }
-  return screen.axes.length ? 'axis:0' : null;
+  return ranked.length ? `col:${ranked[0].name}` : null;
 }
 
 function columnLabel(field, result) {
@@ -33,8 +33,9 @@ function columnLabel(field, result) {
   return `${field.label ?? field.name} ${result ? dots(result) : ''}${coverage}${flag}`.trim();
 }
 
-// "Compare by" chooses the column whose values colour the phrase cloud. Auto follows the highlight when
-// there is one and otherwise the strongest column the screen finds, else the main text axis.
+// "By:" chooses the column whose values colour the phrase cloud. Auto follows the highlight when
+// there is one and otherwise the strongest significant column; without one it shows the population as it is.
+// Columns that are not significant stay in the list: a weak column can still be the one worth looking at.
 export class CompareBy {
   screens = new Map();
   indexId = null;
@@ -60,7 +61,7 @@ export class CompareBy {
 
   mode(indexId) {
     const settings = this.model.termSettings;
-    const chosenColumn = /^(col|axis):/u.test(this.value);
+    const chosenColumn = this.value.startsWith('col:');
     // A chosen ranking, metadata predicates, a population or a tree describe one population, not a column's values.
     const describing = settings.ranking !== 'auto' || settings.content === 'facets' || (this.value !== 'auto' && !chosenColumn);
     if (!indexId || describing) { return 'highlight'; }
@@ -99,17 +100,13 @@ export class CompareBy {
     this.fill(screen);
   }
 
-  groupsFor(choice, screen, population) {
-    if (choice?.startsWith('axis:')) {
-      const axis = screen.axes[Number(choice.slice(5))];
-      return axis ? axisGroups(axis) : [];
-    }
+  groupsFor(choice, population) {
     const field = candidateFields(this.model).find(item => `col:${item.name}` === choice);
     return field ? fieldGroups(this.model, field, population) : [];
   }
 
   labelFor(choice) {
-    return choice?.startsWith('axis:') ? `text axis ${Number(choice.slice(5)) + 1}` : String(choice).slice(4);
+    return String(choice).slice(4);
   }
 
   // The partition to colour the cloud by, or null to describe the highlight as before.
@@ -117,10 +114,10 @@ export class CompareBy {
     if (this.mode(indexId) !== 'columns') { return null; }
     const population = this.population();
     // A column chosen by name works without a screen (small tables are not screened); it just has no dots.
-    const screen = this.screens.get(this.key(indexId, population)) ?? (this.value.startsWith('col:') ? { columns: [], axes: [] } : null);
+    const screen = this.screens.get(this.key(indexId, population)) ?? (this.value.startsWith('col:') ? { columns: [] } : null);
     if (!screen) { return null; }
     const choice = this.value === 'auto' ? bestChoice(screen, this.mapColumn()) : this.value;
-    const groups = this.groupsFor(choice, screen, population);
+    const groups = this.groupsFor(choice, population);
     return groups.length >= 2 ? { population, groups, choice, label: this.labelFor(choice), screen } : null;
   }
 
@@ -136,27 +133,32 @@ export class CompareBy {
     return KINDS.map(kind => [kind, kinds[kind]]);
   }
 
-  entries(screen) {
-    const axes = (screen?.axes ?? []).map((axis, index) =>
-      new Option(`Text axis ${index + 1} · ${Math.round(100 * axis.share)}% of variation`, `axis:${index}`));
-    return [...this.columnOptions(screen), ['Text axes', axes]].filter(([, list]) => list.length);
-  }
 
   fill(screen) {
     const ranked = this.model.termSettings.ranking !== 'auto';
-    // Columns colour a cloud by their values; a chosen ranking describes one population, so only populations remain.
-    const columns = ranked ? [] : this.entries(screen).map(([label, list]) => element('optgroup', { label }, list));
+    // Columns colour a cloud by their values; a chosen ranking describes one population, so they stay listed but
+    // cannot be picked until the size is Automatic again.
+    const columns = this.columnOptions(screen).filter(([, list]) => list.length)
+      .map(([label, list]) => element('optgroup', ranked ? { label, disabled: '' } : { label }, list));
+    this.select.title = ranked ? 'A chosen Size ranks the phrases of one population; set Size to Automatic to colour by a column.' : '';
     const groups = [populationGroup(), ...columns, ...treeGroup(this.model)].filter(Boolean);
     this.select.replaceChildren(new Option('Auto', 'auto'), new Option('Highlighted vs previous step', 'highlight'), ...groups);
-    if (![...this.select.options].some(option => option.value === this.value)) { setTermSettings(this.model, { compare: 'auto' }); }
+    if (this.unavailable(ranked)) { setTermSettings(this.model, { compare: 'auto' }); }
     this.select.options[0].text = this.autoLabel(screen);
     this.select.value = this.value;
+  }
+
+  // The chosen comparison no longer exists, or is a column that a chosen ranking cannot use.
+  unavailable(ranked) {
+    const exists = [...this.select.options].some(option => option.value === this.value);
+    return !exists || (ranked && this.value.startsWith('col:'));
   }
 
   // Auto describes the highlight when there is one; the dots then say which column to condition on next.
   autoLabel(screen) {
     if (this.value === 'auto' && this.model.selected.size && this.mode(this.indexId) === 'highlight') { return 'Auto → highlighted records'; }
     const best = screen ? bestChoice(screen, this.mapColumn()) : null;
-    return best ? `Auto → ${this.labelFor(best)}` : 'Auto';
+    if (best) { return `Auto → ${this.labelFor(best)}`; }
+    return screen?.columns.some(column => column.eligible) ? 'Auto → no column stands out' : 'Auto';
   }
 }

@@ -10,8 +10,8 @@ export function defaultTermSettings() {
     support: 2, // minimum matching records
     deduplicate: true,
     display: 'separate', // one cloud per field, or one coloured by field
-    // What the phrases are compared by: auto, highlight, population:<all|visible|filtered>, col:<column>,
-    // axis:<n> or tree:<clustering id>.
+    // What the phrases are compared by: auto, highlight, population:<all|visible|filtered>, col:<column>
+    // or tree:<clustering id>.
     compare: 'auto',
     treeComparison: 'siblings', // branch against its siblings, or against the rest of the visible records
     groupPage: 0, // which 20 branches of a tree are described

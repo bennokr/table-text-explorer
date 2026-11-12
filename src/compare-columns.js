@@ -4,9 +4,10 @@ import { rangePredicate, valuePredicate } from './query-predicates.js';
 import { rangeValue } from './facet-predicates.js';
 import { categoryColor, HIGH, LOW, OTHER } from './palette.js';
 import { valueColor } from './value-colors.js';
+import { legendNames } from './cluster-legend-data.js';
 
-// A column is any partition of the records into values. These helpers turn table columns, annotations,
-// clusterings and text axes into the same shape: per value, the records it holds and the records it is
+// A column is any partition of the records into values. These helpers turn table columns, annotations
+// and clusterings into the same shape: per value, the records it holds and the records it is
 // compared with, plus the condition a click on that value adds to the query path.
 export const MIN_GROUP = 10;
 const MAX_VALUES = 8;
@@ -51,6 +52,15 @@ function collectMembers(model, field, population) {
   return [...members.values()];
 }
 
+// Clusters follow their legend card, not their size, so a colour key above the cloud reads like the legend.
+function legendOrder(model, field) {
+  const result = model.results.get(field.derived);
+  if (!result?.groups) { return () => 0; }
+  const names = legendNames(result);
+  const position = group => names.indexOf(String(group.value));
+  return (a, b) => position(a) - position(b);
+}
+
 function categoricalGroups(model, field, population) {
   const members = collectMembers(model, field, population);
   const observed = members.flatMap(group => group.ids);
@@ -58,7 +68,8 @@ function categoricalGroups(model, field, population) {
   // More values than colours: the biggest keep theirs and the rest, with every small group, share a grey "Other".
   const limit = field.derived ? MAX_CLUSTERS : MAX_VALUES;
   const chosen = large.length > limit ? large.slice(0, limit - 1) : large;
-  if (chosen.every(group => Number.isFinite(Number(group.value)))) { chosen.sort((a, b) => Number(a.value) - Number(b.value)); }
+  if (field.derived) { chosen.sort(legendOrder(model, field)); }
+  else if (chosen.every(group => Number.isFinite(Number(group.value)))) { chosen.sort((a, b) => Number(a.value) - Number(b.value)); }
   const colorOf = valueColor(model, field);
   const groups = chosen.map((group, index) => {
     const inside = new Set(group.ids);
@@ -95,12 +106,4 @@ function numericGroups(model, field, population) {
 
 export function fieldGroups(model, field, population) {
   return categorical(field) ? categoricalGroups(model, field, population) : numericGroups(model, field, population);
-}
-
-// A text axis has no column to filter on, so a click on its side highlights the records directly.
-export function axisGroups(axis) {
-  return [
-    { id: 'high', name: 'Side A', color: HIGH, subset: axis.high, comparison: axis.low, ids: axis.high },
-    { id: 'low', name: 'Side B', color: LOW, subset: axis.low, comparison: axis.high, ids: axis.low },
-  ];
 }

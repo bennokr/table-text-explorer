@@ -7,21 +7,20 @@ Where the calibration changed the proposal below, the text says so. Items marked
 
 A **column** is any partition of the records into values: a table column, an annotation, a saved
 selection, a clustering, the current highlight (two values), a phrase or facet predicate (present or
-absent) or a text axis. **Compare by** colours a phrase cloud by the values of one column and ranks
+absent). **By:** colours a phrase cloud by the values of one column and ranks
 each phrase by how distinctive it is for one value (the existing c-TF-IDF contrast, one value against
 the rest). It generalises the scope, cluster-group and tree-comparison selects, which become columns.
 
 ## Control
 
-One select labelled **Compare by** in the phrase panel. No extra button.
+One select labelled **By:** in the phrase panel, next to **Size:** (the ranking). No extra button.
 
 ```
-Compare by [ Auto → sentiment ●●● ▾ ]
-  Auto                 highlight if any, else best column, else text axes, else common phrases
+By: [ Auto → sentiment ●●● ▾ ]
+  Auto                 highlight if any, else best significant column, else the population's phrases
   Highlighted
   Columns:    sentiment ●●● 100%   rating ●●○ 100%   year ○○○ 100%   region ●○○ 71%
   Clusters / Annotations / Saved selections
-  Text axes:  axis 1 ●●○   "contains verdachte" ●●○
 ```
 
 Each entry shows strength dots and coverage (records with a value). Dots come from the screen below and are
@@ -102,17 +101,14 @@ screened; a real column of 0.015 is found half the time at 60 records and 85% at
 
 ## Fallback when nothing passes
 
-The top entry becomes **Text axes**, shown as columns:
+Text axes (the main directions of the 32-d vectors, split at the median) were offered here and removed. The
+split is arbitrary (the median of a 4% direction, with unnamed sides), Auto chose it by default on tables
+where no column explains the text, and the clusters and semantic splits are the named version. When nothing
+passes, Auto shows the population's phrases in one colour ("Auto → no column stands out"). Columns that are
+not significant stay selectable, with their dots and a legend note that the colours may reflect chance.
 
-- Axes: the main directions of the 32-d vectors, split at the median; works for TF-IDF without
-  embeddings.
-- With embeddings: the top semantic-split phrases, each offered as a binary column "contains X".
-  *Untested as columns.*
-
-Measured: axes beat the null and balanced splits but trail semantic splits where embeddings are good
-(excerpt information about legal area 0.12 to 0.15 against 0.20; null 0.057). When no dominant
-structure exists (DBRD sentiment) all of them sit at the null, and the dots read "none".
-Saving an axis or phrase as an annotation makes it an ordinary column.
+Measured earlier: axes beat the null and balanced splits but trailed semantic splits where embeddings are
+good (excerpt information about legal area 0.12 to 0.15 against 0.20; null 0.057).
 
 ## Even splits (renamed "Balanced splits")
 
@@ -139,7 +135,7 @@ c-TF-IDF and balanced-for-phrases stay hidden under Advanced or go.
 1. Conditioning click: hide path predicates, NOT modifier, breadcrumb with undo, previous-step
    comparison. Small and independent.
 2. Compare by with the screen for table columns, annotations and the highlight; coverage and missingness.
-3. Clusters, saved selections, text axes and semantic phrase columns as columns; the conditional re-screen.
+3. Clusters, saved selections and semantic phrase columns as columns; the conditional re-screen.
 4. Even splits for facets; target-aware variant.
 
 ## Checks before shipping

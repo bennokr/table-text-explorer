@@ -23,11 +23,11 @@ test('compare by: the best column colours the cloud, clicking a value conditions
   await page.selectOption('#examples', 'dbrd-test.json');
   await expect.poll(async () => (await snapshot(page)).rows, { timeout: 60000 }).toBe(2224);
   await expect(page.locator('#terms-compare option').first()).toHaveText(/Auto → (rating|sentiment)/, { timeout: 90000 });
-  await expect(page.locator('#description-kind')).toHaveText(/Compare by (rating|sentiment)/);
+  await expect(page.locator('#description-kind')).toHaveText(/By (rating|sentiment)/);
   await expect(legend(page).locator('.legend-value')).not.toHaveCount(0);
   await expect(option(page, 'col:sentiment')).toContainText('●');
   await expect(option(page, 'col:word_count'), 'length alone is not a finding').toContainText('○○○');
-  await expect(page.locator('#terms-compare optgroup[label="Text axes"] option')).toHaveCount(3);
+  await expect(page.locator('#terms-compare optgroup[label="Text axes"]'), 'text axes are gone').toHaveCount(0);
 
   await page.selectOption('#terms-compare', 'col:sentiment');
   await expect(legend(page)).toContainText('negative');
@@ -58,6 +58,21 @@ test('compare by: coverage is shown and missingness that depends on the text is 
   await expect(legend(page)).toContainText('missing values differ in text');
   await page.selectOption('#terms-compare', 'col:signal');
   await expect(legend(page)).toContainText('60% of records have a value');
+});
+
+test('by: with no significant column Auto shows plain phrases, weak columns stay selectable, and a chosen Size greys columns out', async ({ app }) => {
+  const { page } = app;
+  const rows = planted().map(({ id, text, noise }) => ({ id, text, noise }));
+  await importRows(page, rows);
+  await expect(page.locator('#terms-compare option').first()).toHaveText('Auto → no column stands out', { timeout: 90000 });
+  await expect(page.locator('.compare-legend')).toHaveCount(0);
+  await expect(option(page, 'col:noise'), 'an insignificant column can still be chosen').toContainText('○○○');
+  await page.selectOption('#terms-compare', 'col:noise');
+  await expect(page.locator('.compare-legend')).toContainText('not significant');
+  await page.selectOption('#terms-ranking', 'frequency');
+  await expect(page.locator('#terms-compare')).toHaveValue('auto');
+  await expect(page.locator('#terms-compare optgroup:not([disabled]) option[value^="col:"]')).toHaveCount(0);
+  await expect(page.locator('#terms-compare optgroup[disabled] option[value="col:noise"]')).toHaveCount(1);
 });
 
 test('even splits: one yes/no question per column, most even first, numbers split at a threshold', async ({ app }) => {

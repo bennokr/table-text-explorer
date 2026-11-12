@@ -7,7 +7,6 @@
 import json
 import sys
 import unittest
-from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
@@ -120,14 +119,6 @@ class ColumnScreen(unittest.TestCase):
             self.by_name["tiny_groups"]["eligible"], "almost every group is smaller than 10"
         )
         self.assertNotIn("p", self.by_name["tiny_groups"])
-
-    def test_text_axes_split_the_records_in_two_and_report_their_share(self):
-        axes = self.result["axes"]
-        self.assertEqual([axis["name"] for axis in axes], ["axis 1", "axis 2", "axis 3"])
-        for axis in axes:
-            self.assertEqual(sorted(axis["high"] + axis["low"]), list(range(ROWS)))
-            self.assertAlmostEqual(len(axis["high"]) / ROWS, 0.5, delta=0.01)
-        self.assertTrue(all(a["share"] >= b["share"] for a, b in pairwise(axes)))
 
     def test_screening_inside_a_subset_uses_only_its_records(self):
         subset = [i for i in range(ROWS) if self.group[i] != 2]

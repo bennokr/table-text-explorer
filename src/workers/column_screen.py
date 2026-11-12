@@ -32,7 +32,6 @@ MISSING_SIGNIFICANCE = 0.01
 # of 0.7 against 0.1 by a column the text separates at 0.04 reached 0.007. Shuffled indicators
 # peaked at 0.0003 in 540 tests.
 MISSING_FLOOR = 0.001
-AXES = 3
 
 prepared_cache = {}
 
@@ -175,26 +174,6 @@ def screen_column(vectors, column, rng):
     return result
 
 
-def text_axes(vectors, rows):
-    """The main directions of variation, each split at the median into two sides."""
-    centered = vectors - vectors.mean(axis=0)
-    u, singular, _ = np.linalg.svd(centered, full_matrices=False)
-    share = singular**2 / (singular**2).sum()
-    axes = []
-    for k in range(min(AXES, len(singular))):
-        scores = u[:, k] * singular[k]
-        high = scores > np.median(scores)
-        axes.append(
-            {
-                "name": f"axis {k + 1}",
-                "share": float(share[k]),
-                "high": rows[high].tolist(),
-                "low": rows[~high].tolist(),
-            }
-        )
-    return axes
-
-
 def mark_significant(columns):
     """Holm-correct across the columns that could be tested and apply the effect floor."""
     tested = [column for column in columns if column.get("p") is not None]
@@ -219,13 +198,9 @@ def run_column_screen(payload):
     keep = usable[population]
     rows = population[keep]
     if len(rows) < MIN_POPULATION:
-        return json.dumps({"population": len(rows), "columns": [], "axes": []})
+        return json.dumps({"population": len(rows), "columns": []})
     residual = residual_vectors(vectors[rows], lengths[rows])
     rng = np.random.default_rng(7)
     columns = [screen_column(residual, restrict(column, keep), rng) for column in data["columns"]]
-    result = {
-        "population": len(rows),
-        "columns": mark_significant(columns),
-        "axes": text_axes(residual, rows),
-    }
+    result = {"population": len(rows), "columns": mark_significant(columns)}
     return json.dumps(result, allow_nan=False)

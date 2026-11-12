@@ -16,7 +16,8 @@ async function combinedQueries(page) {
   await expect(page.locator('#terms-results .term-field')).toHaveCount(2, { timeout: 60000 });
   await expect(page.locator('#description-kind')).toHaveText('Common phrases');
   await page.click('#terms-options');
-  await expect(page.locator('#terms-ranking option[value=semantic]')).toBeDisabled();
+  // Playwright does not report an option inside a label as disabled, so these read the DOM property.
+  await expect(page.locator('#terms-ranking option[value=semantic]')).toHaveJSProperty('disabled', true);
   await page.selectOption('#terms-display', 'combined');
   await expect(page.locator('.term-field-legend span')).toHaveText(['text', 'notes']);
   await page.getByLabel('Cloud view for Selected fields', { exact: true }).uncheck();
@@ -31,7 +32,7 @@ async function combinedQueries(page) {
   await expect(page.locator('#terms-status')).toHaveText(/12 subset \/ 12 comparison/);
   await expect(page.locator('.term-field-legend span')).toHaveCount(2);
   await conjoinPhrase(page);
-  await expect(page.locator('#terms-ranking option[value=balanced]'), 'even splits answer metadata questions, not phrases').toBeDisabled();
+  await expect(page.locator('#terms-ranking option[value=balanced]'), 'even splits answer metadata questions, not phrases').toHaveJSProperty('disabled', true);
   await page.selectOption('#terms-content', 'both');
   await page.selectOption('#terms-ranking', 'balanced');
   await expect(page.locator('#description-kind')).toHaveText('Even splits');
@@ -57,7 +58,7 @@ async function semanticAndClusters(page) {
   await mapForm(page, 'words');
   await page.selectOption('#field-combine', 'concat');
   await finishMap(page);
-  await expect(page.locator('#terms-ranking option[value=semantic]')).not.toBeDisabled();
+  await expect(page.locator('#terms-ranking option[value=semantic]')).toHaveJSProperty('disabled', false);
   await page.selectOption('#terms-ranking', 'semantic');
   await expect(page.locator('#terms-embedding')).toBeVisible();
   await expect(page.locator('#description-kind')).toHaveText('Semantic splits');

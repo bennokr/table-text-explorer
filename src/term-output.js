@@ -29,7 +29,7 @@ export function showMessage(text) {
 }
 
 export function describeHeading({ content, ranking }, compare) {
-  return compare ? `Compare by ${compare.label}` : rankingHeading(ranking, content === 'phrases');
+  return compare ? `By ${compare.label}` : rankingHeading(ranking, content === 'phrases');
 }
 
 export function describeStatus(result, compare, model) {

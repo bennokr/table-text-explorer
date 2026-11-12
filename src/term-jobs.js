@@ -2,6 +2,7 @@ import { phraseSettings } from './phrase-config.js';
 import { descriptionQuery, withEmbeddings } from './term-request.js';
 import { describeHeading, describeStatus } from './term-output.js';
 import { complete, progress } from './status.js';
+import { formatQuery } from './query-predicates.js';
 
 // Runs the description panel's work one job at a time: building the phrase index, screening columns, and
 // describing the records. It reads the settings from the model and reports through `view`; it touches no controls.
@@ -25,6 +26,13 @@ export class TermJobs {
 
   query(compare = this.compare.resolve(this.indexId)) {
     return { ...descriptionQuery(this.model, this.indexId, compare), facetKey: this.facets.key };
+  }
+
+  // What a finished description is worth keeping for: the request and the query path, because the cloud
+  // leaves out phrases the path already states. A click that adds a phrase to the path changes neither the
+  // subset nor the comparison, and must still redraw the cloud.
+  keyFor(payload) {
+    return JSON.stringify({ payload, path: this.model.ast ? formatQuery(this.model.ast) : '' });
   }
 
   invalidate(message) {
@@ -92,7 +100,7 @@ export class TermJobs {
       complete('No highlighted records to describe.');
       return null;
     }
-    const key = JSON.stringify(payload);
+    const key = this.keyFor(payload);
     if (key === this.last) { return null; }
     if (payload.content !== 'phrases') { payload.facets = this.facets.request(this.workers.epoch); }
     return { payload, type: 'describe', key, compare };
@@ -156,7 +164,7 @@ export class TermJobs {
   finish(job, result) {
     if (job.type === 'screen') { this.finishScreen(job, result); return; }
     if (job.type === 'build') { this.finishBuild(result); return; }
-    const key = JSON.stringify({ ...this.query(job.compare), task: 'descriptions_describe' });
+    const key = this.keyFor({ ...this.query(job.compare), task: 'descriptions_describe' });
     if (key !== job.key) { complete('Updating the subset description…'); this.describe(); return; }
     this.last = key;
     this.render(result, job.compare);

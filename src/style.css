@@ -270,8 +270,12 @@ variable-picker[hidden] { display: none; }
 .path-chip button:hover, .path-chip button:focus { color: #a33; }
 .term-note { margin: 4px 0; padding: 3px 6px; border-left: 3px solid #d9772b; background: #fdf5ec; font-size: 11px; }
 
-.compare-by { display: flex; align-items: center; gap: 6px; margin: 4px 0; font-size: 12px; }
-.compare-by select { flex: 1 1 auto; min-width: 0; max-width: 100%; }
+/* Size: and By: are the two choices that matter, so they are always visible and look like a card's M: and C:. */
+.term-fields { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 2px 0 5px; font-size: 12px; }
+.term-fields > label { display: inline-flex; flex: 1 1 140px; align-items: center; gap: 2px; min-width: 0; }
+.term-fields > label > select { flex: 1; min-width: 0; max-width: 100%; font: inherit; }
+.term-fields abbr { text-decoration: none; cursor: help; }
+.term-fields > select { min-width: 0; max-width: 100%; }
 .compare-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 4px 0; font-size: 11px; }
 .legend-value { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ccc; border-radius: 10px; background: #fff; padding: 1px 8px 1px 4px; cursor: pointer; font-size: 11px; }
 .legend-value:hover, .legend-value:focus { border-color: #426d8d; }
