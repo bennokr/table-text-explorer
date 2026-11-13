@@ -40,7 +40,6 @@ export class Clustering {
   }
 
   open() {
-    for (const details of $('#cluster-form').querySelectorAll('details')) { details.open = false; }
     const saved = this.model.results.list().filter(result => result.kind !== 'clustering');
     const preferred = saved.find(result => result.id === this.analysis.cache?.result.representationId)
       ?? saved.find(result => result.kind === 'representation');

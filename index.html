@@ -93,21 +93,22 @@
     <div id="row-divider" class="divider row-divider" role="separator" tabindex="0" aria-label="Resize top and bottom panels" aria-orientation="horizontal" aria-valuemin="30" aria-valuemax="75" aria-valuenow="57"></div>
   </main>
   <footer><span id="counts"></span><progress id="task-progress" hidden aria-label="Task progress"></progress><span id="status" role="status" aria-live="polite">Import a local file or choose an example. Your data stays on this machine.</span><span id="runtime-status" role="status" aria-label="Local analysis libraries" aria-atomic="true"><span id="python-status" class="runtime-component" data-state="idle" title="Python: not loaded yet">Py</span><span id="sklearn-status" class="runtime-component" data-state="idle" title="scikit-learn: not loaded yet">SK</span></span></footer>
-  <dialog id="phrase-dialog" aria-labelledby="phrase-title"><form id="phrase-form"><h2 id="phrase-title">Phrase counting settings</h2><fieldset id="phrase-controls">
-        <fieldset id="terms-config-controls" class="term-controls"><label>Preset <select id="terms-config" aria-label="Phrase counting preset"><option value="">Current settings</option></select></label>
-          <input id="terms-name" aria-label="New text index name" placeholder="Name for copy">
-          <button id="terms-save" type="button">Save as…</button></fieldset>
-        <section id="terms-settings"><h3>Text columns and phrases</h3>
-        <fieldset id="terms-index-controls" aria-label="Phrase counting">
-          <variable-picker id="terms-fields" multiple aria-label="Phrase columns" caption="Phrases from" noun="columns"></variable-picker>
-          <div class="term-controls term-stopwords"><label>N-grams <select id="terms-sizes"><option value="1:1">Words</option><option value="1:3">Short phrases (1–3 words)</option><option value="1:5">Longer phrases (1–5 words)</option></select></label>
-          <label>Stoplist <select id="terms-language"><option value="nl">Dutch</option><option value="en">English</option><option value="nl,en">Dutch + English</option><option value="none">None</option></select></label>
-          <input id="terms-stopwords" aria-label="Additional n-gram stopwords" placeholder="Additional stopwords"></div>
-          <button type="button" class="help-hint" data-help="descriptions#phrase-counting">?</button>
-          <p id="terms-index-status" role="status">Counts are prepared when needed.</p>
-        </fieldset>
-        </section>
-</fieldset><p id="phrase-error" role="alert"></p><div class="dialog-actions"><button type="button" data-close>Cancel</button><button id="phrase-apply" type="submit">Apply settings</button></div></form></dialog>
+  <dialog id="phrase-dialog" aria-labelledby="phrase-title"><form id="phrase-form">
+    <h2 id="phrase-title">Phrase counting settings</h2>
+    <fieldset id="terms-config-controls"><legend>Preset</legend>
+      <div class="row"><label>Preset <select id="terms-config" aria-label="Phrase counting preset"><option value="">Current settings</option></select></label>
+        <label class="wide"><input id="terms-name" aria-label="New text index name" placeholder="Name for copy"></label>
+        <button id="terms-save" type="button">Save as…</button></div>
+    </fieldset>
+    <fieldset id="terms-index-controls" aria-label="Phrase counting"><legend>Text columns and phrases <button type="button" class="help-hint" data-help="descriptions#phrase-counting">?</button></legend>
+      <div class="row"><variable-picker id="terms-fields" multiple aria-label="Phrase columns" caption="Phrases from" noun="columns"></variable-picker></div>
+      <div class="row"><label>N-grams <select id="terms-sizes"><option value="1:1">Words</option><option value="1:3">Short phrases (1–3 words)</option><option value="1:5">Longer phrases (1–5 words)</option></select></label>
+        <label>Stoplist <select id="terms-language"><option value="nl">Dutch</option><option value="en">English</option><option value="nl,en">Dutch + English</option><option value="none">None</option></select></label>
+        <label class="wide"><input id="terms-stopwords" aria-label="Additional n-gram stopwords" placeholder="Additional stopwords"></label></div>
+      <p id="terms-index-status" role="status">Counts are prepared when needed.</p>
+    </fieldset>
+    <div class="dialog-actions"><p id="phrase-error" role="alert"></p><button type="button" data-close>Cancel</button><button id="phrase-apply" type="submit">Apply settings</button></div>
+  </form></dialog>
   <dialog id="help-dialog" aria-labelledby="help-title">
     <header class="help-heading"><h2 id="help-title">Help</h2><button type="button" class="square" data-close aria-label="Close help" title="Close">×</button></header>
     <nav class="help-navigation" aria-label="Help navigation"><button id="help-home" type="button" class="square" aria-label="Help home" title="Help home">⌂</button><button id="help-back" type="button" class="square" aria-label="Previous help page" title="Back">←</button><button id="help-forward" type="button" class="square" aria-label="Next help page" title="Forward">→</button><select id="help-topic" aria-label="Help topic"></select></nav>
@@ -115,79 +116,84 @@
   </dialog>
   <dialog id="cluster-dialog" aria-labelledby="cluster-title"><form id="cluster-form">
     <h2 id="cluster-title">New clustering</h2>
-    <label class="analysis-name">Name <input id="cluster-name" required maxlength="120"></label>
-    <label>Input <select id="cluster-source"></select></label>
-    <output id="cluster-source-summary"></output><button type="button" class="help-hint" data-help="clustering">?</button>
-    <label>Method <select id="cluster-method"><option value="kmeans">K-means · default</option><option value="agglomerative">Agglomerative · hierarchical</option><option value="hdbscan">HDBSCAN · density with Other (experimental)</option></select></label>
-    <div id="cluster-parameters"><label id="cluster-count-label">Groups <input id="cluster-count" type="number" min="2" step="1" value="8" required></label>
-    <div id="cluster-density" hidden><label>Minimum group size <input id="cluster-min-size" type="number" min="2" step="1" value="15" required></label>
-      <label>Minimum neighbors <input id="cluster-min-samples" type="number" min="1" step="1" value="5" required></label></div>
-    <label id="cluster-linkage-label" hidden>Linkage <select id="cluster-linkage"><option value="ward">Ward</option><option value="average">Average</option><option value="complete">Complete</option><option value="single">Single</option></select></label></div>
-    <div id="cluster-naming" class="cluster-naming"><label title="Reuse a compatible all-record text index, or build one automatically. Edited names are preserved."><input id="cluster-suggest-names" type="checkbox" checked>Suggest phrase names</label></div>
-    <button type="button" class="help-hint" data-help="clustering#technical-details">?</button>
-    <p id="cluster-error" role="alert"></p>
-    <div class="dialog-actions"><button type="button" data-close>Close</button><button id="cluster-submit" type="submit">Make clustering</button></div>
+    <div class="row">
+      <label>Method <select id="cluster-method"><option value="kmeans">K-means · default</option><option value="agglomerative">Agglomerative · hierarchical</option><option value="hdbscan">HDBSCAN · density with Other (experimental)</option></select></label><button type="button" class="help-hint" data-help="clustering#methods">?</button>
+      <label class="wide">Name <input id="cluster-name" required maxlength="120"></label>
+    </div>
+    <fieldset id="cluster-input"><legend>Input <button type="button" class="help-hint" data-help="clustering">?</button></legend>
+      <div class="row"><label>From <select id="cluster-source"></select></label><output id="cluster-source-summary"></output></div>
+    </fieldset>
+    <fieldset id="cluster-settings"><legend>Settings <button type="button" class="help-hint" data-help="clustering#settings">?</button></legend>
+      <div id="cluster-parameters" class="row"><label id="cluster-count-label">Groups <input id="cluster-count" type="number" min="2" step="1" value="8" required></label>
+        <div id="cluster-density" class="row" hidden><label>Minimum group size <input id="cluster-min-size" type="number" min="2" step="1" value="15" required></label>
+          <label>Minimum neighbors <input id="cluster-min-samples" type="number" min="1" step="1" value="5" required></label></div>
+        <label id="cluster-linkage-label" hidden>Linkage <select id="cluster-linkage"><option value="ward">Ward</option><option value="average">Average</option><option value="complete">Complete</option><option value="single">Single</option></select></label></div>
+    </fieldset>
+    <fieldset id="cluster-names"><legend>Names <button type="button" class="help-hint" data-help="clustering#technical-details">?</button></legend>
+      <div id="cluster-naming" class="row"><label title="Reuse a compatible all-record text index, or build one automatically. Edited names are preserved."><input id="cluster-suggest-names" type="checkbox" checked>Suggest phrase names</label></div>
+    </fieldset>
+    <div class="dialog-actions"><p id="cluster-error" role="alert"></p><button type="button" data-close>Cancel</button><button id="cluster-submit" type="submit">Make clustering</button></div>
   </form></dialog>
   <dialog id="export-dialog" aria-labelledby="export-title">
     <h2 id="export-title">Exports</h2>
-    <form id="export-form"><fieldset><legend>Table and annotations</legend>
-      <label>Format <select id="export-format"><option value="csv">CSV</option><option value="json">JSON records</option><option value="xlsx">XLSX</option></select></label>
-      <label>Rows <select id="export-scope"><option value="all">All original records</option><option value="visible">Current filtered records</option></select></label>
-      <button type="button" class="help-hint" data-help="data#exports">?</button>
-      <button type="submit">Download table</button>
-    </fieldset></form>
-    <h3>Analysis results</h3>
-    <p>Results stay in memory until you close this page.</p>
-    <div id="results-list"></div>
+    <fieldset><legend>Table and annotations <button type="button" class="help-hint" data-help="data#exports">?</button></legend>
+      <form id="export-form" class="row">
+        <label>Format <select id="export-format"><option value="csv">CSV</option><option value="json">JSON records</option><option value="xlsx">XLSX</option></select></label>
+        <label>Rows <select id="export-scope"><option value="all">All original records</option><option value="visible">Current filtered records</option></select></label>
+        <button type="submit">Download table</button>
+      </form>
+    </fieldset>
+    <fieldset><legend>Analysis results</legend>
+      <p>Results stay in memory until you close this page.</p>
+      <div id="results-list"></div>
+    </fieldset>
     <div class="dialog-actions"><button type="button" data-close>Close</button></div>
   </dialog>
   <dialog id="map-dialog" aria-labelledby="map-title"><form id="map-form">
     <h2 id="map-title">New similarity map</h2>
-    <div class="analysis-name-row">
-      <label>Method <select id="map-method"><option value="umap">UMAP</option><option value="linear">Linear projection</option></select></label>
-      <label class="analysis-name">Name <input id="map-name" required maxlength="120"></label>
+    <div class="row">
+      <label>Method <select id="map-method"><option value="umap">UMAP</option><option value="linear">Linear projection</option></select></label><button type="button" class="help-hint" data-help="maps#settings">?</button>
+      <label class="wide">Name <input id="map-name" required maxlength="120"></label>
     </div>
-    <fieldset><legend>Input features <button type="button" class="help-hint" data-help="maps">?</button></legend>
-      <label>Input <select id="feature-mode"><option value="table">Numeric and categorical columns</option><option value="text">Text · TF-IDF</option><option value="words">Text · static word vectors</option><option value="sentences">Text · sentence embeddings</option></select></label>
-      <variable-picker id="feature-list" multiple aria-label="Map input columns" caption="Input" noun="columns"></variable-picker>
-      <div id="lexical-settings-note" hidden><button id="shared-fields" type="button"></button><button type="button" class="help-hint" data-help="maps#input-columns">?</button></div>
+    <fieldset id="map-input"><legend>Input <button type="button" class="help-hint" data-help="maps">?</button></legend>
+      <div class="row"><label>Input <select id="feature-mode"><option value="table">Numeric and categorical columns</option><option value="text">Text · TF-IDF</option><option value="words">Text · static word vectors</option><option value="sentences">Text · sentence embeddings</option></select></label></div>
+      <div class="row"><variable-picker id="feature-list" multiple aria-label="Map input columns" caption="Input" noun="columns"></variable-picker><button type="button" class="help-hint" data-help="maps#input-columns">?</button></div>
+      <div id="lexical-settings-note" class="row" hidden><button id="shared-fields" type="button"></button><button type="button" class="help-hint" data-help="descriptions#phrase-counting">?</button></div>
       <div id="word-options" hidden>
-        <label>Vector model <select id="vector-language"><option value="nl">Dutch · spaCy</option><option value="en">English · spaCy</option></select></label><button type="button" class="help-hint" data-help="text-models">?</button>
-        <details data-map-fold><summary>Word pooling</summary><label>Words within each column <select id="word-pooling"><option value="mean">Mean of word vectors</option><option value="tfidf">TF-IDF weighted mean</option></select></label></details>
+        <div class="row"><label>Vector model <select id="vector-language"><option value="nl">Dutch · spaCy</option><option value="en">English · spaCy</option></select></label><button type="button" class="help-hint" data-help="text-models">?</button></div>
+        <div class="row"><label>Words within each column <select id="word-pooling"><option value="mean">Mean of word vectors</option><option value="tfidf">TF-IDF weighted mean</option></select></label><button type="button" class="help-hint" data-help="text-models#settings">?</button></div>
       </div>
       <div id="sentence-options" hidden>
-        <label>Sentence model <select id="sentence-model"></select></label><button type="button" class="help-hint" data-help="text-models">?</button>
-        <button type="button" id="embedding-import" title="Use vectors you already have: a .npy file or raw float32 (.f32), one row per record in table order">Import embeddings…</button>
-        <input id="embedding-file" type="file" accept=".npy,.f32,.bin" hidden>
-        <details data-map-fold><summary>Long text settings <button type="button" class="help-hint" data-help="text-models#long-text">?</button></summary>
-          <label>Long text <select id="sentence-chunking"><option value="chunks">Average chunks · use all text</option><option value="truncate">First chunk only</option></select></label>
-        </details>
+        <div class="row"><label>Sentence model <select id="sentence-model"></select></label><button type="button" class="help-hint" data-help="text-models">?</button>
+          <button type="button" id="embedding-import" title="Use vectors you already have: a .npy file or raw float32 (.f32), one row per record in table order">Import embeddings…</button><button type="button" class="help-hint" data-help="text-models#reusing-embeddings">?</button>
+          <input id="embedding-file" type="file" accept=".npy,.f32,.bin" hidden></div>
+        <div class="row"><label>Long text <select id="sentence-chunking"><option value="chunks">Average chunks · use all text</option><option value="truncate">First chunk only</option></select></label><button type="button" class="help-hint" data-help="text-models#long-text">?</button></div>
       </div>
-      <div id="embedding-options" hidden>
-        <label>Combine columns <select id="field-combine"></select></label><button type="button" class="help-hint" data-help="combining">?</button>
-        <details data-map-fold><summary>Advanced combining</summary>
-          <div id="description-options"><label><input id="include-descriptions" type="checkbox">Include column descriptions</label><button type="button" class="help-hint" data-help="text-models#column-descriptions">?</button></div>
-          <div id="group-combining" hidden>
-            <label>Preserve group identity <input id="group-identity" type="range" min="0" max="100" step="5" value="20"><output id="group-identity-value" for="group-identity">20%</output></label><button type="button" class="help-hint" data-help="combining#preserve-group-identity">?</button>
-            <details data-map-fold><summary><span id="groups-summary">Variable groups</span><button type="button" class="help-hint" data-help="combining#variable-groups">?</button></summary><div id="group-assignments"></div></details>
-          </div>
-        </details>
-      </div>
-      <details id="weights-details" data-map-fold hidden><summary><span id="weights-summary">Column weights · Equal weights</span><button type="button" class="help-hint" data-help="combining#column-weights">?</button></summary><div id="feature-weights"></div><button id="weights-reset" type="button">Reset weights</button></details>
-      <details id="umap-options" data-map-fold><summary>Map tuning <button type="button" class="help-hint" data-help="maps#settings">?</button></summary>
-        <label>UMAP neighbors <input id="neighbors" type="number" min="2" max="100" required></label>
-        <label>UMAP epochs <input id="epochs" type="number" min="50" max="1000" step="10" required></label>
-      </details>
     </fieldset>
-    <p id="map-error" role="alert"></p>
-    <div class="dialog-actions"><button type="button" data-close>Cancel</button><button id="map-submit" type="submit">Make similarity map</button></div>
+    <fieldset id="embedding-options" hidden><legend>Combining <button type="button" class="help-hint" data-help="combining">?</button></legend>
+      <div class="row"><label>Combine columns <select id="field-combine"></select></label><button type="button" class="help-hint" data-help="combining">?</button></div>
+      <div id="description-options" class="row"><label><input id="include-descriptions" type="checkbox">Include column descriptions</label><button type="button" class="help-hint" data-help="text-models#column-descriptions">?</button></div>
+      <div id="group-combining" hidden>
+        <div class="row"><label>Preserve group identity <input id="group-identity" type="range" min="0" max="100" step="5" value="20"><output id="group-identity-value" for="group-identity">20%</output></label><button type="button" class="help-hint" data-help="combining#preserve-group-identity">?</button></div>
+        <div class="row"><strong id="groups-summary">Variable groups</strong><button type="button" class="help-hint" data-help="combining#variable-groups">?</button></div>
+        <div id="group-assignments"></div>
+      </div>
+      <div id="weights-details">
+        <div class="row"><strong id="weights-summary">Column weights · Equal weights</strong><button type="button" class="help-hint" data-help="combining#column-weights">?</button><button id="weights-reset" type="button">Reset weights</button></div>
+        <div id="feature-weights"></div>
+      </div>
+    </fieldset>
+    <fieldset id="umap-options"><legend>Map tuning <button type="button" class="help-hint" data-help="maps#settings">?</button></legend>
+      <div class="row"><label>UMAP neighbors <input id="neighbors" type="number" min="2" max="100" required></label><button type="button" class="help-hint" data-help="maps#settings">?</button>
+        <label>UMAP epochs <input id="epochs" type="number" min="50" max="1000" step="10" required></label><button type="button" class="help-hint" data-help="maps#settings">?</button></div>
+    </fieldset>
+    <div class="dialog-actions"><p id="map-error" role="alert"></p><button type="button" data-close>Cancel</button><button id="map-submit" type="submit">Make similarity map</button></div>
   </form></dialog>
   <dialog id="column-types-dialog" aria-labelledby="column-types-title"><form id="column-types-form">
     <h2 id="column-types-title">Column types</h2>
-    <fieldset><legend>Type inference and overrides</legend>
-      <label>Text categories: at most <input id="category-limit" type="number" min="2" max="100" required> distinct values</label>
-      <label>Numeric categories: at most <input id="numeric-category-limit" type="number" min="2" max="100" required> distinct values</label>
-      <button type="button" class="help-hint" data-help="data#column-types">?</button>
+    <fieldset><legend>Type inference and overrides <button type="button" class="help-hint" data-help="data#column-types">?</button></legend>
+      <div class="row"><label>Text categories: at most <input id="category-limit" type="number" min="2" max="100" required> distinct values</label></div>
+      <div class="row"><label>Numeric categories: at most <input id="numeric-category-limit" type="number" min="2" max="100" required> distinct values</label></div>
       <div class="types-scroll"><table><thead><tr><th>Column</th><th>Type override</th><th>Unique</th><th>Missing</th></tr></thead><tbody id="field-types"></tbody></table></div>
     </fieldset>
     <div class="dialog-actions"><button type="button" data-close>Cancel</button><button type="submit">Apply column types</button></div>

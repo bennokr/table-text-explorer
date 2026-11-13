@@ -105,7 +105,6 @@ test('analysis: map creation, phrase highlighting, tree naming and scrubbing aft
   const { page, models } = app;
   await importRows(page);
   await mapForm(page, 'text', 'umap');
-  await page.locator('#umap-options > summary').click();
   await page.fill('#neighbors', '3');
   await page.fill('#epochs', '50');
   await finishMap(page);

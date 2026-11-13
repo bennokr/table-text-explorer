@@ -5,9 +5,7 @@ async function describedDutchMap(page, fitted, models) {
   await page.selectOption('#sentence-model', 'dutch');
   await fields(page, ['text', 'notes']);
   await page.selectOption('#field-combine', 'group-mean');
-  await page.locator('#embedding-options > details > summary').click();
   await page.check('#include-descriptions');
-  await page.locator('#group-combining details > summary').click();
   await page.getByLabel('Group for text', { exact: true }).fill('Main');
   await page.getByLabel('Group for notes', { exact: true }).fill('Context');
   await finishMap(page);

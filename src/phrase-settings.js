@@ -13,7 +13,7 @@ export class PhraseSettings {
     $('#terms-save').onclick = () => this.save();
     $('#phrase-form').onsubmit = event => { event.preventDefault(); this.apply(); };
     model.on(Events.BUSY, () => {
-      $('#phrase-controls').disabled = model.analysisBusy;
+      for (const group of $('#phrase-form').querySelectorAll('fieldset')) { group.disabled = model.analysisBusy; }
       $('#phrase-apply').disabled = model.analysisBusy;
     });
   }

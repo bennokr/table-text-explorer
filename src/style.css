@@ -102,10 +102,19 @@ footer progress { width: 110px; height: 12px; flex-shrink: 0; align-self: center
 dialog { width: min(700px, 92vw); max-height: 88vh; overflow: auto; padding: 12px; border: 1px solid #aaa; }
 dialog::backdrop { background: #0003; }
 dialog h2 { font-size: 14px; margin: 0 0 10px; }
-dialog fieldset { margin: 8px 0; border: 1px solid #ddd; }
-dialog form > label, dialog fieldset > label { display: block; margin: 5px 0; }
+/* One dialog template: a title, fieldsets of rows (a control, then its ? hint), and a footer of actions with the
+   error message at its left. Labels sit left of their control; only a name input stretches (.wide). */
+dialog form { display: grid; gap: 8px; }
+dialog fieldset { margin: 0; padding: 6px 8px 8px; border: 1px solid #ddd; display: grid; gap: 6px; }
+dialog legend { font-weight: 600; padding: 0 4px; }
+dialog legend .help-hint { font-size: 0.75em; }
+dialog .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+dialog .row > label { display: inline-flex; align-items: center; gap: 5px; }
+dialog .row > .wide { flex: 1; min-width: min(220px, 100%); }
+dialog .row > .wide input { flex: 1; min-width: 0; }
 dialog textarea { display: block; width: 100%; }
-.dialog-actions { display: flex; justify-content: flex-end; gap: 5px; margin-top: 10px; }
+dialog [role=alert] { margin: 0 auto 0 0; color: #a12727; }
+.dialog-actions { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 4px; }
 .types-scroll { max-height: 230px; overflow: auto; }
 .types-scroll table { width: 100%; text-align: left; border-collapse: collapse; }
 .types-scroll th, .types-scroll td { padding: 2px 4px; border-bottom: 1px solid #eee; }
@@ -121,8 +130,6 @@ dialog textarea { display: block; width: 100%; }
 .saved-result { border-top: 1px solid #ccd2d6; padding: 10px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .saved-result > details, .saved-result > p { flex-basis: 100%; margin: 2px 0; }
 .saved-result pre { max-height: 200px; overflow: auto; white-space: pre-wrap; }
-#cluster-dialog label { margin-block: 6px; }
-#cluster-error { color: #a12727; }
 
 .view-card > header > button { flex: 0 0 22px; }
 .view-placeholder { min-height: 190px; display: flex; flex-direction: column; align-items: center; justify-content: safe center; padding: 12px; text-align: center; gap: 8px; }
@@ -133,20 +140,10 @@ dialog textarea { display: block; width: 100%; }
 #runtime-status { margin-left: auto; flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 10px; }
 .runtime-component { display: inline-flex; align-items: center; gap: 2px; cursor: help; }
 .runtime-component::before { content: '●'; color: #bc890c; font-size: 12px; }
-#map-error { color: #a12727; }
-.analysis-name-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
-.analysis-name { flex: 1; min-width: min(240px, 100%); }
-.analysis-name input { width: 100%; }
-.analysis-name-row > label { display: flex; align-items: center; gap: 5px; }
-.analysis-name-row > .analysis-name { flex: 1; }
-#cluster-name { display: block; width: 100%; }
 #analysis-actions { display: flex; align-items: center; gap: 5px; }
 #analysis-progress { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 80px; max-width: 320px; }
 #panel-progress { width: 110px; min-width: 50px; height: 12px; }
 #panel-status { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
-.term-stopwords { flex-wrap: nowrap; }
-.term-stopwords label { white-space: nowrap; }
-.term-controls #terms-stopwords { flex: 1; min-width: 110px; width: auto; }
 #terms-index-status { margin: 5px 0 0; color: #69747a; font-size: 11px; }
 .cluster-legend { padding: 6px; }
 .view-card:has(.cluster-legend) .view-plot { contain: none; flex-basis: auto; }
@@ -189,21 +186,14 @@ dialog textarea { display: block; width: 100%; }
   left: var(--drop-x); width: 3px; background: #527b9c; pointer-events: none; z-index: 5; }
 
 #terms-controls { border-bottom: 1px solid #ddd; margin-bottom: 5px; padding-bottom: 5px; }
-#terms-settings h3 { margin: 0 0 8px; font-size: 14px; }
 #terms-inspector > .term-controls { flex-wrap: wrap; overflow: visible; }
 
 #description-kind { flex: 1 1 0; min-width: 40px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
 #table-count { margin-left: auto; }
-#terms-config-controls { flex-wrap: wrap; overflow: visible; }
 #terms-config { max-width: 180px; }
-#terms-config-controls #terms-name { flex: 1; min-width: 100px; width: auto; }
 
-#cluster-parameters, .cluster-naming { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
-#cluster-centroids, #cluster-density { display: contents; }
-#cluster-parameters label, .cluster-naming label { white-space: nowrap; }
 #cluster-parameters input[type="number"] { width: 65px; }
-.cluster-naming { margin-top: 6px; }
-.cluster-naming label { display: inline-flex; align-items: center; gap: 4px; }
+#cluster-density { display: contents; }
 
 .runtime-component[data-state="idle"]::before { color: #f0ce58; }
 .runtime-component[data-state="loading"]::before { color: #efa14a; }
@@ -238,9 +228,6 @@ variable-picker[hidden] { display: none; }
 .help-hint::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; }
 .help-hint:focus-visible { outline: 2px solid #527b9c; outline-offset: 3px; }
 .help-hint[title] { min-width: 1.35em; }
-#map-form details, #cluster-form details { margin: 8px 0; }
-#map-form summary, #cluster-form summary { cursor: pointer; color: #465f6d; }
-#map-form legend .help-hint { font-size: 0.75em; }
 #group-assignments label { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, 40%); gap: 8px; align-items: center; margin: 5px 0; }
 #group-assignments input { width: 100%; min-width: 0; box-sizing: border-box; }
 #group-assignments { max-height: 220px; overflow: auto; }

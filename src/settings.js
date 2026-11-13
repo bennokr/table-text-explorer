@@ -8,12 +8,6 @@ import { combiningControls } from './map-fields.js';
 import { retainPhraseSettings } from './phrase-config.js';
 import { Events } from './events.js';
 
-function revealInvalidControl(event) {
-  for (let parent = event.target.parentElement; parent; parent = parent.parentElement) {
-    if (parent.tagName === 'DETAILS') { parent.open = true; }
-  }
-}
-
 class SimilarityMaps {
   constructor(model, projection) {
     this.model = model;
@@ -43,7 +37,6 @@ class SimilarityMaps {
   open(view) {
     const method = this.context(view);
     fillMapConfig(this.model, this.base, method);
-    for (const details of $('#map-form').querySelectorAll('[data-map-fold]')) { details.open = false; }
     $('#map-name').value = '';
     $('#map-error').textContent = '';
     this.controls();
@@ -82,7 +75,6 @@ class SimilarityMaps {
 }
 
 export function settings(model, projection, status) {
-  document.addEventListener('invalid', revealInvalidControl, true);
   const maps = new SimilarityMaps(model, projection);
   columnTypes(model, status);
   for (const button of document.querySelectorAll('[data-close]')) {
