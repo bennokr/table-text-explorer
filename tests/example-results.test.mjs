@@ -13,10 +13,10 @@ const data = (records = 6) => ({
   version: 1, table: 'shipped', records, provenance: { map: 'UMAP' },
   map: { name: 'UMAP', method: 'umap', x: [0, 1, 2, 3, 4, null].slice(0, records), y: [5, 4, 3, 2, 1, null].slice(0, records) },
   clustering: { name: 'themes', method: 'kmeans', parameters: { clusters: 2 }, labels: [0, 0, 1, 1, 0, null].slice(0, records),
-    groups: { 0: { name: 'Eerste thema' }, 1: { name: 'Tweede thema', color: '#123456' } } },
+    groups: { 0: { name: 'Eerste thema', edited: true }, 1: { name: 'Tweede thema', color: '#123456' } } },
 });
 
-test('a shipped map and clustering become saved results with a map card, a legend card and the curated names', () => {
+test('a shipped map and clustering become saved results with a map card, a legend card and their names', () => {
   const model = table();
   const note = registerExampleResults(model, data());
   assert.match(note, /precomputed UMAP map and themes clusters/);
@@ -28,7 +28,8 @@ test('a shipped map and clustering become saved results with a map card, a legen
   const [clustering] = model.results.list('clustering');
   assert.deepEqual(clustering.groups[0], { name: 'Eerste thema', color: clustering.groups[0].color, nameEdited: true });
   assert.equal(clustering.groups[1].color, '#123456');
-  assert.equal(model.views[0].color, clustering.columns.name, 'the map is coloured by the clusters');
+  assert.equal(clustering.groups[1].nameEdited, false, 'a name that is not marked edited can be refreshed');
+  assert.equal(model.views[0].color, clustering.columns.name, 'the map is colored by the clusters');
   assert.equal(model.rows[2][clustering.columns.name], 'Tweede thema');
   assert.equal(model.rows[5][clustering.columns.name], null);
 });

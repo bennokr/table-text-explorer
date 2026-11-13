@@ -3,7 +3,7 @@ import { showClustering, showMap } from './analysis-views.js';
 import { Events } from './events.js';
 
 // A curated example can ship a similarity map and a clustering (`results.json` beside its demo.json): coordinates
-// and labels in table order, with hand-edited cluster names. They become saved results like any others, marked as
+// and labels in table order, with cluster names (the app's own, unless the file marks one `edited`). They become saved results like any others, marked as
 // precomputed, so the map and its legend are on screen as soon as the example opens. Nothing is fitted here, and
 // fitting again stays an explicit choice. A file for another table (a different record count) is ignored.
 const aligned = (values, records) => values?.length === records;
@@ -33,7 +33,7 @@ function clusteringData(model, data, mapId) {
   const groups = clusterGroups(labels);
   for (const [id, group] of Object.entries(groups)) {
     const given = clustering.groups?.[id];
-    if (given?.name) { Object.assign(group, { name: given.name, nameEdited: true }); }
+    if (given?.name) { Object.assign(group, { name: given.name, nameEdited: Boolean(given.edited) }); }
     if (given?.color) { group.color = given.color; }
   }
   return { name: clustering.name, method: clustering.method, parameters: { method: clustering.method, ...clustering.parameters },

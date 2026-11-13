@@ -1,7 +1,7 @@
 // Draws the precomputed map and clustering of a curated example by running the app itself: a UMAP fit on the
 // example's shipped embeddings and a k-means clustering of that map, read back through the Exports dialog.
-// The draft goes to demo-config/<example>/results.json with the app's automatic cluster names; the names are
-// then edited by hand in that file, which this script will not overwrite without --force.
+// The result goes to demo-config/<example>/results.json with the app's automatic cluster names, as a user's first
+// clustering would get them. The script will not overwrite an existing file without --force, in case it holds edits.
 //
 //   npm run build && node node_modules/vite/bin/vite.js preview --port 4180 &
 //   node scripts/curate_example_results.mjs dbrd-test.json 8
@@ -16,7 +16,7 @@ const target = `demo-config/${example}/results.json`;
 
 if (!example) { throw new Error('Usage: node scripts/curate_example_results.mjs <example table name> [clusters] [--force]'); }
 if (!flags.includes('--force') && await access(target).then(() => true, () => false)) {
-  throw new Error(`${target} exists and may hold hand-edited names; pass --force to replace it.`);
+  throw new Error(`${target} exists and may hold edits; pass --force to replace it.`);
 }
 
 const round = value => (Number.isFinite(value) ? Math.round(value * 10000) / 10000 : null);
@@ -76,7 +76,7 @@ const draft = {
     map: `UMAP (umap-js 1.4.0, fixed seed) fitted by this app on the example's shipped embeddings; ${map.rowIds.length} of ${records} records have a point`,
     clustering: `k-means, ${clusters} clusters, fitted by this app on the saved feature space (the shipped embeddings reduced by SVD), not on the 2-D map`,
     parameters: { neighbors: settings.neighbors, epochs: settings.epochs },
-    names: 'Cluster names were suggested by the app from each cluster\'s phrases and then edited by hand.',
+    names: 'Cluster names are the app\'s own phrase names, as a user\'s first clustering would get them; none were edited by hand.',
     generated: new Date().toISOString().slice(0, 10),
   },
   map: { name: 'UMAP', method: 'umap', x: ordered(records, map.rowIds, mapRows.map(pair => round(pair[0]))),
