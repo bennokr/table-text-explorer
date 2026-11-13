@@ -16,11 +16,11 @@ Use multilingual sentence embeddings for mixed Dutch/English text; compare Dutch
 
 Sentence embeddings represent meaning approximately. Dutch MiniLM is a community model with limited published evaluation; test representative real examples. Multilingual MiniLM supports more languages than Dutch and English. Models load only when requested, from local assets.
 
-## Field descriptions
+## Column descriptions
 
-Include field descriptions to contextualize short or ambiguous text such as “not enough.”
+Include column descriptions to contextualize short or ambiguous text such as “not enough.”
 
-The prefix uses the field description, then its label/title, then its column name. Short semantic descriptions are preferable to long repeated field descriptions. This option is independent of [field aggregation](combining.md), and only applies to sentence embeddings. An empty field still contributes no vector.
+The prefix uses the column description, then its label/title, then its column name. Short semantic descriptions are preferable to long repeated column descriptions. This option is independent of [field aggregation](combining.md), and only applies to sentence embeddings. An empty field still contributes no vector.
 
 ## Reusing embeddings
 
@@ -40,6 +40,6 @@ Static vectors support ordinary or TF-IDF-weighted word means. Their language mo
 
 ## Technical details
 
-Both sentence models produce 384-dimensional field vectors before aggregation, using local CPU/WASM inference.
+Both sentence models produce 384-dimensional column vectors before aggregation, using local CPU/WASM inference.
 
 Chunks are weighted by newly covered text tokens. Description prefixes use at most 32 tokens and one third of the chunk budget; they do not inflate text-token coverage. Excessive overlap is rejected. Compatible field vectors are cached; changing weights, group assignments or aggregation can reuse them. Changing a description re-encodes affected fields when prefixes are enabled.

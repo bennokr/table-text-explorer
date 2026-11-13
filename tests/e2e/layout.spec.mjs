@@ -48,16 +48,16 @@ async function cancelRowResize(page, divider) {
 
 async function moveUp(page, id, count = 2) {
   const card = page.locator(`[data-view-id="${id}"]`);
-  await card.getByRole('button', { name: 'View options', exact: true }).click();
+  await card.getByRole('button', { name: 'Chart options', exact: true }).click();
   await card.getByRole('button', { name: 'Move to row above', exact: true }).click();
   await expect(page.locator('.view-row').first().locator('.view-card')).toHaveCount(count);
-  await card.getByRole('button', { name: 'View options', exact: true }).click();
+  await card.getByRole('button', { name: 'Chart options', exact: true }).click();
 }
 
 async function dragCard(page) {
   const target = page.locator('.view-row').first();
   const origin = page.locator('.view-row').nth(1).locator('.view-card').first();
-  const grip = origin.getByRole('button', { name: 'Drag visualization card', exact: true });
+  const grip = origin.getByRole('button', { name: 'Drag chart', exact: true });
   let box = await target.boundingBox();
   await hold(page, grip, 0, 0);
   await page.mouse.move(box.x + 20, box.y + 40);
@@ -67,7 +67,7 @@ async function dragCard(page) {
   const card = target.locator('.view-card').first();
   const id = await card.getAttribute('data-view-id');
   box = await page.locator('.view-row').nth(1).boundingBox();
-  await hold(page, card.getByRole('button', { name: 'Drag visualization card' }), 0, 0);
+  await hold(page, card.getByRole('button', { name: 'Drag chart' }), 0, 0);
   await page.mouse.move(box.x + 20, box.y + 40);
   await expect(page.locator('[data-drop=valid]')).toHaveCount(1);
   await page.mouse.up();
@@ -88,9 +88,9 @@ async function consistentOrder(page) {
 async function earlierAndReset(page) {
   const before = await consistentOrder(page);
   const card = page.locator(`[data-view-id="${before[1]}"]`);
-  await card.getByRole('button', { name: 'View options', exact: true }).click();
-  await card.getByRole('button', { name: 'Move view earlier', exact: true }).click();
-  await card.getByRole('button', { name: 'View options', exact: true }).click();
+  await card.getByRole('button', { name: 'Chart options', exact: true }).click();
+  await card.getByRole('button', { name: 'Move chart earlier', exact: true }).click();
+  await card.getByRole('button', { name: 'Chart options', exact: true }).click();
   const after = await consistentOrder(page);
   expect(after).toEqual([before[1], before[0], ...before.slice(2)]);
   const height = await page.locator('.view-row').first().evaluate(row => row.clientHeight);

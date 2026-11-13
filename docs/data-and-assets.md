@@ -38,10 +38,9 @@ the distributable `dist/`. Do not distribute that diagnostic output with private
 
 ## Dataset provenance
 
-Example attribution: [Crawlfeeds Booking Hotel Reviews Dataset](https://huggingface.co/datasets/crawlfeeds/Booking-Hotel-Reviews-Dataset),
-revision `f39ceeede7b9d8a824909ebe88a7723ad31fa6c5`, declared CC BY-NC 4.0. The source CSV
-and dataset card are downloaded locally, not committed. Attribution is included in
-`public/attribution/crawlfeeds.md` and copied into offline builds. Dutch vectors originate from
+Attribution of the approved examples is in `examples/attribution/<dataset>/` and is copied into the build. The
+local-only Crawlfeeds example ([Booking Hotel Reviews Dataset](https://huggingface.co/datasets/crawlfeeds/Booking-Hotel-Reviews-Dataset),
+revision `f39ceeede7b9d8a824909ebe88a7723ad31fa6c5`, declared CC BY-NC 4.0) is downloaded locally, never committed or bundled. Dutch vectors originate from
 [spaCy nl_core_news_md](https://huggingface.co/spacy/nl_core_news_md) (CC BY-SA 4.0);
 English vectors from [spaCy en_core_web_md](https://huggingface.co/spacy/en_core_web_md)
 (MIT). Generated asset directories retain licenses and provenance manifests.

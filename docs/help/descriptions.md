@@ -1,6 +1,6 @@
-# Phrases and metadata facets
+# Subset descriptions
 
-Descriptions suggest phrases or field predicates characterizing the highlighted or current records.
+Descriptions suggest phrases or variable predicates characterizing the highlighted or current records.
 
 ## Example
 
@@ -9,7 +9,7 @@ Highlight a map region, inspect its phrases and facets, and click a useful predi
 ## Steps
 
 1. Choose Size (how phrases are scored), Color (what colors them) and, when no column colors them, Contrast (what the highlight is compared with).
-2. Open the panel settings for phrases, metadata facets or both, the field display and minimum support.
+2. Open the panel settings for phrases, metadata facets or both, and minimum support.
 3. Inspect a cloud or switch it to a table for counts and scores.
 
 ## Interpreting the result
@@ -24,7 +24,7 @@ Facet candidates include category values, booleans, missing/not-missing and fixe
 
 **Size** lists common phrases, distinctive phrases (a contrast, the Automatic choice when there is something to compare), even splits for metadata, one entry per available embedding for semantic splits (an imported file, a table's shipped embeddings or a saved representation), and the advanced scores.
 
-**Color** is Auto, None, Field (one cloud for several fields, colored by field), a column (a table column, an annotation or a cluster) or a tree's branches. With Automatic or Distinctive Size, a column gives each of its values its own distinctive phrases, in that value's color. With any other Size, one population is scored and each phrase takes the color of the column value where most of its records are (grey when they are spread out); a key above the cloud lists the values. Auto picks the column the text varies with most, beyond text length, but keeps the column the map is colored by (a clustering, say) when that column is significant, so the cloud explains the colors on the map; with semantic splits it tints by the map's column. Values of a clustering keep the cluster legend's colors; other columns use the map's color order. Dots show how much of the text variation the column explains (one dot from 1%, two from 3%, three from 10%), followed by coverage (records with a value). "None" means not detected, which below about 120 records is weaker evidence than it looks. "Missing differs" means the text differs between records with and without a value, so values are probably not missing at random and the column's own strength may be biased. When no column passes, Auto shows the population's phrases in one color ("Auto → no column stands out"). Columns that are not significant stay in the list, since a weak column can still be the one worth looking at: the key notes that its colors may reflect chance.
+**Color** is Auto, None, Source column (one cloud for several text columns, colored by the column a phrase comes from), a column (a table column, an annotation or a cluster) or a tree's branches. With Automatic or Distinctive Size, a column gives each of its values its own distinctive phrases, in that value's color. With any other Size, one population is scored and each phrase takes the color of the column value where most of its records are (grey when they are spread out); a key above the cloud lists the values. Auto picks the column the text varies with most, beyond text length, but keeps the column the map is colored by (a clustering, say) when that column is significant, so the cloud explains the colors on the map; with semantic splits it tints by the map's column. Values of a clustering keep the cluster legend's colors; other columns use the map's color order. Dots show how much of the text variation the column explains (one dot from 1%, two from 3%, three from 10%), followed by coverage (records with a value). "None" means not detected, which below about 120 records is weaker evidence than it looks. "Missing differs" means the text differs between records with and without a value, so values are probably not missing at random and the column's own strength may be biased. When no column passes, Auto shows the population's phrases in one color ("Auto → no column stands out"). Columns that are not significant stay in the list, since a weak column can still be the one worth looking at: the key notes that its colors may reflect chance.
 
 **Contrast** appears only when no column splits the cloud into values. Previous step compares the highlight with the records before the last condition (the default); Rest of the table compares the filtered records with the records filtered out; None (current filter) describes the filtered records with no contrast. To describe the whole table, remove the filter.
 
@@ -34,7 +34,7 @@ The screen is a descriptive statistic computed on this machine without fitting a
 
 Shared phrase settings control text columns, phrase lengths and stoplists. They apply to TF-IDF, static word vectors, descriptions and phrase-based names.
 
-Counts build when needed. Presets save settings, not completed analyses. Unicode words are tokenized; punctuation ends phrases; fields remain separate. Phrase length is Words, Short phrases (1–3 words, the default) or Longer phrases (1–5 words). The stoplist is a language's word lists: stopwords (de, het, of, deze) never stand alone and never start or end a phrase, lead words (zonder, heel, te) may start a phrase but not end it or stand alone, and negations (niet, geen) are kept as phrases of their own. A phrase also never starts or ends with a single character such as `c` or `1`. With "Reduce redundant phrases", two forms of one word in a list (boek, boeken) are merged and the better-scoring one is kept, and cluster names avoid repeating a word in another form; the filter and the counts still use the exact phrase. The lists and the folding rules are plain text files in `src/lexicon/`. Sentence models keep their own tokenizer. [Text models](text-models.md) explains the distinction.
+Counts build when needed. Presets save settings, not completed analyses. Unicode words are tokenized; punctuation ends phrases; columns remain separate. Phrase length is Words, Short phrases (1–3 words, the default) or Longer phrases (1–5 words). The stoplist is a language's word lists: stopwords (de, het, of, deze) never stand alone and never start or end a phrase, lead words (zonder, heel, te) may start a phrase but not end it or stand alone, and negations (niet, geen) are kept as phrases of their own. A phrase also never starts or ends with a single character such as `c` or `1`. With "Reduce redundant phrases", two forms of one word in a list (boek, boeken) are merged and the better-scoring one is kept, and cluster names avoid repeating a word in another form; the filter and the counts still use the exact phrase. The lists and the folding rules are plain text files in `src/lexicon/`. Sentence models keep their own tokenizer. [Text models](text-models.md) explains the distinction.
 
 ## Settings
 

@@ -149,12 +149,12 @@ export class CompareBy {
   }
 
 
-  // Auto, None, Field (one cloud colored by field, when there are several), the columns, and a tree's branches.
+  // Auto, None, Source column (one cloud colored by the column a phrase comes from, when there are several), the columns, and a tree's branches.
   fill(screen) {
     const columns = this.columnOptions(screen).filter(([, list]) => list.length)
       .map(([label, list]) => element('optgroup', { label }, list));
     const several = this.model.termSettings.content !== 'phrases' || phraseSettings(this.model).fields.length > 1;
-    const field = several ? [new Option('Field', 'field')] : [];
+    const field = several ? [new Option('Source column', 'field')] : [];
     this.select.replaceChildren(new Option('Auto', 'auto'), new Option('None', 'none'), ...field, ...columns, ...treeGroup(this.model));
     if (![...this.select.options].some(option => option.value === this.value)) { setTermSettings(this.model, { color: 'auto' }); }
     this.select.options[0].text = this.autoLabel(screen);

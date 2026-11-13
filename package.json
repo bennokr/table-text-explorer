@@ -29,7 +29,7 @@
     "feasibility": "node scripts/browser_check.mjs",
     "test:terms": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --cache-dir .cache/uv --script tests/check_terms.py",
     "test:facets": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --offline --cache-dir .cache/uv --script tests/check_facets.py",
-    "test:quick": "npm test && npm run test:terms",
+    "test:quick": "npm test && npm run test:terms && npm run test:fold",
     "test:clustering": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --offline --cache-dir .cache/uv --script tests/check_clustering.py",
     "test:clustering:wasm": "node scripts/clustering_check.mjs",
     "test:browser:smoke": "playwright test workspace layout",
@@ -40,7 +40,9 @@
     "build:feasibility": "node scripts/prepare_examples.mjs && vite build --mode feasibility",
     "check:bundle": "node scripts/bundle_check.mjs",
     "test:clean-rechtspraak": "python3 tests/check_clean_rechtspraak.py",
-    "test:cluster-names": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --offline --cache-dir .cache/uv --script tests/check_cluster_names.py"
+    "test:cluster-names": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --offline --cache-dir .cache/uv --script tests/check_cluster_names.py",
+    "test:fold": "uv run --offline --cache-dir .cache/uv --script tests/check_fold.py",
+    "report:lexicon": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --offline --cache-dir .cache/uv --script tests/eval/lexicon_report.py"
   },
   "dependencies": {
     "@bokeh/bokehjs": "3.8.0",

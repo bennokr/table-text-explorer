@@ -7,7 +7,7 @@ export function recordViewer(model, reportError) {
     $('#record-body').replaceChildren(...(row ? model.fields.map(field =>
       element('div', { class: 'record-field' }, [element('dt', { text: field.name, title: field.label ?? '' }),
         element('dd', { text: display(row[field.name]) })])) : [
-      element('p', { class: 'empty', text: 'Select a point or record to inspect every field.' })]));
+      element('p', { class: 'empty', text: 'Select a point or record to inspect every variable.' })]));
     const position = model.visible.indexOf(model.active);
     $('#record-position').textContent = row ? `Row ${model.active + 1} · ${position + 1} / ${model.visible.length}` : 'No record';
     const entries = model.annotations.size ? [...model.annotations].map(name => [name, name]) : [['', 'Annotation…']];

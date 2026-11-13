@@ -51,7 +51,7 @@ export function descriptionTable(field, result, show) {
   const facets = field.kind === 'facets';
   const base = facets ? ['Predicate', 'Subset / recall', 'Rest', 'Δ share', 'Lift', 'Precision'] : headers;
   const columns = populationRankings.has(result.ranking) ? [base[0], 'Contains', 'Score'] : base;
-  const titles = field.combined ? [columns[0], 'Field', ...columns.slice(1)] : columns;
+  const titles = field.combined ? [columns[0], 'Column', ...columns.slice(1)] : columns;
   const row = facets ? facetRow : termRow;
   return element('table', { class: 'term-table' }, [element('thead', {}, [element('tr', {},
     titles.map(text => element('th', { text })))]),

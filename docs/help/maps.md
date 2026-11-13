@@ -9,7 +9,7 @@ Choose sentence embeddings and two text columns to explore similar wording or me
 ## Steps
 
 1. Choose an input type and columns.
-2. For text embeddings, choose a model and how to [combine fields](combining.md).
+2. For text embeddings, choose a model and how to [combine columns](combining.md).
 3. Accept the suggested name or enter your own, then choose Make similarity map.
 
 ## Interpreting the result
@@ -30,13 +30,13 @@ Keep defaults initially; open advanced settings when you have a concrete compari
 
 - UMAP emphasizes local neighborhoods. Neighbors changes their scale; epochs changes optimization effort.
 - Linear projection is a fast linear summary of the prepared features. The app chooses the method from the input (currently PCA for every input, because it centres the data first) and does not ask.
-- Use [field weights](combining.md#field-weights) to change relative influence, not record counts.
+- Use [column weights](combining.md#column-weights) to change relative influence, not record counts.
 
 ## Troubleshooting
 
 If a map mostly separates missingness, inspect which columns and groups are present. Compare a shared mean with a smaller identity contribution.
 
-There is no universally best representation. Compare nearest records and representative examples, not only attractive shapes. [Combining fields](combining.md) explains the sparse-data trade-offs.
+There is no universally best representation. Compare nearest records and representative examples, not only attractive shapes. [Combining columns](combining.md) explains the sparse-data trade-offs.
 
 ## Technical details
 

@@ -22,7 +22,7 @@ export function comparisonSets(model, scope) {
 }
 
 function fieldLegend(fields) {
-  return element('div', { class: 'term-field-legend', 'aria-label': 'Phrase fields' }, fields.map((field, index) =>
+  return element('div', { class: 'term-field-legend', 'aria-label': 'Phrase columns' }, fields.map((field, index) =>
     element('span', { text: field.name, style: `color: ${fieldColor(index)}`,
       title: field.kind === 'facets' ? `${field.population} scored records, including missing values`
         : `${field.textRecords ?? 0} records with usable text · ${field.population ?? 0} scored` })));
@@ -32,7 +32,7 @@ function facetHeading(field, toggle) {
   const counts = field.combined ? `${field.vocabulary} predicates` : `${field.vocabulary} predicates · ${field.population} scored`;
   return element('header', {}, [element('h3', { text: field.label ?? field.name, title: field.name }),
     element('small', { text: counts,
-      title: 'All records count, including missing values. Up to 50 values and four fixed quantile ranges per field.' }),
+      title: 'All records count, including missing values. Up to 50 values and four fixed quantile ranges per variable.' }),
     element('label', {}, [toggle, document.createTextNode('Cloud')])]);
 }
 
@@ -90,5 +90,5 @@ export function renderTerms(container, result, model, activate, views = new Map(
   if (result.subset > 0 && result.subset < FEW_RECORDS) {
     container.prepend(element('p', { class: 'term-note', text: `Only ${result.subset} records: contrasts are noisy, so treat this as exploration.` }));
   }
-  if (!fields.length && !facets.length) { container.append(element('p', { text: 'No predicates meet these settings. Choose fields or lower minimum support.' })); }
+  if (!fields.length && !facets.length) { container.append(element('p', { text: 'No predicates meet these settings. Choose text columns or lower minimum support.' })); }
 }

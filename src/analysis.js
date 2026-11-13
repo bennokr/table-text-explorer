@@ -57,7 +57,7 @@ export class Analysis {
   async embed(data) {
     const embedded = this.importedEmbeddings(data)
       ?? await this.workers.run(data.mode === 'words' ? 'words' : 'sentences', data, this.progress);
-    if (embedded.rowIds.length < 2) { throw new Error('Fewer than two records have usable embeddings. Check text fields, model settings and weights.'); }
+    if (embedded.rowIds.length < 2) { throw new Error('Fewer than two records have usable embeddings. Check text columns, model settings and weights.'); }
     data.features = embedded.features;
     data.dimensions = embedded.dimensions;
     data.rows = embedded.rowIds.map(() => ({}));

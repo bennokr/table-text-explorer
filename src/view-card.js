@@ -16,11 +16,11 @@ export class ViewCard {
     this.editor = new ViewEditor(model, config, patch => actions.update(config, patch));
     const make = () => actions.settings(config);
     this.settings = glyph('＋', 'New similarity map', make);
-    this.expand = glyph('⛶', 'Expand or restore view', () => actions.expand(config));
+    this.expand = glyph('⛶', 'Expand or restore chart', () => actions.expand(config));
     this.expand.setAttribute('aria-pressed', 'false');
-    this.grip = glyph('⠿', 'Drag visualization card', () => {});
+    this.grip = glyph('⠿', 'Drag chart', () => {});
     this.grip.className = 'card-grip';
-    this.more = glyph('⋯', 'View options', () => this.toggleMenu());
+    this.more = glyph('⋯', 'Chart options', () => this.toggleMenu());
     this.header = element('header', {}, [this.grip, this.editor.type, this.editor.fields, this.settings, this.expand, this.more]);
     this.menu = this.options(actions);
     this.container = element('div', { class: 'view-plot' });
@@ -33,10 +33,10 @@ export class ViewCard {
 
   options(actions) {
     const buttons = element('div', { class: 'card-actions' }, [
-      glyph('⧉', 'Duplicate visualization', () => actions.duplicate(this.config)),
-      glyph('←', 'Move view earlier', () => actions.move(this.config)),
+      glyph('⧉', 'Duplicate chart', () => actions.duplicate(this.config)),
+      glyph('←', 'Move chart earlier', () => actions.move(this.config)),
       this.upButton(actions),
-      glyph('×', 'Remove visualization', () => actions.remove(this.config))]);
+      glyph('×', 'Remove chart', () => actions.remove(this.config))]);
     const menu = element('div', { class: 'card-menu', hidden: '' }, [this.editor.nameLabel, buttons]);
     this.more.setAttribute('aria-controls', `${this.config.id}-options`);
     menu.id = `${this.config.id}-options`;

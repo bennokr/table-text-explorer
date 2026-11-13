@@ -19,7 +19,7 @@ async function groupedDraft(page) {
   await expect(page.locator('#groups-summary')).toHaveText('Variable groups · 2 groups');
   await page.locator('#weights-details > summary').click();
   await page.getByLabel('Weight of text', { exact: true }).fill('2');
-  await expect(page.locator('#weights-summary')).toHaveText('Field weights · 1 customized');
+  await expect(page.locator('#weights-summary')).toHaveText('Column weights · 1 customized');
   await page.getByLabel('Weight of text', { exact: true }).fill('-1');
   await page.locator('#weights-details').evaluate(details => { details.open = false; });
   await page.locator('#map-form').evaluate(form => form.reportValidity());
@@ -34,15 +34,15 @@ async function contextualJourney(page) {
   const box = await hint.boundingBox();
   expect(Math.abs(box.width - box.height)).toBeLessThan(1);
   await hint.click();
-  await expect(page.locator('#help-title')).toHaveText('Combining fields');
+  await expect(page.locator('#help-title')).toHaveText('Combining columns');
   await expect(page.locator('#help-content #preserve-group-identity')).toBeInViewport();
   await page.selectOption('#help-topic', 'text-models');
   await page.locator('#help-content a[data-help=combining]').click();
-  await expect(page.locator('#help-title')).toHaveText('Combining fields');
+  await expect(page.locator('#help-title')).toHaveText('Combining columns');
   await page.click('#help-back');
   await expect(page.locator('#help-title')).toHaveText('Text models');
   await page.click('#help-back');
-  await expect(page.locator('#help-title')).toHaveText('Combining fields');
+  await expect(page.locator('#help-title')).toHaveText('Combining columns');
   await page.keyboard.press('Escape');
   await expect(hint).toBeFocused();
   await expect(page.locator('#map-dialog')).toBeVisible();

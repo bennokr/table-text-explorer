@@ -57,7 +57,7 @@ async function columnPicker(page) {
   expect((await snapshot(page)).fields.some(field => field.name === 'text')).toBe(true);
   await page.click('#phrase-settings');
   const phrases = page.locator('#terms-fields');
-  await phrases.getByRole('button', { name: 'Phrase fields', exact: true }).click();
+  await phrases.getByRole('button', { name: 'Phrase columns', exact: true }).click();
   await phrases.getByRole('searchbox').fill('text');
   await expect(phrases.getByRole('checkbox')).toBeChecked();
   await phrases.getByRole('searchbox').fill('group');

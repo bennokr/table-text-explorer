@@ -13,8 +13,8 @@ async function expectCards(page, count) {
 async function removeCards(page, initial = 3) {
   for (let count = initial - 1; count >= 0; count -= 1) {
     const card = page.locator('.view-card').first();
-    await card.getByRole('button', { name: 'View options', exact: true }).click();
-    await card.getByRole('button', { name: 'Remove visualization', exact: true }).click();
+    await card.getByRole('button', { name: 'Chart options', exact: true }).click();
+    await card.getByRole('button', { name: 'Remove chart', exact: true }).click();
     await expectCards(page, count);
   }
   await expect(page.locator('#views-empty')).toBeVisible();
@@ -26,7 +26,7 @@ async function replaceExpandedDataset(page) {
   await importRows(page);
   for (let index = 0; index < 3; index += 1) { await page.click('#add-chart'); }
   await expect(page.locator('.view-card')).toHaveCount(6);
-  await page.locator('.view-card').first().getByRole('button', { name: 'Expand or restore view' }).click();
+  await page.locator('.view-card').first().getByRole('button', { name: 'Expand or restore chart' }).click();
   await expect(page.locator('.view-card:visible')).toHaveCount(1);
   await page.selectOption('#examples', 'dbrd-test.json');
   await expect.poll(async () => (await snapshot(page)).rows).toBe(2224);

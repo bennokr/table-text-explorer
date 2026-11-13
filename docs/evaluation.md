@@ -1,5 +1,9 @@
 # Evaluating structure discovery and explanations
 
+> **Status.** The generated `evaluation-*-report.md` files predate the lexicon (stop, lead and negation words and
+> folding, see [evaluation-lexicon.md](evaluation-lexicon.md)), which changes phrase lists and slightly shifts the
+> text vectors behind the column screen; rerun the harness to refresh them.
+
 The harness in `tests/eval/` scores what the app already does (phrase descriptions, clustering,
 maps) against known annotations. It runs natively on the same Python modules as the Pyodide
 worker, with the app's default settings, and keeps all data local.

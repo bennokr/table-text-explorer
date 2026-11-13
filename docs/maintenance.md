@@ -10,6 +10,8 @@ Run `npm test`, `npm run check`, the relevant native checks, `npm run build` and
 | JavaScript unit tests and native phrase checks | `npm run test:quick` |
 | Metadata predicate scoring and comparisons | `npm run test:facets` |
 | Phrase-based cluster naming | `npm run test:cluster-names` |
+| Folding rules and the lexicon files | `npm run test:fold` (and `npm test` for the file format) |
+| Lexicon before/after on the examples (writes a table to stdout) | `npm run report:lexicon` |
 | Clustering algorithms / WASM worker bridge | `npm run test:clustering` / `npm run test:clustering:wasm` |
 | Synthetic workload invariants, without private files | `npm run test:rmc` |
 | Offline sentence inference and chunking | `npm run test:sentences:wasm` |

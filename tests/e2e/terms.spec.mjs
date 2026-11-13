@@ -3,7 +3,7 @@ import { test, expect, importRows, records, snapshot, idle, mapForm, finishMap }
 async function phraseFields(page) {
   await page.click('#phrase-settings');
   const picker = page.locator('#terms-fields');
-  await picker.getByRole('button', { name: 'Phrase fields', exact: true }).click();
+  await picker.getByRole('button', { name: 'Phrase columns', exact: true }).click();
   await picker.getByRole('searchbox').fill('notes');
   await picker.getByRole('checkbox').check();
   await picker.getByRole('button', { name: 'Done', exact: true }).click();
@@ -20,9 +20,9 @@ async function combinedQueries(page) {
   await expect(page.locator('#terms-ranking option[value=semantic]')).toHaveJSProperty('disabled', true);
   await page.selectOption('#terms-color', 'field');
   await expect(page.locator('.term-field-legend span')).toHaveText(['text', 'notes']);
-  await page.getByLabel('Cloud view for Selected fields', { exact: true }).uncheck();
-  await expect(page.locator('.term-table thead')).toContainText('Field');
-  await page.getByLabel('Cloud view for Selected fields', { exact: true }).check();
+  await page.getByLabel('Cloud view for Selected columns', { exact: true }).uncheck();
+  await expect(page.locator('.term-table thead')).toContainText('Column');
+  await page.getByLabel('Cloud view for Selected columns', { exact: true }).check();
   const cloud = page.locator('#terms-results .term-cloud[aria-busy=false]');
   await expect(cloud).toHaveCount(1);
   await expect(cloud.locator('text[data-term=camera]')).toHaveCount(2);

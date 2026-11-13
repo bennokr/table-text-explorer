@@ -10,12 +10,13 @@ query highlighting; incomplete input preserves the last valid highlight. Filteri
 requires an explicit action. Fit on all records
 initially, and never refit as a side effect of highlighting or filtering.
 
-Users choose one or multiple text fields and optional chunking. Cluster records.
+Users choose one or multiple text columns and optional chunking. Cluster records.
 Counts/TF-IDF with words/ngrams, SVD and clustering run in Pyodide/scikit-learn.
 HDBSCAN accepts suitable reduced features or embeddings. UMAP runs in a JS worker;
 PCA/SVD are fast alternatives. NMF/LDA/DBSCAN exist only in the historical
 feasibility harness, not the application or current delivery plan.
-Stopword lists are per language and configurable; do not strip stopwords from the
+Word lists are per language and configurable (stopwords, lead words and negations, plus
+folding rules for inflected forms: `src/lexicon/`); do not strip stopwords from the
 transformer input by default. Chunk vectors must be aggregated back to record IDs.
 
 Transformer inference uses WASM and requires explicit opt-in before model loading.
