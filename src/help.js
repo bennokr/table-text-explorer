@@ -53,7 +53,7 @@ export function bindHelp() {
   for (const button of document.querySelectorAll('button[data-help]')) {
     const [name, anchor] = button.dataset.help.split('#');
     const info = pages[name].sections[anchor] ?? pages[name];
-    button.title = info.summary;
+    if (!button.title) { button.title = info.summary; }
     button.setAttribute('aria-label', `Help: ${info.title}`);
   }
 }

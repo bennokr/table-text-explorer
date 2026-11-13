@@ -4,7 +4,7 @@ A similarity map places records with similar selected features near one another.
 
 ## Example
 
-Choose sentence embeddings and two text columns to explore similar wording or meaning, or numeric and categorical columns to compare records by their values.
+Choose sentence embeddings and two text columns to explore similar wording or meaning. Choose numeric and categorical columns to compare records by their values.
 
 ## Steps
 
@@ -34,7 +34,7 @@ Keep defaults initially; open advanced settings when you have a concrete compari
 
 ## Troubleshooting
 
-If a map mostly separates missingness, inspect which columns/groups are present and compare a shared mean with a smaller identity contribution.
+If a map mostly separates missingness, inspect which columns and groups are present. Compare a shared mean with a smaller identity contribution.
 
 There is no universally best representation. Compare nearest records and representative examples, not only attractive shapes. [Combining fields](combining.md) explains the sparse-data trade-offs.
 

@@ -29,6 +29,15 @@ function paragraph(block) {
   return `<p>${inline(lines.join(' '))}</p>`;
 }
 
+// The tooltip of a help button: the first sentence of the text, without Markdown. Whatever else there is to
+// say belongs on the help page itself; tests keep these short.
+function leadSentence(block, fallback) {
+  const line = block?.split('\n')[0] ?? '';
+  if (!line || /^([-*] |\d+\. |```|#)/u.test(line)) { return fallback; }
+  const plain = line.replace(/\[([^\]]+)\]\([^)]+\)/gu, '$1').replace(/\*\*([^*]+)\*\*/gu, '$1').replace(/`([^`]+)`/gu, '$1');
+  return /^.+?[.!?](?=\s+[A-Z(]|$)/u.exec(plain)?.[0] ?? plain;
+}
+
 export function compileHelp(source) {
   const blocks = source.trim().split(/\n\s*\n/u);
   const title = blocks.shift().replace(/^# /u, '');
@@ -40,12 +49,12 @@ export function compileHelp(source) {
     if (!heading) { parts.push(paragraph(block)); return; }
     if (folded && heading[1] === '##') { parts.push('</details>'); folded = false; }
     const anchor = helpAnchor(heading[2]);
-    sections[anchor] = { title: heading[2], summary: blocks[index + 1]?.split('\n')[0] ?? title };
+    sections[anchor] = { title: heading[2], summary: leadSentence(blocks[index + 1], heading[2]) };
     if (heading[1] === '##' && ['settings', 'troubleshooting', 'technical-details'].includes(anchor)) {
       parts.push(`<details id="${anchor}"><summary>${inline(heading[2])}</summary>`);
       folded = true;
     } else { parts.push(`<h${heading[1].length} id="${anchor}">${inline(heading[2])}</h${heading[1].length}>`); }
   });
   if (folded) { parts.push('</details>'); }
-  return { title, summary: blocks[0]?.split('\n')[0] ?? title, sections, html: parts.join('\n') };
+  return { title, summary: leadSentence(blocks[0], title), sections, html: parts.join('\n') };
 }

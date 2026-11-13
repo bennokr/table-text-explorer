@@ -66,7 +66,7 @@ test('semantic splits: phrases take the colour of the cluster where their record
   await clusteredMap(page);
   await page.click('#terms-options');
   await page.selectOption('#terms-ranking', 'semantic');
-  await expect(page.locator('#description-hint')).toHaveAttribute('title', /Semantic splits: phrases chosen one after another/, { timeout: 60000 });
+  await expect(page.locator('#description-hint')).toHaveAttribute('title', /Semantic splits: phrases that each split the records/, { timeout: 60000 });
   await expect(page.locator('#terms-compare optgroup:not([disabled]) option[value^="col:"]'), 'columns are greyed out; populations remain').toHaveCount(0);
   await expect(page.locator('#terms-compare option[value="population:all"]')).toHaveCount(1);
   const allowed = [...await legendRgb(page), 'rgb(153, 153, 153)'];

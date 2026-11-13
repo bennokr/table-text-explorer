@@ -10,7 +10,7 @@ export function displayFields(fields, combined) {
   if (!combined || !fields.length) { return fields; }
   return [{ name: 'Selected fields', combined: true, fields,
     vocabulary: fields.reduce((sum, field) => sum + field.vocabulary, 0),
-    representatives: [], terms: fields.flatMap((field, index) => field.terms.map(term => ({
+    terms: fields.flatMap((field, index) => field.terms.map(term => ({
       ...term, field: field.name, color: fieldColor(index),
     }))) }];
 }

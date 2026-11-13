@@ -35,8 +35,6 @@ export class QueryField {
     this.render();
   }
 
-  focus() { this.input.focus(); }
-
   // Turns the draft into conditions when it is a whole query; the field keeps it as a draft otherwise.
   commit() {
     const text = this.text;

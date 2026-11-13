@@ -1,4 +1,4 @@
-import { element, display } from './dom.js';
+import { element } from './dom.js';
 import { phraseCloud } from './phrase-cloud.js';
 import { displayFields, fieldColor } from './term-display.js';
 import { descriptionTable, descriptionTooltip } from './term-table.js';
@@ -20,18 +20,6 @@ export function comparisonSets(model, scope) {
   const before = model.populations?.get(conjuncts(model.ast).length - 1);
   const rest = before ?? model.visible;
   return { subset, comparison: rest.filter(id => !model.selected.has(id)) };
-}
-
-function excerpt(text) {
-  return `${text.slice(0, 320)}${text.length > 320 ? '…' : ''}`;
-}
-
-function examples(model, field, ids) {
-  return element('ul', { class: 'term-excerpts' }, ids.map(id => element('li', {}, [
-    element('button', { type: 'button', text: `Record ${id + 1}`, title: 'Show the full record without changing the subset',
-      onclick: () => model.select([...model.selected], id) }),
-    document.createTextNode(` ${excerpt(display(model.rows[id][field]))}`),
-  ])));
 }
 
 function fieldLegend(fields) {
@@ -59,12 +47,8 @@ function fieldHeading(field, toggle) {
     element('label', {}, [toggle, document.createTextNode('Cloud')])]);
 }
 
-function fieldExtras(field, model) {
-  if (field.combined) { return [fieldLegend(field.fields)]; }
-  if (field.kind === 'facets') { return []; }
-  const representatives = element('details', {}, [element('summary', { text: 'Representative records' }),
-    examples(model, field.name, field.representatives ?? [])]);
-  return [representatives];
+function fieldExtras(field) {
+  return field.combined ? [fieldLegend(field.fields)] : [];
 }
 
 function fieldView(field, result, model, activate, views) {
@@ -82,7 +66,7 @@ function fieldView(field, result, model, activate, views) {
   packed.hidden = !toggle.checked;
   const heading = fieldHeading(field, toggle);
   return element('section', { class: 'term-field', 'data-field': field.name }, [heading,
-    ...fieldExtras(field, model),
+    ...fieldExtras(field),
     ...(field.terms.length ? [table, packed] : [element('p', {
       text: 'No predicates meet the current support and ranking. Try a larger subset or lower minimum support.' })])]);
 }

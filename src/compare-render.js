@@ -23,7 +23,7 @@ function mergeFields(groups, compare, read) {
   // Each group's description counts only its own records; the cloud covers all the shown values together.
   const total = (index, key) => groups.reduce((sum, group) => sum + (read(group.description)[index][key] ?? 0), 0);
   return first.map((field, index) => ({
-    ...field, representatives: [], textRecords: total(index, 'textRecords'), population: total(index, 'population'),
+    ...field, textRecords: total(index, 'textRecords'), population: total(index, 'population'),
     terms: mergeTerms(groups.map(group => ({ group: compare.byId.get(group.id), terms: read(group.description)[index].terms }))),
   }));
 }

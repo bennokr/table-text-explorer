@@ -4,7 +4,7 @@ Clustering proposes groups of similar records for you to inspect, describe and n
 
 ## Example
 
-Cluster a saved sentence-embedding representation, inspect distinctive phrases and representative records, then rename useful groups in the legend.
+Cluster a saved sentence-embedding representation, inspect distinctive phrases, then rename useful groups in the legend.
 
 ## Steps
 
@@ -20,7 +20,7 @@ Saved representations retain semantic/numeric features; a saved similarity map u
 
 ## Methods
 
-K-means is the fast default; agglomerative clustering builds a hierarchy; HDBSCAN finds density groups and an Other group; it is experimental because on text vectors it often leaves most records in Other.
+K-means is the fast default. Agglomerative clustering builds a hierarchy; HDBSCAN finds density groups and an Other group, and is experimental because on text vectors it often leaves most records in Other.
 
 K-means requires a group count and assigns every usable record. Hierarchical cuts let you explore different granularity. Density selection controls reuse a saved tree. Other is not the same as missing: records without vectors have no cluster.
 
@@ -32,7 +32,7 @@ Phrase names are suggested by default (untick it to keep numbers) and reuse or b
 
 ## Troubleshooting
 
-Inspect representatives and boundary cases; compare several granularities before accepting a theme.
+Inspect example records and boundary cases in the table; compare several granularities before accepting a theme.
 
 For sparse data, compare [aggregation strategies](combining.md) and missingness patterns. Cluster labels used as input are categories and discard the underlying semantic distances.
 

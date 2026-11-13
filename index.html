@@ -22,7 +22,7 @@
       <span id="search-chips" class="search-chips"></span>
       <input id="search" type="search" aria-label="Search records" placeholder="Search · field:value · AND / OR / NOT" autocomplete="off"
         aria-autocomplete="list" aria-controls="suggest-list"
-        title='Highlight matching records as you type; Enter turns the condition into a removable token, and the next one narrows it with AND. Suggestions list columns, then operators, then values. Search every field, or use field:value, field>=10, parentheses and AND / OR / NOT. Use field~"phrase" for exact n-gram matching. ⏷ filters to the highlighted records.'>
+        title='Highlights matching records as you type; Enter turns the condition into a removable token.'>
       <small id="search-count" class="search-count" hidden></small>
       <ul id="suggest-list" class="suggest-list" role="listbox" aria-label="Suggestions" hidden></ul>
     </div>
@@ -44,7 +44,7 @@
       <div id="views"><p id="views-empty" class="empty">No visualizations. Make a similarity map or clustering, or add a chart with ＋.</p></div>
     </section>
     <section id="description-panel" class="panel" aria-label="Subset descriptions">
-      <header class="panel-head"><h2>Subset descriptions</h2><small id="description-kind">Distinctive phrases</small><button type="button" id="description-hint" class="help-hint" aria-label="About this ranking">?</button><button id="terms-options" class="square" aria-controls="terms-controls" title="Subset description settings" aria-label="Subset description settings" aria-expanded="true">⚙</button></header>
+      <header class="panel-head"><h2>Subset descriptions</h2><small id="description-kind">Distinctive phrases</small><button type="button" id="description-hint" class="help-hint" data-help="descriptions#settings" aria-label="About this ranking">?</button><button id="terms-options" class="square" aria-controls="terms-controls" title="Subset description settings" aria-label="Subset description settings" aria-expanded="true">⚙</button></header>
       <div id="terms" class="scroll">
         <div class="term-fields">
           <label><abbr title="Size: how phrases are ranked, which sets their size in the cloud">Size:</abbr>

@@ -135,17 +135,6 @@ def describe_counts(matrix, subset, comparison):
     }
 
 
-def representatives(matrix, subset, scores):
-    weights = np.maximum(scores["contrast"], 0)
-    if not weights.any():
-        weights = scores["ctfidf"]
-    selected = matrix[subset]
-    lengths = np.asarray(selected.sum(axis=1)).ravel()
-    values = np.asarray(selected @ weights).ravel() / np.maximum(lengths, 1)
-    order = np.argsort(-values, kind="stable")
-    return subset[order[lengths[order] > 0]]
-
-
 def membership(field, term, mask):
     column = field["lookup"].get(term)
     if column is None:
@@ -155,14 +144,8 @@ def membership(field, term, mask):
     return ids[mask[ids]]
 
 
-def term_row(field, column, scores, ranked, sizes):
+def term_row(field, column, scores, sizes):
     phrase = str(field["terms"][column])
-    mask = np.zeros(active.record_count, dtype=bool)
-    mask[ranked] = True
-    ids = membership(field, phrase, mask)
-    positions = np.full(active.record_count, active.record_count)
-    positions[ranked] = np.arange(len(ranked))
-    examples = ids[np.argsort(positions[ids], kind="stable")[:3]]
     return {
         "phrase": phrase,
         "label": phrase,
@@ -178,7 +161,6 @@ def term_row(field, column, scores, ranked, sizes):
         "ctfidf": float(scores["ctfidf"][column]),
         "contrast": float(scores["contrast"][column]),
         "lift": float(scores["lift"][column]),
-        "examples": examples.tolist(),
         **{key: float(scores[key][column]) for key in POPULATION_RANKINGS},
         "partitionSupport": int(scores["partitionSupport"][column]),
         "population": scores["population"],
@@ -239,20 +221,18 @@ def ranked_columns(field, data, scores, eligible, records):
 
 def describe_field(name, field, data, subset, comparison):
     if field is None:
-        return {"name": name, "vocabulary": 0, "terms": [], "representatives": []}
+        return {"name": name, "vocabulary": 0, "terms": []}
     scores = describe_counts(field["matrix"], subset, comparison)
     scores.update(population_scores(field, subset, data.get("_embeddings")))
     eligible = eligible_columns(data, scores, len(comparison))
     order = ranked_columns(field, data, scores, eligible, np.concatenate([subset, comparison]))
-    ranked = representatives(field["matrix"], subset, scores)
     sizes = (len(subset), len(comparison))
     return {
         "name": name,
         "vocabulary": len(field["terms"]),
-        "representatives": ranked[:3].tolist(),
         "textRecords": int(field["present"][subset].sum()),
         "population": scores["population"],
-        "terms": [term_row(field, column, scores, ranked, sizes) for column in order],
+        "terms": [term_row(field, column, scores, sizes) for column in order],
     }
 
 

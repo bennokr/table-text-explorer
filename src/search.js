@@ -55,7 +55,6 @@ class QuerySearch {
       this.rememberPopulation(ast);
       this.field.text = formatQuery(appendPredicate(ast, this.model.querySuggestion));
       this.pathInput = this.field.text;
-      this.field.focus();
       this.apply();
     } catch (error) { this.failed(error, version); }
   }

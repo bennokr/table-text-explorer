@@ -32,7 +32,7 @@ test('partition evidence distinguishes scored text coverage from all-record cove
 
 test('the ranking hint explains each ranking and follows the type of predicate', async () => {
   const { rankingHelp } = await import('../src/ranking-help.js');
-  assert.match(rankingHelp('semantic'), /one after another/);
+  assert.match(rankingHelp('semantic'), /Semantic splits/);
   assert.match(rankingHelp('auto', 'facets'), /predicates/);
   assert.match(rankingHelp('auto', 'phrases'), /phrases/);
   assert.match(rankingHelp('balanced', 'facets'), /yes\/no question/);

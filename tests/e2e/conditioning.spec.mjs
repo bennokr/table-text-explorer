@@ -18,6 +18,8 @@ test('clicking highlights and conditions: a path of chips, hidden conditions, NO
   await idle(page);
   await expect(chips(page)).toHaveCount(2);
   await expect(chips(page).nth(1)).toContainText('text contains camera maakt scherpe');
+  await expect(page.locator('#search'), 'a click in the cloud does not move into the query field').not.toBeFocused();
+  await expect(page.locator('#suggest-list'), 'and does not open the suggestions').toBeHidden();
   expect((await snapshot(page)).rows, 'a click highlights, it never filters').toBe(before);
   expect((await snapshot(page)).selected.length).toBeGreaterThan(0);
   await expect(page.locator('#search-count')).toContainText(' of ');
