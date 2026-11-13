@@ -8,21 +8,10 @@ import numpy as np
 from terms import describe_counts
 from text_indexes import get_text_index
 
-# Function words and negations say nothing about a topic. Names avoid them at the edges,
-# so "niet echt" or "over de" never name a cluster, but "zorg voor kinderen" can.
-NAMING_STOPWORDS = frozenset(
-    re.findall(
-        r"\w+",
-        """
-de het een en van in op te dat die is was voor met aan er om als ik je hij zij wij ze
-we niet maar ook dan dit zijn wordt door bij naar tot uit heeft hebben had heb of over
-geen nog wel meer veel zo zich deze kan zal moet worden werd hun hem haar mij me u uw
-nu al toch hoe wat wie waar onder tegen tussen na zonder alle alles even eens niets
-nooit nl dus the a an and on to that for with at as i you he she not but also then this
-are be by from has have or no it its
-""",
-    )
-)
+# Function words and negations say nothing about a topic. Names avoid the lexicon's stop, lead and
+# negation words at the edges, so "niet echt" or "over de" never name a cluster, but "zorg voor
+# kinderen" can. Words are compared by their folded key, so "boek" in one name blocks "boeken".
+NO_VOCAB = {"blocked": frozenset(), "fold": lambda word: word}
 GENERIC_COVERAGE = 0.35  # In over a third of the other records: not distinctive.
 
 
@@ -31,21 +20,22 @@ def ordered_words(text):
     return re.findall(r"[^\W_]+(?:'[^\W_]+)*", normalized)
 
 
-def name_words(text):
-    return set(ordered_words(text))
+def name_words(text, fold=NO_VOCAB["fold"]):
+    return {fold(word) for word in ordered_words(text)}
 
 
-def stop_edges(phrase):
+def stop_edges(phrase, blocked):
     tokens = ordered_words(phrase)
-    return bool(tokens) and (tokens[0] in NAMING_STOPWORDS or tokens[-1] in NAMING_STOPWORDS)
+    return bool(tokens) and (tokens[0] in blocked or tokens[-1] in blocked)
 
 
-def only_stopwords(phrase):
-    return all(token in NAMING_STOPWORDS for token in ordered_words(phrase))
+def only_stopwords(phrase, blocked):
+    return all(token in blocked for token in ordered_words(phrase))
 
 
-def phrase_evidence(name, field, subset, comparison, strict=True):
+def phrase_evidence(name, field, group, vocab, strict=True):
     """Candidate names: strict ones avoid generic words, loose ones are a last resort."""
+    subset, comparison = group["subset"], group["comparison"]
     if field is None or not subset:
         return []
     matrix = field["matrix"]
@@ -57,11 +47,11 @@ def phrase_evidence(name, field, subset, comparison, strict=True):
     candidates = []
     for column in order:
         phrase = str(field["terms"][column])
-        words = name_words(phrase)
+        words = name_words(phrase, vocab["fold"])
         support = int(scores["support"][column])
         if not usable_phrase(phrase, words, support, len(subset)) or values[column] <= 0:
             continue
-        if not acceptable(phrase, background[column], strict):
+        if not acceptable(phrase, background[column], strict, vocab["blocked"]):
             continue
         ids = matrix[subset, column].nonzero()[0]
         candidates.append(
@@ -82,10 +72,10 @@ def phrase_evidence(name, field, subset, comparison, strict=True):
     return candidates
 
 
-def acceptable(phrase, background, strict):
+def acceptable(phrase, background, strict, blocked):
     if strict:
-        return not stop_edges(phrase) and background <= GENERIC_COVERAGE
-    return not only_stopwords(phrase)
+        return not stop_edges(phrase, blocked) and background <= GENERIC_COVERAGE
+    return not only_stopwords(phrase, blocked)
 
 
 def usable_phrase(phrase, words, support, size):
@@ -97,23 +87,21 @@ def usable_phrase(phrase, words, support, size):
     )
 
 
-def name_candidates(group, fields):
+def name_candidates(group, fields, vocab):
     candidates = []
     for name, field in fields.items():
-        candidates.extend(phrase_evidence(name, field, group["subset"], group["comparison"]))
+        candidates.extend(phrase_evidence(name, field, group, vocab))
     candidates.sort(
         key=lambda candidate: (-candidate["score"], candidate["phrase"], candidate["field"])
     )
     return candidates[:24]
 
 
-def loose_candidates(group, fields):
+def loose_candidates(group, fields, vocab):
     """Names that may repeat words of other names or be common; used when no strict name fits."""
     candidates = []
     for name, field in fields.items():
-        candidates.extend(
-            phrase_evidence(name, field, group["subset"], group["comparison"], strict=False)
-        )
+        candidates.extend(phrase_evidence(name, field, group, vocab, strict=False))
     candidates.sort(key=lambda item: (-item["score"], item["phrase"], item["field"]))
     return candidates[:24]
 
@@ -151,8 +139,9 @@ def fits(candidate, used, fixed, taken):
     return not words & used
 
 
-def extend_names(states, group, candidates, loose, fixed):
-    blocked = set().union(*(name_words(name) for name in group.get("blocked", [])))
+def extend_names(states, group, options, fixed, fold):
+    candidates, loose = options
+    blocked = set().union(*(name_words(name, fold) for name in group.get("blocked", [])))
     expanded = []
     for score, used, labels in states:
         taken = {label["phrase"] for label in labels.values()}
@@ -178,26 +167,28 @@ def fallback_name(group, blocked):
     return {"phrase": name, "words": sorted(name_words(name)), "score": -10}
 
 
-def choose_names(groups, fields, counts=None):
+def choose_names(groups, fields, counts=None, vocab=NO_VOCAB):
+    fold = vocab["fold"]
     locked = [group["name"] for group in groups if group.get("locked")]
-    reserved = set().union(name_words("Other"), *(name_words(name) for name in locked))
+    reserved = set().union(name_words("Other", fold), *(name_words(name, fold) for name in locked))
     states = [(0, reserved, {})]
     for group in groups:
         if not group.get("locked"):
-            candidates = name_candidates(group, fields)
-            loose = loose_candidates(group, fields)
+            candidates = name_candidates(group, fields, vocab)
+            loose = loose_candidates(group, fields, vocab)
             if counts is not None:
                 candidates = name_bundles(candidates, counts)
                 loose = name_bundles(loose, [1, counts[1]])
-            states = extend_names(states, group, candidates, loose, reserved)
+            states = extend_names(states, group, (candidates, loose), reserved, fold)
     return states[0][2]
 
 
 def name_clusters(payload):
     data = json.loads(payload)
-    fields = get_text_index(data["indexId"])["fields"]
+    entry = get_text_index(data["indexId"])
+    fields = entry["fields"]
     maximum = data.get("maxPhrases", 4)
     if not isinstance(maximum, int) or not 1 <= maximum <= 5:
         raise ValueError("Choose a maximum of one to five phrases per name.")
-    labels = choose_names(data["groups"], fields, [1, maximum])
+    labels = choose_names(data["groups"], fields, [1, maximum], entry["vocab"])
     return json.dumps({"labels": labels}, allow_nan=False)

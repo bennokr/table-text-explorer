@@ -34,7 +34,7 @@ The screen is a descriptive statistic computed on this machine without fitting a
 
 Shared phrase settings control text columns, phrase lengths and stoplists. They apply to TF-IDF, static word vectors, descriptions and phrase-based names.
 
-Counts build when needed. Presets save settings, not completed analyses. Unicode words are tokenized; punctuation ends phrases; fields remain separate. Negation is retained by default. Phrase length is Words, Short phrases (1–3 words, the default) or Longer phrases (1–5 words). A phrase never starts or ends with a stopword or a single character such as `c` or `1`. Sentence models keep their own tokenizer. [Text models](text-models.md) explains the distinction.
+Counts build when needed. Presets save settings, not completed analyses. Unicode words are tokenized; punctuation ends phrases; fields remain separate. Phrase length is Words, Short phrases (1–3 words, the default) or Longer phrases (1–5 words). The stoplist is a language's word lists: stopwords (de, het, of, deze) never stand alone and never start or end a phrase, lead words (zonder, heel, te) may start a phrase but not end it or stand alone, and negations (niet, geen) are kept as phrases of their own. A phrase also never starts or ends with a single character such as `c` or `1`. With "Reduce redundant phrases", two forms of one word in a list (boek, boeken) are merged and the better-scoring one is kept, and cluster names avoid repeating a word in another form; the filter and the counts still use the exact phrase. The lists and the folding rules are plain text files in `src/lexicon/`. Sentence models keep their own tokenizer. [Text models](text-models.md) explains the distinction.
 
 ## Settings
 

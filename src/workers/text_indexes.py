@@ -1,5 +1,7 @@
 """Shared sparse fields with bounded, addressable index variants."""
 
+from fold import compile_fold
+
 index_registry = {}
 field_indexes = {}
 token_indexes = {}
@@ -66,6 +68,7 @@ def field_key(namespace, column, data):
         column["name"],
         tuple(data["sizes"]),
         tuple(sorted(set(data["stopwords"]))),
+        tuple(sorted(set(data.get("leadwords", [])))),
     )
 
 
@@ -92,6 +95,12 @@ def build_fields(data, builder, progress, namespace):
     return fields, set(keys), not pending
 
 
+def index_vocabulary(data):
+    """What names and merging need: the words names avoid, and the folding."""
+    blocked = {*data["stopwords"], *data.get("leadwords", []), *data.get("negations", [])}
+    return {"blocked": frozenset(blocked), "fold": compile_fold(data.get("fold"))}
+
+
 def register_text_index(data, builder, progress=None):
     reset_revision(data)
     namespace = data.get("revision", data.get("cacheKey", object()))
@@ -104,6 +113,7 @@ def register_text_index(data, builder, progress=None):
     entry = {
         "documents": documents,
         "stopwords": set(data["stopwords"]),
+        "vocab": index_vocabulary(data),
         "fields": fields,
         "rows": data["rows"],
         "keys": keys,

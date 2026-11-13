@@ -48,8 +48,8 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 ## Readability budgets
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
-each authored module at 250 statements, Python at 3300 total and JavaScript at
-12775 total. Imports, nested bodies, tooling and tests count. Generated files,
+each authored module at 250 statements, Python at 3550 total and JavaScript at
+12925 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -140,6 +140,13 @@ The JavaScript budget rose from 12750 to 12775 (11 over) for the chip and contro
 color key, cloud chips) now come from one component (`src/chip.js`) and one cluster-label rule with one hover (`conditionText`, `legendHover`),
 which replaced three hand-built copies, and the unit test for that shared rule adds about 10 statements. The control rows of the cards and the
 panel share markup and CSS, which saved CSS, not statements.
+
+The budgets rose for the lexicon (Python 3300 to 3550, JavaScript 12775 to 12925). Python (about 235): the folding module `fold.py` (about 35),
+the checks for it and for the new index behavior (lead words, variant merging, names that avoid repeated forms, about 70), a reader that shares the
+lexicon files between those checks and the report (about 25), and `tests/eval/lexicon_report.py` (about 110), which measures the examples before and
+after and writes `docs/evaluation-lexicon.md`; it replaced the separate 90-word naming list. JavaScript (about 130): the file reader and bundling
+(`src/lexicon-parse.js`, `src/lexicon.js`, about 40) and their tests and an end-to-end check that the bundled lexicon is applied, which check that every language has its four files, that no word sits in two
+tiers and that the folding rules are well formed (about 60).
 
 ## Codebook reader
 

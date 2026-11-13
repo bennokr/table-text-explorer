@@ -1,0 +1,9 @@
+# Dutch negations. Unlike stopwords they are kept as phrases of their own ("niet", "geen"), because they flip
+# the meaning of a review or a motion. Cluster names avoid them at the edges, so "niet echt" never names a cluster.
+niet
+geen
+nooit
+niets
+niemand
+nergens
+noch

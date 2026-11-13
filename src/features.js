@@ -3,6 +3,7 @@ import { missing, numberOf } from './schema.js';
 import { fieldDescription } from './field-metadata.js';
 import { descriptionEnabled, groupName } from './group-vectors.js';
 import { defaultSentenceModel } from './sentence-models.js';
+import { lexiconFor } from './lexicon.js';
 
 export const isEmbeddingMode = mode => ['words', 'sentences'].includes(mode);
 
@@ -32,19 +33,8 @@ export function featureFields(model) {
   return (text.length ? text : automatic).slice(0, 1);
 }
 
-const stopwords = {
-  nl: 'de het een en van in op te dat die is was voor met aan er om als ik je hij zij wij niet maar ook dan dit zijn wordt door bij naar tot uit heeft hebben',
-  en: 'the a an and of in on to that is was for with at as I you he she we not but also then this are be by from has have',
-  none: '',
-};
-
-export function stopwordList(config, keepNegation = false) {
-  const negations = new Set(['niet', 'geen', 'nooit', 'not', 'no', 'never']);
-  const base = config.language.split(',').flatMap(language => (stopwords[language] ?? '').toLowerCase().split(/\s+/u))
-    .filter(word => !keepNegation || !negations.has(word));
-  const extra = config.stopwords.toLowerCase().split(/[\s,]+/u);
-  return [...new Set([...base, ...extra].filter(Boolean))];
-}
+// The words a text index leaves out, from the language's stop list and the user's own additions.
+export const stopwordList = config => lexiconFor(config).stop;
 
 function featureDescriptor(field, config) {
   const descriptor = { name: field.name, kind: field.kind };
@@ -61,7 +51,7 @@ function featureSettings(model, method) {
   return { revision: model.revision, sentence: { model: model.config.sentenceModel ?? defaultSentenceModel(model.config.language), chunking: model.config.sentenceChunking,
     size: model.config.sentenceChunkSize, overlap: model.config.sentenceOverlap },
     fields: fields.map(field => featureDescriptor(field, model.config)), method, mode: model.config.mode,
-    stopwords: lexical ? stopwordList(model.phraseConfig ?? model.config, true) : [],
+    stopwords: lexical ? stopwordList(model.phraseConfig ?? model.config) : [],
     phrases: lexical ? model.phraseConfig ?? null : null, vectorLanguage: model.config.vectorLanguage,
     pooling: model.config.pooling, combine: model.config.combine, weights: model.config.weights,
     includeDescriptions: descriptionEnabled(model.config), groupIdentity: model.config.groupIdentity };

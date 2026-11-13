@@ -19,7 +19,7 @@ import bridge
 import terms
 
 
-def build(rows, fields=("text",), sizes=(1, 1), stopwords=()):
+def build(rows, fields=("text",), sizes=(1, 1), stopwords=(), **extra):
     return json.loads(
         terms.build_term_index(
             json.dumps(
@@ -28,6 +28,7 @@ def build(rows, fields=("text",), sizes=(1, 1), stopwords=()):
                     "indexId": "test",
                     "sizes": sizes,
                     "stopwords": stopwords,
+                    **extra,
                     "columns": [
                         {"name": field, "texts": [row.get(field) for row in rows]}
                         for field in fields
@@ -149,18 +150,35 @@ class TermTests(unittest.TestCase):
     def test_redundancy_requires_nested_words_and_actual_record_overlap(self):
         members = {"goed": {0, 1}, "heel goed": {2, 3}, "prima": {0, 1}}
         values = dict.fromkeys(members, 1.0)
-        self.assertFalse(terms.redundant_phrase("goed", "heel goed", members, values))
-        self.assertFalse(terms.redundant_phrase("goed", "prima", members, values))
+        keys = {phrase: phrase for phrase in members}
+        self.assertFalse(terms.redundant_phrase("goed", "heel goed", keys, members, values))
+        self.assertFalse(terms.redundant_phrase("goed", "prima", keys, members, values))
         members["heel goed"] = {0, 1}
-        self.assertTrue(terms.redundant_phrase("goed", "heel goed", members, values))
+        self.assertTrue(terms.redundant_phrase("goed", "heel goed", keys, members, values))
         members["goed"] = set(range(20))
         members["heel goed"] = set(range(18))
-        self.assertTrue(terms.redundant_phrase("goed", "heel goed", members, values))
+        self.assertTrue(terms.redundant_phrase("goed", "heel goed", keys, members, values))
         members["heel goed"] = set(range(17))
-        self.assertFalse(terms.redundant_phrase("goed", "heel goed", members, values))
+        self.assertFalse(terms.redundant_phrase("goed", "heel goed", keys, members, values))
         members["heel goed"] = set(range(20))
         values["heel goed"] = 0.5
-        self.assertFalse(terms.redundant_phrase("goed", "heel goed", members, values))
+        self.assertFalse(terms.redundant_phrase("goed", "heel goed", keys, members, values))
+
+    def test_lead_words_start_phrases_but_never_stand_alone_or_end_them(self):
+        tokens = terms.tokenize_text("zonder suiker heel")
+        grams = set(terms.analyze_tokens(tokens, set(), (1, 2), {"zonder", "heel"}))
+        self.assertEqual(grams, {"suiker", "zonder suiker"})
+
+    def test_variants_of_one_word_are_merged_when_the_index_has_folding_rules(self):
+        fold = {"collapse": False, "undouble": False, "dropE": False, "rules": [["en", "", 3]]}
+        rows = [{"text": "boek lezen"}] * 3 + [{"text": "boeken lezen"}] * 2
+        rows += [{"text": "film"}] * 5
+        subset, rest = [0, 1, 2, 3, 4], [5, 6, 7, 8, 9]
+        for folding, expected in ((None, {"boek", "boeken"}), (fold, {"boek"})):
+            build(rows, fold=folding)
+            result = json.loads(terms.describe_terms(request(subset, rest, support=2)))
+            phrases = {term["phrase"] for term in result["fields"][0]["terms"]}
+            self.assertEqual(phrases & {"boek", "boeken"}, expected)
 
     def test_twenty_thousand_sparse_records(self):
         build(

@@ -1,0 +1,33 @@
+# English lead words: they change the meaning of what follows, so they may start a phrase or sit inside one
+# ("without sugar", "very good"), but they never stand alone and never end a phrase.
+without
+against
+very
+too
+more
+less
+much
+many
+few
+almost
+nearly
+only
+just
+quite
+rather
+really
+extremely
+highly
+absolutely
+completely
+totally
+all
+any
+each
+every
+some
+both
+other
+another
+most
+least

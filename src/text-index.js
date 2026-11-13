@@ -30,8 +30,9 @@ export class TextIndexes {
   }
 
   key(settings) {
-    return JSON.stringify([this.model.revision, [...settings.fields].sort(),
-      settings.sizes, [...new Set(settings.stopwords)].sort()]);
+    const words = list => [...new Set(list ?? [])].sort();
+    return JSON.stringify([this.model.revision, [...settings.fields].sort(), settings.sizes, words(settings.stopwords),
+      words(settings.leadwords), words(settings.negations), settings.fold ?? null]);
   }
 
   get(settings) { return this.entries.get(this.key(settings)); }

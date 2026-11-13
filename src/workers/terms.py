@@ -5,6 +5,7 @@ from functools import partial
 
 import bridge
 import numpy as np
+from fold import fold_phrase
 from lexical import analyze_terms as analyze_terms
 from lexical import analyze_tokens, tokenize_text
 from sklearn.feature_extraction.text import CountVectorizer
@@ -30,9 +31,11 @@ class ActiveIndex:
         self.indexes = {}
         self.index_id = None
         self.record_count = 0
+        self.vocab = {"blocked": frozenset(), "fold": lambda word: word}
 
     def use(self, entry, index_id):
         self.indexes, self.index_id, self.record_count = entry["fields"], index_id, entry["rows"]
+        self.vocab = entry["vocab"]
 
 
 active = ActiveIndex()
@@ -56,7 +59,12 @@ def index_field(column, data):
     if len(column["texts"]) != data["rows"]:
         raise ValueError("Every text field must contain one value per record.")
     texts = tokenize_column(column, data, tokenize_text)
-    analyzer = partial(analyze_tokens, stopwords=set(data["stopwords"]), sizes=data["sizes"])
+    analyzer = partial(
+        analyze_tokens,
+        stopwords=set(data["stopwords"]),
+        sizes=data["sizes"],
+        leadwords=set(data.get("leadwords", [])),
+    )
     analyzer = counting_analyzer(analyzer, data.get("_step", ignore_step))
     vectorizer = CountVectorizer(analyzer=analyzer, max_features=20000, dtype=np.int32)
     try:
@@ -167,13 +175,22 @@ def term_row(field, column, scores, sizes):
     }
 
 
-def redundant_phrase(short, long, members, values):
-    if short == long or f" {short} " not in f" {long} ":
+def covered_by(short, long, keys, members, values):
+    """The longer phrase holds the shorter one's words and nearly the same records."""
+    if f" {keys[short]} " not in f" {keys[long]} ":
         return False
     if values[long] < values[short] - 0.1 * abs(values[short]):
         return False
     overlap = len(members[short] & members[long]) / len(members[short] | members[long])
     return overlap >= 0.9
+
+
+def redundant_phrase(short, long, keys, members, values):
+    """Redundant next to a better phrase that is its variant (the same folded key, boek/boeken)
+    or that covers it."""
+    if short == long:
+        return False
+    return keys[short] == keys[long] or covered_by(short, long, keys, members, values)
 
 
 def distinct_terms(field, order, values, records):
@@ -183,9 +200,10 @@ def distinct_terms(field, order, values, records):
     mask[records] = True
     members = {phrase: set(membership(field, phrase, mask)) for phrase in phrases}
     scores = {phrase: values[column] for phrase, column in phrases.items()}
+    keys = {phrase: fold_phrase(phrase, active.vocab["fold"]) for phrase in phrases}
     kept = []
     for phrase in sorted(phrases, key=lambda phrase: -len(phrase.split())):
-        if not any(redundant_phrase(phrase, long, members, scores) for long in kept):
+        if not any(redundant_phrase(phrase, long, keys, members, scores) for long in kept):
             kept.append(phrase)
     columns = {phrases[phrase] for phrase in kept}
     return [column for column in order if column in columns][:15]

@@ -1,4 +1,5 @@
-import { featureFields, stopwordList } from './features.js';
+import { featureFields } from './features.js';
+import { lexiconFor } from './lexicon.js';
 
 export function retainPhraseSettings(model) {
   if (model.phraseConfig) { return; }
@@ -13,5 +14,7 @@ export function phraseSettings(model) {
   const fields = config.fields ?? featureFields({ fields: model.fields,
     config: { ...model.config, mode: 'text', features: model.config.mode === 'table' ? null : model.config.features } }).map(field => field.name);
   const eligible = new Set(model.fields.filter(field => !field.annotation && !field.derived).map(field => field.name));
-  return { fields: fields.filter(name => eligible.has(name)), sizes: config.sizes, stopwords: stopwordList(config, true) };
+  const lexicon = lexiconFor(config);
+  return { fields: fields.filter(name => eligible.has(name)), sizes: config.sizes, stopwords: lexicon.stop,
+    leadwords: lexicon.lead, negations: lexicon.negation, fold: lexicon.fold };
 }
