@@ -34,6 +34,11 @@ small { color: #737b80; font-size: 10px; }
 .empty { color: #737b80; padding: 12px; }
 #add-chart { margin-left: auto; }
 .square { width: 26px; height: 26px; padding: 0; }
+/* The small square buttons of a chart header, a card menu and a panel's control row: 22 px, like the selects beside them. */
+.mini, .view-card > header > button, .card-actions button { width: 22px; min-width: 22px; height: 22px; min-height: 22px; padding: 0; border: 0; background: #f5f6f6; }
+.mini:hover:not([disabled]) { background: #e9edef; }
+.link { border: 0; background: transparent; color: #245c85; text-decoration: underline; padding: 0 2px; min-height: 0; cursor: pointer; font: inherit; }
+#status .link { margin-left: 4px; }
 #views { flex: 1; min-height: 0; overflow: auto; padding: 0; gap: 0;
   scrollbar-gutter: stable; overflow-anchor: none; }
 .view-row { display: grid; min-width: 0; }
@@ -42,8 +47,7 @@ small { color: #737b80; font-size: 10px; }
 #views-empty { margin: 0; }
 .view-card { min-width: 0; min-height: 0; display: flex; flex-direction: column; border: 1px solid #e2e4e5; overflow: hidden; }
 .view-card > header { display: flex; align-items: center; gap: 2px; padding: 2px; flex-wrap: nowrap; }
-.view-card > header > button, .view-card > header > select, .card-actions button { height: 22px; min-height: 22px; }
-.view-card > header > button, .card-actions button { min-width: 22px; width: 22px; padding: 0; border: 0; background: #f5f6f6; }
+.view-card > header > select { height: 22px; min-height: 22px; }
 .view-type { width: 72px; min-width: 42px; flex: 0 1 72px; padding: 0 1px; }
 .card-menu { display: flex; align-items: center; gap: 5px; padding: 4px; border-top: 1px solid #e2e4e5; }
 .card-actions { display: flex; flex-shrink: 0; gap: 3px; margin-left: auto; }
@@ -51,7 +55,7 @@ small { color: #737b80; font-size: 10px; }
 .view-name { display: flex; flex: 1; min-width: 0; align-items: center; gap: 5px; }
 .view-name input { flex: 1; min-width: 0; height: 22px; min-height: 22px; }
 .view-plot { contain: size; flex: 1; min-height: 100px; min-width: 0; position: relative; }
-#terms { padding: 5px; }
+#terms { padding: 0 5px; }
 #terms fieldset { border: 1px solid #ddd; margin: 0 0 5px; padding: 5px; }
 .term-controls { display: flex; flex-wrap: nowrap; overflow-x: auto; align-items: center; gap: 5px; margin: 4px 0; }
 .term-controls > * { flex-shrink: 0; white-space: nowrap; }

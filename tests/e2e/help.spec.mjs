@@ -57,7 +57,7 @@ test('help: progressive settings, group controls, native tooltips and linked pag
   await contextualJourney(app.page);
   await app.page.locator('#map-dialog [data-close]').click();
   await app.page.click('#help');
-  await expect(app.page.locator('#help-title')).toHaveText('Help and shortcuts');
+  await expect(app.page.locator('#help-title')).toHaveText('Help');
   await app.page.locator('#help-content a[data-help=maps]').first().click();
   await expect(app.page.locator('#help-title')).toHaveText('Similarity maps');
   expect(app.models).toEqual([]);

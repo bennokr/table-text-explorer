@@ -1,4 +1,4 @@
-import { $ } from './dom.js';
+import { $, element } from './dom.js';
 import { Events } from './events.js';
 
 export function status(message, error = false) {
@@ -8,6 +8,14 @@ export function status(message, error = false) {
     node.title = message;
     node.classList.toggle('error', error);
   }
+}
+
+// A message with an Undo link beside it for a few seconds; the next message replaces both.
+export function offerUndo(message, undo, milliseconds = 8000) {
+  status(message);
+  const link = element('button', { type: 'button', class: 'link', text: 'Undo', onclick: () => { link.remove(); undo(); } });
+  $('#status').append(link);
+  setTimeout(() => link.remove(), milliseconds);
 }
 
 export function complete(message, error = false) {

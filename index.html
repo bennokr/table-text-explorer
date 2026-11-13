@@ -16,7 +16,6 @@
     <button id="import" title="Import a local table" aria-label="Import a local table">↥</button>
     <input id="file" type="file" accept=".csv,.json,.sav,.xlsx" hidden>
     <select id="examples" aria-label="Example dataset" title="Load an example from the local fixtures folder"><option value="">Examples…</option></select>
-    <button id="phrase-settings" class="square" title="Phrase counting settings" aria-label="Phrase counting settings">⚙</button>
     <button id="export" title="Exports" aria-label="Exports">↧</button>
     <div id="search-box" class="search-box" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-owns="suggest-list">
       <span id="search-chips" class="search-chips"></span>
@@ -29,7 +28,7 @@
     <button id="filter-selection" title="Filter to highlighted records" aria-label="Filter to highlighted records">⏷</button>
     <button id="clear-selection" title="Clear selection and query" aria-label="Clear selection and query">×</button>
     <button id="clear-filters" title="Clear all filters" aria-label="Clear all filters">↺</button>
-    <button id="help" data-help="start" title="Help and shortcuts" aria-label="Help and shortcuts">?</button>
+    <button id="help" data-help="start" title="Help" aria-label="Help">?</button>
   </nav>
   <main class="workspace">
     <section id="visual-panel" class="panel" aria-label="Linked charts">
@@ -38,13 +37,13 @@
         <button id="cluster" title="Cluster all records">New clustering</button></div>
         <div id="analysis-progress" hidden><progress id="panel-progress" aria-label="Analysis progress"></progress><span id="panel-status"></span></div>
         <button id="cancel" hidden title="Cancel analysis" aria-label="Cancel analysis">■</button>
-        <button id="add-chart" class="square" title="New chart" aria-label="New chart">＋</button>
-        <button id="clear-views" class="square" title="Remove all charts (new defaults come with the next import)" aria-label="Remove all charts">×</button>
+        <button id="add-chart" class="mini" title="New chart" aria-label="New chart">＋</button>
+        <button id="clear-views" title="Remove all charts; Undo is offered" aria-label="Remove all charts">Remove all</button>
       </header>
       <div id="views"><p id="views-empty" class="empty">No charts. Make a similarity map or clustering, or add a chart with ＋.</p></div>
     </section>
     <section id="description-panel" class="panel" aria-label="Subset descriptions">
-      <header class="panel-head"><h2>Subset descriptions</h2><small id="description-kind">Distinctive phrases</small><button type="button" id="description-hint" class="help-hint" data-help="descriptions#settings" aria-label="About this ranking">?</button><button id="terms-options" class="square" aria-controls="terms-controls" title="Subset description settings" aria-label="Subset description settings" aria-expanded="true">⚙</button></header>
+      <header class="panel-head"><h2>Subset descriptions</h2><small id="description-kind">Distinctive phrases</small><button type="button" id="description-hint" class="help-hint" data-help="descriptions#size-color-and-contrast" aria-label="About this ranking">?</button><button id="phrase-settings" class="mini" title="Phrase counting settings" aria-label="Phrase counting settings">⚙</button></header>
       <div id="terms" class="scroll">
         <div class="term-fields controls">
           <label class="control"><abbr title="Size: how phrases are scored, which sets their size in the cloud">Size:</abbr>
@@ -56,6 +55,7 @@
           <select id="terms-tree-node" aria-label="Tree branches to describe" hidden></select>
           <select id="terms-tree-comparison" aria-label="Tree comparison" hidden><option value="siblings">Branch vs siblings</option><option value="rest">Branch vs rest of visible</option></select>
           <select id="terms-group-page" aria-label="Groups to describe" hidden></select>
+          <button id="terms-options" class="mini" aria-controls="terms-controls" title="More settings" aria-label="More description settings" aria-expanded="true">⋯</button>
         </div>
         <div id="terms-controls">
         <div id="terms-inspector" hidden>
@@ -66,7 +66,7 @@
         <button type="button" class="help-hint" data-help="descriptions#settings">?</button></div>
         </div>
         </div>
-        <p id="terms-empty">Highlight records to prepare phrase descriptions.</p>
+        <p id="terms-empty" class="empty">Highlight records to prepare phrase descriptions.</p>
         <div id="terms-results"></div>
       </div>
     </section>
@@ -74,7 +74,7 @@
       <header class="panel-head"><h2 id="dataset-name">No table</h2>
         <label title="Temporarily show only highlighted records in this table; other views and fitted similarity maps stay unchanged"><input id="preview-selection" type="checkbox">Preview selection</label>
         <variable-picker id="table-columns" multiple aria-label="Visible table columns" caption="Show"></variable-picker><small id="table-count"></small><button type="button" class="help-hint" data-help="selection">?</button>
-        <button id="column-types" class="square" title="Column types" aria-label="Column types">⚙</button></header>
+        <button id="column-types" class="mini" title="Column types" aria-label="Column types">⚙</button></header>
       <div id="table-scroll" class="scroll"></div>
     </section>
     <section class="panel" aria-label="Full record">
@@ -109,8 +109,8 @@
         </section>
 </fieldset><p id="phrase-error" role="alert"></p><div class="dialog-actions"><button type="button" data-close>Cancel</button><button id="phrase-apply" type="submit">Apply settings</button></div></form></dialog>
   <dialog id="help-dialog" aria-labelledby="help-title">
-    <header class="help-heading"><h2 id="help-title">Help and shortcuts</h2><button type="button" data-close aria-label="Close help">×</button></header>
-    <nav class="help-navigation" aria-label="Help navigation"><button id="help-back" type="button" aria-label="Previous help page">←</button><button id="help-forward" type="button" aria-label="Next help page">→</button><select id="help-topic" aria-label="Help topic"></select></nav>
+    <header class="help-heading"><h2 id="help-title">Help</h2><button type="button" class="square" data-close aria-label="Close help" title="Close">×</button></header>
+    <nav class="help-navigation" aria-label="Help navigation"><button id="help-home" type="button" class="square" aria-label="Help home" title="Help home">⌂</button><button id="help-back" type="button" class="square" aria-label="Previous help page" title="Back">←</button><button id="help-forward" type="button" class="square" aria-label="Next help page" title="Forward">→</button><select id="help-topic" aria-label="Help topic"></select></nav>
     <article id="help-content" tabindex="0"></article>
   </dialog>
   <dialog id="cluster-dialog" aria-labelledby="cluster-title"><form id="cluster-form">

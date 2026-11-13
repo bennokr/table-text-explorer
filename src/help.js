@@ -43,6 +43,7 @@ export function bindHelp() {
   };
   options($('#help-topic'), Object.entries(pages).map(([name, page]) => [name, page.title]));
   $('#help-topic').onchange = event => open(event.target.value);
+  $('#help-home').onclick = () => open('start');
   $('#help-back').onclick = () => travel(-1);
   $('#help-forward').onclick = () => travel(1);
   dialog.addEventListener('close', () => { if (returnFocus?.isConnected) { returnFocus.focus(); } });

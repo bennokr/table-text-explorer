@@ -1,4 +1,4 @@
-# Help and shortcuts
+# Help
 
 Explore a table locally, highlight interesting records, and build maps or themes when you need them.
 

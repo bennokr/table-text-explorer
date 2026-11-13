@@ -4,6 +4,7 @@ import { defaultViews, isPointView, isResultView, newView } from './view-config.
 import { ViewLayout } from './view-layout.js';
 import { ViewCard } from './view-card.js';
 import { Events } from './events.js';
+import { offerUndo } from './status.js';
 
 export class Views {
   cards = new Map();
@@ -79,10 +80,18 @@ export class Views {
   }
 
   // Starts from an empty canvas so a map and its legend get the space; new defaults return with the next import.
+  // Undo brings the charts back (their settings and order; the layout goes back to the default packing).
   clear() {
     this.restore();
+    const removed = this.model.views;
+    if (!removed.length) { return; }
     this.model.views = [];
     this.model.emit(Events.VIEWS);
+    offerUndo(`Removed ${removed.length} charts.`, () => {
+      if (this.model.views.length) { return; }
+      this.model.views = removed;
+      this.model.emit(Events.VIEWS);
+    });
   }
 
   discardCard(id) {

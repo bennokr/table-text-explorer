@@ -15,13 +15,13 @@ export class ViewCard {
     this.reportError = reportError;
     this.editor = new ViewEditor(model, config, patch => actions.update(config, patch));
     const make = () => actions.settings(config);
-    this.settings = glyph('＋', 'New similarity map', make);
+    this.newMap = element('button', { type: 'button', text: 'New map here…', onclick: make });
     this.expand = glyph('⛶', 'Expand or restore chart', () => actions.expand(config));
     this.expand.setAttribute('aria-pressed', 'false');
     this.grip = glyph('⠿', 'Drag chart', () => {});
     this.grip.className = 'card-grip';
     this.more = glyph('⋯', 'Chart options', () => this.toggleMenu());
-    this.header = element('header', {}, [this.grip, this.editor.type, this.editor.fields, this.settings, this.expand, this.more]);
+    this.header = element('header', {}, [this.grip, this.editor.type, this.editor.fields, this.expand, this.more]);
     this.menu = this.options(actions);
     this.container = element('div', { class: 'view-plot' });
     this.placeholder = new ViewPlaceholder(model, config, this.container, make);
@@ -37,7 +37,7 @@ export class ViewCard {
       glyph('←', 'Move chart earlier', () => actions.move(this.config)),
       this.upButton(actions),
       glyph('×', 'Remove chart', () => actions.remove(this.config))]);
-    const menu = element('div', { class: 'card-menu', hidden: '' }, [this.editor.nameLabel, buttons]);
+    const menu = element('div', { class: 'card-menu', hidden: '' }, [this.editor.nameLabel, this.newMap, buttons]);
     this.more.setAttribute('aria-controls', `${this.config.id}-options`);
     menu.id = `${this.config.id}-options`;
     this.more.setAttribute('aria-expanded', 'false');
@@ -60,7 +60,7 @@ export class ViewCard {
     this.editor.sync();
     this.node.dataset.point = String(isPointView(config.type));
     this.node.setAttribute('aria-label', viewTitle(config, this.model));
-    this.settings.hidden = !isProjection(config.type);
+    this.newMap.hidden = !isProjection(config.type);
     this.renderIfChanged();
     this.colorKey.sync();
     const description = this.description();
@@ -101,7 +101,7 @@ export class ViewCard {
   }
 
   busy() {
-    this.settings.disabled = this.model.analysisBusy;
+    this.newMap.disabled = this.model.analysisBusy;
     this.placeholder.sync(isProjection(this.config.type) && !this.renderer);
   }
 
