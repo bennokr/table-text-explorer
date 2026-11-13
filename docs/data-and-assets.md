@@ -6,6 +6,10 @@ file or opening the app; inference requires explicitly creating an embedding map
 
 ## Preparing assets
 
+`npm run setup` runs `node scripts/prepare_assets.mjs` (runtime plus examples); `npm run setup:models` adds the
+sentence models and requires the `models-v1` release. `SKIP_DATA_RELEASE=1` leaves out the `data-v1` examples. The
+README's Local deployment section lists what each step downloads.
+
 `node scripts/prepare_assets.mjs` prepares Bokeh, Pyodide/scikit-learn and local
 WASM runtime files. Pinned wheel hashes are checked and recorded in
 `public/vendor/manifest.json`. `npm run prepare:sentences` verifies both the multilingual

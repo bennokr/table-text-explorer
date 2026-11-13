@@ -7,26 +7,43 @@ Create similarity maps, cluster records and edit independent annotation columns.
 Records, queries, annotations and embeddings stay on your machine. Rendering uses
 Bokeh Canvas and inference uses CPU/WASM, with no GPU requirement or analytics.
 
-## Run locally
+## Local deployment
 
-Requires Node 22.22+ and [uv](https://docs.astral.sh/uv/) with Python 3.12+.
-
-```sh
-npm ci
-uv sync
-node scripts/prepare_assets.mjs
-npm run dev
-```
-
-Open the localhost URL printed by Vite. Asset preparation downloads static runtime
-files; Python/scikit-learn load locally at startup. Pretrained text models are optional:
+Needs Node 22.22+ and an internet connection once; afterwards the app makes no network requests.
 
 ```sh
-npm run prepare:vectors    # Dutch and English static word vectors
-npm run prepare:sentences  # multilingual MiniLM-L12 and Dutch MiniLM-L6
+git clone --depth 1 https://github.com/bennokr/table-text-explorer.git
+cd table-text-explorer
+npm ci --ignore-scripts
+npm run setup          # Python/Bokeh/WASM runtime and the examples
+npm run dev            # open the printed localhost URL
 ```
 
-See [assets, dataset licenses and offline preparation](docs/data-and-assets.md).
+Choose what to download (sizes measured on a fresh clone):
+
+| Command | Adds | Download | On disk |
+| --- | --- | --- | --- |
+| `npm ci --ignore-scripts` | Build tools (always) | 225 MB | 716 MB (`node_modules`) |
+| `SKIP_DATA_RELEASE=1 npm run setup` | Runtime and the tracked DBRD example | 25 MB | 77 MB |
+| `npm run setup` | Also the Rechtspraak and Tweede Kamer examples and precomputed Dutch embeddings (release `data-v1`) | +16 MB | +17 MB |
+| `npm run setup:models` | Also the multilingual and Dutch sentence models (release `models-v1`) | +130 MB | +186 MB |
+| `npm run prepare:vectors` | Dutch and English static word vectors (needs [uv](https://docs.astral.sh/uv/)) | +81 MB | +63 MB |
+
+So the smallest working setup downloads about 250 MB, with all examples about 265 MB, and with sentence models
+about 395 MB. Text models are optional and are only used when you explicitly make an embedding map.
+
+The two releases belong to this repository, which is currently private: `gh auth login` (or `GH_TOKEN`) is needed
+for them. Without access `npm run setup` says so and continues with the tracked example; `npm run setup:models`
+stops instead of falling back to Hugging Face and a local torch export (see [assets](docs/data-and-assets.md)).
+
+To serve a production build instead of the dev server, run `npm run build && npm run preview`, or put `dist/` on any
+static host (`BASE_PATH=/sub/path/ npm run build` for a sub-path). It must be served over HTTP, not opened as a file.
+
+## Development
+
+Also install Python tooling with `uv sync` (needs [uv](https://docs.astral.sh/uv/) and Python 3.12+); it is only
+used by `npm run check`, the word vectors and the evaluation scripts. See
+[assets, dataset licenses and offline preparation](docs/data-and-assets.md).
 
 ## Explore
 
