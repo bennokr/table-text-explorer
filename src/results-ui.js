@@ -48,7 +48,7 @@ function entry(model, result) {
     element('pre', { text: JSON.stringify({ id: result.id, created: result.created,
       source: result.sourceId ?? result.representationId, config: result.config,
       parameters: result.parameters, sentenceModel: result.sentenceModel, aggregation: result.aggregation,
-      coverage: result.coverage, originalDimensions: result.dimensions }, null, 2) })]);
+      coverage: result.coverage, originalDimensions: result.dimensions, precomputed: result.precomputed }, null, 2) })]);
   const children = [name, element('span', { text: `${result.kind === 'projection' ? 'Similarity map' : result.kind} · ${result.rowIds.length} records` }), ...buttons, details];
   if (result.kind === 'representation') {
     children.push(element('p', { text: result.embeddings

@@ -2,6 +2,7 @@ import { withBase } from './base.js';
 import { tableColumns } from './table-columns.js';
 import { demoSettings } from './demo-settings.js';
 import { registerExampleEmbeddings } from './example-embeddings.js';
+import { registerExampleResults } from './example-results.js';
 import { $, options } from './dom.js';
 import { Dataset } from './state.js';
 import { importTable, importExample, exportTable, cancelImport } from './importers.js';
@@ -57,8 +58,9 @@ async function load(action) {
     if (version !== importVersion) { return; }
     model.load(table);
     demoSettings(model, table.demo, registerExampleEmbeddings(model, table.embeddings));
+    const precomputed = registerExampleResults(model, table.results);
     const ignored = table.ignoredFields?.length ? ` · ${table.ignoredFields.length} structured columns ignored` : '';
-    complete(`${table.name} · ${model.rows.length} records, ${model.fields.length} columns${ignored} · data axes`);
+    complete(`${table.name} · ${model.rows.length} records, ${model.fields.length} columns${ignored} · ${precomputed}`);
   } catch (error) { if (version === importVersion) { reportError(error); } }
   finally { if (version === importVersion) { analysis.busy(false); summary(); } }
 }

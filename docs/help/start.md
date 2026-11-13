@@ -4,7 +4,7 @@ Explore a table locally, highlight interesting records, and build maps or themes
 
 ## First steps
 
-1. Import a spreadsheet, CSV, JSON or SAV table, or choose an example.
+1. Import a spreadsheet, CSV, JSON or SAV table, or choose an example (the examples open with a precomputed map and named clusters).
 2. Inspect columns and a few records. Correct column types if necessary.
 3. Brush a chart or type a query to highlight records.
 4. Read [phrases and metadata facets](descriptions.md) describing the current population.

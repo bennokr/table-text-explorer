@@ -23,7 +23,8 @@ export async function importExample(name, progress, example) {
   if (!example?.demo) { return table; }
   const [demo, schema] = await Promise.all([example.demo, example.metadata].map(readDescriptor));
   const embeddings = await fetchExampleEmbeddings(demo?.embeddings, table.rows.length, progress);
-  return { ...table, demo, embeddings, metadata: schemaMetadata(schema, table.metadata) };
+  const results = example.results ? await readDescriptor(example.results).catch(() => null) : null;
+  return { ...table, demo, embeddings, results, metadata: schemaMetadata(schema, table.metadata) };
 }
 
 export function exportTable(model, format, scope) {

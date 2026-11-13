@@ -22,8 +22,8 @@ test('compare by: the best column colours the cloud, clicking a value conditions
   const { page } = app;
   await page.selectOption('#examples', 'dbrd-test.json');
   await expect.poll(async () => (await snapshot(page)).rows, { timeout: 60000 }).toBe(2224);
-  await expect(page.locator('#terms-compare option').first()).toHaveText(/Auto → (rating|sentiment)/, { timeout: 90000 });
-  await expect(page.locator('#description-kind')).toHaveText(/^Distinctive phrases by (rating|sentiment)/);
+  await expect(page.locator('#terms-compare option').first()).toHaveText(/Auto → (rating|sentiment|themes)/, { timeout: 90000 });
+  await expect(page.locator('#description-kind')).toHaveText(/^Distinctive phrases by (rating|sentiment|themes)/);
   await expect(page.locator('#terms-ranking option[value="auto"]'), 'Size says what Automatic chose').toHaveText('Auto → Distinctive phrases');
   await expect(page.locator('#terms-compare optgroup[label="Compare to"] option[value="highlight"]')).toHaveCount(1);
   await expect(legend(page).locator('strong'), 'the column name is in the select and the heading, not beside the chips').toHaveCount(0);

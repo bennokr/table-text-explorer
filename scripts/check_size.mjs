@@ -34,4 +34,4 @@ for (const path of await files('.')) {
   if (count > 250) { throw new Error(`${path}: module exceeds 250 statements`); }
   total += count;
 }
-if (total > 12450) { throw new Error('JavaScript exceeds 12450 statements'); }
+if (total > 12650) { throw new Error('JavaScript exceeds 12650 statements'); }

@@ -49,7 +49,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
 each authored module at 250 statements, Python at 3300 total and JavaScript at
-12450 total. Imports, nested bodies, tooling and tests count. Generated files,
+12650 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -124,6 +124,11 @@ The JavaScript budget rose again, from 12350 to 12450, for the colour key (`src/
 about 25): one chip component and one list of "what the colours mean" shared by the map and scatter cards and the phrase cloud, so a value looks
 and behaves the same wherever it is listed. The cloud's own chip code was replaced by it. The rest of the stage (heading "ranking by column",
 what Automatic chose in the Size select, the highlight option moved into "Compare to") is a handful of statements.
+
+The JavaScript budget rose from 12450 to 12650 for the curated example results: the loader (`src/example-results.js`, about 50 statements, the
+only app code), the curation script that draws them with the app itself (`scripts/curate_example_results.mjs`, about 60, tooling), their unit and
+end-to-end tests (about 45), and the test that keeps every help tooltip to one short sentence (about 25, with the lead-sentence helper). Removing
+the Representative records block also removed its worker code and the per-phrase example lookup, which nothing else used.
 
 ## Codebook reader
 
