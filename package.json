@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "predev": "node scripts/prepare_examples.mjs",
+    "setup": "node scripts/prepare_assets.mjs",
+    "setup:models": "MODEL_RELEASE_REQUIRED=1 node scripts/prepare_assets.mjs --model",
     "dev": "vite --host 127.0.0.1",
+    "preview": "vite preview --host 127.0.0.1",
     "prebuild": "node scripts/prepare_build.mjs",
     "build": "vite build",
     "test": "node --test tests/*.test.mjs",

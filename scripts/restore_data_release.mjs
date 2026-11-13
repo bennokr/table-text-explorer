@@ -6,7 +6,9 @@ import { fetchReleaseAsset } from './release_assets.mjs';
 const cache = '.cache/data-release';
 const restored = `${cache}/files`;
 
+// SKIP_DATA_RELEASE=1 leaves out the released examples and embeddings (about 16 MB); the tracked examples remain.
 export async function restoreDataRelease() {
+  if (process.env.SKIP_DATA_RELEASE) { return []; }
   const release = JSON.parse(await readFile('scripts/data-release.json', 'utf8'));
   if (!release.datasets.length) { return []; }
   await mkdir(restored, { recursive: true });
