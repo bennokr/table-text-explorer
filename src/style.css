@@ -274,9 +274,9 @@ variable-picker[hidden] { display: none; }
 .term-fields > label > select { flex: 1; min-width: 0; max-width: 100%; font: inherit; }
 .term-fields abbr { text-decoration: none; cursor: help; }
 .term-fields > select { min-width: 0; max-width: 100%; }
-.colour-key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 4px 0; font-size: 11px; }
-.view-card > .colour-key { flex: none; margin: 0; padding: 3px 4px; max-height: 56px; overflow-y: auto; border-top: 1px solid #e2e4e5; }
-.view-card > .colour-key[hidden] { display: none; }
+.color-key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 4px 0; font-size: 11px; }
+.view-card > .color-key { flex: none; margin: 0; padding: 3px 4px; max-height: 56px; overflow-y: auto; border-top: 1px solid #e2e4e5; }
+.view-card > .color-key[hidden] { display: none; }
 .legend-value { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ccc; border-radius: 10px; background: #fff; padding: 1px 8px 1px 4px; cursor: pointer; font-size: 11px; }
 .legend-value:hover, .legend-value:focus { border-color: #426d8d; }
 .legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }

@@ -1,4 +1,4 @@
-// Every colour the app chooses by meaning lives here, so a value has one colour wherever it appears: on the map,
+// Every color the app chooses by meaning lives here, so a value has one color wherever it appears: on the map,
 // in the cluster legend, in the path chips and in the phrase clouds.
 
 // Categories (clusters, column values, phrase fields) take these in order and wrap after twelve.
@@ -15,7 +15,7 @@ export const UNASSIGNED = '#cccccc';
 export const LOW = CATEGORY[0];
 export const HIGH = CATEGORY[4];
 
-// Marks that are not categories: bars and points before any colouring, and the highlighted share.
+// Marks that are not categories: bars and points before any coloring, and the highlighted share.
 export const NEUTRAL = '#849bad';
 export const SERIES = '#527b9c';
 export const HIGHLIGHT = '#d9772b';

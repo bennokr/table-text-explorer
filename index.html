@@ -47,11 +47,12 @@
       <header class="panel-head"><h2>Subset descriptions</h2><small id="description-kind">Distinctive phrases</small><button type="button" id="description-hint" class="help-hint" data-help="descriptions#settings" aria-label="About this ranking">?</button><button id="terms-options" class="square" aria-controls="terms-controls" title="Subset description settings" aria-label="Subset description settings" aria-expanded="true">⚙</button></header>
       <div id="terms" class="scroll">
         <div class="term-fields">
-          <label><abbr title="Size: how phrases are ranked, which sets their size in the cloud">Size:</abbr>
-            <select id="terms-ranking" aria-label="N-gram ranking"><option value="auto">Automatic</option><option value="frequency">Common phrases</option><option value="semantic">Semantic splits</option><optgroup label="Advanced"><option value="balanced">Even splits</option><option value="contrast">c-TF-IDF contrast</option><option value="ctfidf">c-TF-IDF</option><option value="lift">Document lift</option></optgroup></select></label>
-          <select id="terms-embedding" aria-label="Semantic split embeddings" title="Reuse original embeddings from a saved result; no new model is fitted" hidden></select>
-          <label><abbr title="By: the column whose values colour the phrases, or what the records are compared with">By:</abbr>
-            <select id="terms-compare" aria-label="Compare by"></select></label>
+          <label><abbr title="Size: how phrases are scored, which sets their size in the cloud">Size:</abbr>
+            <select id="terms-ranking" aria-label="Size"><option value="auto">Automatic</option><option value="frequency">Common phrases</option><option value="contrast">Distinctive phrases</option><optgroup id="size-splits" label="Splits"><option value="balanced">Even splits</option></optgroup><optgroup label="Advanced"><option value="ctfidf">c-TF-IDF</option><option value="lift">Document lift</option></optgroup></select></label>
+          <label><abbr title="Color: what colors the phrases, such as the values of a column">Color:</abbr>
+            <select id="terms-color" aria-label="Color"></select></label>
+          <label hidden><abbr title="Contrast: what the highlighted records are compared with">Contrast:</abbr>
+            <select id="terms-contrast" aria-label="Contrast"><option value="previous">Previous step</option><option value="rest">Rest of the table</option><option value="current">Current records · no contrast</option><option value="all">Whole table · no contrast</option></select></label>
           <select id="terms-tree-node" aria-label="Tree branches to describe" hidden></select>
           <select id="terms-tree-comparison" aria-label="Tree comparison" hidden><option value="siblings">Branch vs siblings</option><option value="rest">Branch vs rest of visible</option></select>
           <select id="terms-group-page" aria-label="Groups to describe" hidden></select>
@@ -59,7 +60,6 @@
         <div id="terms-controls">
         <div id="terms-inspector" hidden>
         <div class="term-controls"><select id="terms-content" aria-label="Description predicates"><option value="phrases">Phrases</option><option value="facets">Metadata facets</option><option value="both">Phrases + facets</option></select>
-          <select id="terms-display" aria-label="Phrase field display"><option value="separate">Separate field clouds</option><option value="combined">Combined · color by field</option></select>
           <label title="Minimum matching records; split rankings require this many records on both sides">Min records <input id="terms-support" type="number" min="1" max="20000" value="2" required></label>
           <label><input id="terms-deduplicate" type="checkbox" checked> Reduce redundant phrases</label></div>
         <div class="status-line"><p id="terms-status" role="status">Counts are prepared when needed.</p>

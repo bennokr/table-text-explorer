@@ -49,7 +49,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
 each authored module at 250 statements, Python at 3300 total and JavaScript at
-12650 total. Imports, nested bodies, tooling and tests count. Generated files,
+12750 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -76,7 +76,7 @@ modules under 250 statements with the usual function limits, and none of it ship
 
 The budgets rose again, JavaScript from 10400 to 11100 and Python from 2600 to 2900, for Compare by
 ([spec](compare-by-spec.md)). JavaScript grew by about 715 statements: roughly 520 in `src/` (query-path chips and
-NOT, previous-step comparison, the Compare by picker and screen planning, coloured cloud and legend, even-split
+NOT, previous-step comparison, the Compare by picker and screen planning, colored cloud and legend, even-split
 UI) and about 200 in tests (query path, column payloads, three browser journeys). Python grew by about 257: the
 closed-form column screen (`src/workers/column_screen.py`, 148), its self-check on synthetic planted and missing
 data (`tests/check_screen.py`, 88) and the even-split ranking in `facets.py`. The screen replaces nothing that
@@ -97,15 +97,15 @@ stepping aside when a ranking is chosen).
 
 The budgets rose a last time for the exploration fixes, JavaScript from 11300 to 11450 and Python from 3100 to 3150. JavaScript (about 100
 statements, a third of it tests): default views chosen by what the columns are, identifier and repeated-label typing, a clear-visualizations
-button, the legend placed after its map, one colour per value shared by the map, legend and phrase cloud, and shorter map names. Python
+button, the legend placed after its map, one color per value shared by the map, legend and phrase cloud, and shorter map names. Python
 (about 50): cluster naming now skips function words and generic phrases and falls back to looser phrases before a number, with tests.
 
 Semantic splits then raised the budgets once more, JavaScript from 11450 to 11550 and Python from 3150 to 3200: phrases are chosen one after
-another so each adds something the earlier ones do not (Python, about 35 statements with tests), and coloured by the cluster where their
+another so each adds something the earlier ones do not (Python, about 35 statements with tests), and colored by the cluster where their
 records sit (JavaScript, about 60 statements with tests). The same pass removed unused exports.
 
 The JavaScript budget rose again, from 11550 to 12300 (about 700 statements, a fifth of it tests), for the explorer refactor stage: the ranking
-hint, cluster chip dots, an event list, shared colours, a settings object with a job runner split from the panel binder, one Compare by, and the
+hint, cluster chip dots, an event list, shared colors, a settings object with a job runner split from the panel binder, one Compare by, and the
 search field with tokens and suggestions (`query-field.js`, `query-suggest.js`, `query-text.js`). The refactors moved code more than they added it;
 the new behaviour is the field and the folded-in comparisons.
 
@@ -120,8 +120,8 @@ greyed-out columns while a Size ranking is chosen, and the "no column stands out
 weak columns stay selectable and that a chosen Size greys the columns out, and the cluster order in the unit tests). Removing text axes took out
 the `text_axes` worker function, `axisGroups`, the axes menu entries and their tests.
 
-The JavaScript budget rose again, from 12350 to 12450, for the colour key (`src/colour-key.js`, about 85 statements, and its end-to-end spec,
-about 25): one chip component and one list of "what the colours mean" shared by the map and scatter cards and the phrase cloud, so a value looks
+The JavaScript budget rose again, from 12350 to 12450, for the color key (`src/color-key.js`, about 85 statements, and its end-to-end spec,
+about 25): one chip component and one list of "what the colors mean" shared by the map and scatter cards and the phrase cloud, so a value looks
 and behaves the same wherever it is listed. The cloud's own chip code was replaced by it. The rest of the stage (heading "ranking by column",
 what Automatic chose in the Size select, the highlight option moved into "Compare to") is a handful of statements.
 
@@ -129,6 +129,12 @@ The JavaScript budget rose from 12450 to 12650 for the curated example results: 
 only app code), the curation script that draws them with the app itself (`scripts/curate_example_results.mjs`, about 60, tooling), their unit and
 end-to-end tests (about 45), and the test that keeps every help tooltip to one short sentence (about 25, with the lead-sentence helper). Removing
 the Representative records block also removed its worker code and the per-phrase example lookup, which nothing else used.
+
+The JavaScript budget rose from 12650 to 12750 for the Size / Color / Contrast restructure (about 80 statements net). The new module
+`src/size-choices.js` (about 55) lists each embedding as its own semantic-splits entry in Size, which replaced the separate embeddings select;
+Color now works with any Size, so a population-scored cloud is tinted by the Color column (the tint, its key and the job key that includes it,
+about 30); and the end-to-end specs for the new behavior and the example's shipped embeddings (about 25). It removed the display and embedding
+selects, the "Compare to" group and the rule that a chosen Size disables the columns.
 
 ## Codebook reader
 

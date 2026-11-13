@@ -5,14 +5,16 @@ import { Events } from './events.js';
 export function defaultTermSettings() {
   return {
     content: 'phrases', // phrases | facets | both
+    // Size: how phrases are scored, which sets their size in the cloud.
     ranking: 'auto', // auto | frequency | contrast | ctfidf | lift | balanced | semantic
-    embedding: '', // saved embedding result behind semantic splits
+    embedding: '', // the embeddings behind semantic splits: a saved result's id or an imported file's key
     support: 2, // minimum matching records
     deduplicate: true,
-    display: 'separate', // one cloud per field, or one coloured by field
-    // What the phrases are compared by: auto, highlight, population:<all|visible|filtered>, col:<column>
-    // or tree:<clustering id>.
-    compare: 'auto',
+    // Color: what colors the phrases. auto | none | field (one cloud, colored by text field) | col:<column>
+    // (its values, or the value where most of a phrase's records are) | tree:<clustering id>.
+    color: 'auto',
+    // Contrast: what the highlighted records are compared with when no column colors the cloud.
+    contrast: 'previous', // previous (the records before the last condition) | rest (of the table) | current | all
     treeComparison: 'siblings', // branch against its siblings, or against the rest of the visible records
     groupPage: 0, // which 20 branches of a tree are described
   };
@@ -27,12 +29,12 @@ export function setTermSettings(model, patch) {
   return true;
 }
 
-export const populationScopes = ['all', 'visible', 'filtered'];
+// Contrast choices and the records each one describes (see comparisonSets in term-view.js).
+export const contrastScopes = { previous: 'selection', rest: 'filtered', current: 'visible', all: 'all' };
 
-// The comparison scope of the ordinary (non-column) descriptions.
-export function termScope(settings) {
-  const [kind, name] = settings.compare.split(':');
-  return kind === 'population' && populationScopes.includes(name) ? name : 'selection';
-}
+export const termScope = settings => contrastScopes[settings.contrast] ?? 'selection';
 
-export const treeChoice = settings => (settings.compare.startsWith('tree:') ? settings.compare.slice(5) : null);
+export const treeChoice = settings => (settings.color.startsWith('tree:') ? settings.color.slice(5) : null);
+
+// The column a Color choice names, if it names one.
+export const colorColumn = settings => (settings.color.startsWith('col:') ? settings.color.slice(4) : null);

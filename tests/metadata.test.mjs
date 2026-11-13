@@ -116,13 +116,13 @@ function workbook(sheets) {
 
 test('cells whose type does not match their header are reported by sheet, row and header', () => {
   const bytes = workbook({
-    Columns: [['name', 'minimum', 'identifying', 'colour'], ['a', '5', 1, 'x']],
+    Columns: [['name', 'minimum', 'identifying', 'color'], ['a', '5', 1, 'x']],
     Values: [['column', 'code', 'label'], ['a', 7, 'Seven'], ['a', '08', 'Eight']],
   });
   const warnings = [];
   const schema = readCodebook(bytes, { onWarning: message => warnings.push(message) });
   assert.deepEqual(warnings, [
-    'Columns header colour is not used',
+    'Columns header color is not used',
     'Columns row 2, minimum: "5" is text but this header takes a number',
     'Columns row 2, identifying: 1 is a number; use TRUE or FALSE',
     'Values row 2, code: 7 is a number but this header takes text; write it as text so that leading zeros survive',

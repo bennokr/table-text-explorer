@@ -1,22 +1,7 @@
-import { $, options } from './dom.js';
 import { comparisonSets } from './term-view.js';
 import { clusterComparison } from './cluster-descriptions.js';
-import { setTermSettings, termScope, treeChoice } from './term-settings-model.js';
-
-function embeddingChoices(model) {
-  return model.results.list('representation').filter(result => result.embeddings && result.embeddingDimensions);
-}
-
-export function refreshEmbeddingChoices(model) {
-  const select = $('#terms-embedding');
-  const settings = model.termSettings;
-  const choices = embeddingChoices(model);
-  options(select, choices.map(result => [result.id, result.name]), settings.embedding);
-  $('#terms-ranking option[value="semantic"]').disabled = !choices.length;
-  if (!choices.length && settings.ranking === 'semantic') { setTermSettings(model, { ranking: 'auto' }); }
-  if (choices.length && !choices.some(result => result.id === settings.embedding)) { setTermSettings(model, { embedding: choices[0].id }); }
-  select.hidden = settings.ranking !== 'semantic';
-}
+import { termScope, treeChoice } from './term-settings-model.js';
+import { embeddingsFor } from './size-choices.js';
 
 function compareQuery(compare, indexId, settings) {
   const groups = compare.groups.map(({ id, name, subset, comparison }) => ({ id, name, subset, comparison }));
@@ -24,7 +9,7 @@ function compareQuery(compare, indexId, settings) {
     content: settings.content, deduplicate: settings.deduplicate };
 }
 
-// What to describe when no column colours the cloud: the highlight, a population, or a tree's branches.
+// What to describe when no column splits the cloud into values: the highlight against its contrast, or a tree's branches.
 function scopeQuery(model, indexId) {
   const settings = model.termSettings;
   const tree = treeChoice(settings);
@@ -43,8 +28,7 @@ export function descriptionQuery(model, indexId, compare = null) {
 
 export function withEmbeddings(model, payload) {
   if (payload.ranking !== 'semantic') { return payload; }
-  const result = model.results.get(payload.embeddingId);
-  if (!result?.embeddings) { throw new Error('Choose an existing embedding result for semantic splits.'); }
-  return { ...payload, features: result.embeddings, embeddingDimensions: result.embeddingDimensions,
-    embeddingRowIds: result.rowIds };
+  const embeddings = embeddingsFor(model, payload.embeddingId);
+  if (!embeddings) { throw new Error('Choose existing embeddings for semantic splits.'); }
+  return { ...payload, ...embeddings };
 }

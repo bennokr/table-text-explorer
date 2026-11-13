@@ -1,5 +1,7 @@
 # Compare by: conditional phrase ranking (spec)
 
+> **Renamed.** The controls are now **Size**, **Color** (the column select described here, formerly By) and **Contrast** (the baseline choices that were in its "Compare to" group). A chosen Size no longer disables Color: other Sizes tint their phrases by the Color column. This page is the design record of the column screen and the first Compare-by stage; the current controls are in `docs/help/descriptions.md`.
+
 Status: implemented and calibrated on DBRD, Rechtspraak and Tweede Kamer motions ([evaluation](evaluation.md#calibrating-the-column-screen)).
 Where the calibration changed the proposal below, the text says so. Items marked *untested* have no measurement.
 
@@ -7,7 +9,7 @@ Where the calibration changed the proposal below, the text says so. Items marked
 
 A **column** is any partition of the records into values: a table column, an annotation, a saved
 selection, a clustering, the current highlight (two values), a phrase or facet predicate (present or
-absent). **By:** colours a phrase cloud by the values of one column and ranks
+absent). **By:** colors a phrase cloud by the values of one column and ranks
 each phrase by how distinctive it is for one value (the existing c-TF-IDF contrast, one value against
 the rest). It generalises the scope, cluster-group and tree-comparison selects, which become columns.
 
@@ -30,10 +32,10 @@ that gave a weak 0.015 column three dots.)
 
 ## Cloud
 
-- One cloud per text field (separate by default). Colour is the value where the phrase has the highest
+- One cloud per text field (separate by default). Color is the value where the phrase has the highest
   contrast, size is the contrast. A phrase that is not clearly tied to one value is grey.
 - The legend lists the values; clicking a value highlights those records.
-- Hover shows field, support and share per value. Combined clouds keep colour for the value and
+- Hover shows field, support and share per value. Combined clouds keep color for the value and
   show the field in hover and outline.
 - Ordinal and numeric columns use a diverging scale (low to high). More than 8 values: top 7 and a grey
   "other". Missing values are a separate grey value, hidden unless switched on.
@@ -104,8 +106,8 @@ screened; a real column of 0.015 is found half the time at 60 records and 85% at
 Text axes (the main directions of the 32-d vectors, split at the median) were offered here and removed. The
 split is arbitrary (the median of a 4% direction, with unnamed sides), Auto chose it by default on tables
 where no column explains the text, and the clusters and semantic splits are the named version. When nothing
-passes, Auto shows the population's phrases in one colour ("Auto → no column stands out"). Columns that are
-not significant stay selectable, with their dots and a legend note that the colours may reflect chance.
+passes, Auto shows the population's phrases in one color ("Auto → no column stands out"). Columns that are
+not significant stay selectable, with their dots and a legend note that the colors may reflect chance.
 
 Measured earlier: axes beat the null and balanced splits but trailed semantic splits where embeddings are
 good (excerpt information about legal area 0.12 to 0.15 against 0.20; null 0.057).

@@ -42,7 +42,7 @@ export function clusterMembers(model, result, id) {
 }
 
 // The names of a clustering's groups in the order its legend card lists them, so other lists of the
-// same clusters (the colour key above the phrase cloud) can follow it.
+// same clusters (the color key above the phrase cloud) can follow it.
 export function legendNames(result) {
   if (!result.tree) { return Object.values(result.groups).map(group => group.name); }
   const names = [];

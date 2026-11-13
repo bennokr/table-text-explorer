@@ -68,7 +68,7 @@ export class Views {
     return added;
   }
 
-  // A map goes first and its legend right after it, so the two colour keys sit side by side.
+  // A map goes first and its legend right after it, so the two color keys sit side by side.
   insert(added) {
     const views = this.model.views;
     const map = views.findIndex(view => view.type === 'map');

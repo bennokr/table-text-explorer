@@ -83,7 +83,7 @@ function withoutPath(fields, path) {
 export function renderTerms(container, result, model, activate, views = new Map()) {
   clearTerms(container);
   const path = conjuncts(model.ast);
-  const combined = !result.separate && model.termSettings.display === 'combined';
+  const combined = !result.separate && model.termSettings.color === 'field';
   const fields = displayFields(withoutPath(result.fields, path), combined);
   const facets = displayFields(withoutPath(result.facets ?? [], path).filter(field => field.terms.length), combined)
     .map(field => ({ ...field, kind: 'facets', ...(field.combined ? { name: 'Metadata facets' } : {}) }));

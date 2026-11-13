@@ -8,7 +8,7 @@ test('facets: numeric-only tables describe missingness and ranges; clicks highli
   await expect(page.locator('#terms-options')).toBeEnabled();
   if (await page.locator('#terms-options').getAttribute('aria-expanded') === 'false') { await page.locator('#terms-options').click(); }
   await page.selectOption('#terms-content', 'facets');
-  await page.selectOption('#terms-display', 'combined');
+  await page.selectOption('#terms-color', 'field');
   await expect(page.locator('#terms-results .term-cloud[aria-busy=false]')).toHaveCount(1, { timeout: 120000 });
   await expect(page.locator('#terms-results .term-field-legend span')).toHaveText(['score', 'active']);
   await page.locator('.term-cloud text[data-term="Missing"][data-field="active"]').click();
@@ -31,7 +31,7 @@ test('facets: numeric-only tables describe missingness and ranges; clicks highli
   expect((await snapshot(page)).selected).toEqual([]);
   expect((await snapshot(page)).visible).toBe(12);
   await page.click('#clear-filters');
-  await page.selectOption('#terms-compare', 'population:all');
+  await page.selectOption('#terms-contrast', 'all');
   await page.selectOption('#terms-ranking', 'balanced');
   await expect(page.locator('#description-kind')).toHaveText('Even splits');
   await expect(page.locator('#terms-status')).toHaveText(/24 subset \/ 0 comparison/);

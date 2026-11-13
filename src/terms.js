@@ -5,7 +5,7 @@ import { bindTermSettings, refreshDescriptionControls, showDescriptionHeading, t
 import { bindTermControls } from './term-controls.js';
 import { $ } from './dom.js';
 import { clearTerms } from './term-view.js';
-import { refreshEmbeddingChoices } from './term-request.js';
+import { refreshSizeChoices } from './size-choices.js';
 import { complete } from './status.js';
 import { bindTreeControls } from './cluster-descriptions.js';
 import { setTermSettings, treeChoice } from './term-settings-model.js';
@@ -25,12 +25,12 @@ export class Terms {
     this.jobs = new TermJobs(model, analysis, { compare: this.compare, facets: this.facets, view: this.panel() });
     this.lastSelection = model.selected;
     this.lastPath = '';
-    this.display = model.termSettings.display;
+    this.combined = model.termSettings.color === 'field';
     bindTermSettings();
     bindTermControls(model);
     this.listen(model, analysis);
     bindTreeControls(model, () => this.jobs.describe());
-    refreshEmbeddingChoices(model);
+    refreshSizeChoices(model);
     this.fields();
   }
 
@@ -40,12 +40,12 @@ export class Terms {
       message: showMessage,
       clear: () => { clearTerms($('#terms-results')); showDescriptionHeading(this.model); },
       indexState: ready => termIndexState(ready, Boolean(this.model.rows.length)),
-      render: (result, compare) => renderResult($('#terms-results'), result, compare, { model: this.model, views: this.views }),
+      render: (result, compare) => renderResult($('#terms-results'), result, compare, { model: this.model, views: this.views, tint: this.compare.tintField() }),
       heading: ({ size, by }) => showDescriptionHeading(this.model, size, by),
       hidden: () => $('#terms').hidden,
       refresh: () => {
         refreshDescriptionControls(this.model);
-        refreshEmbeddingChoices(this.model);
+        refreshSizeChoices(this.model);
         this.compare.fill(this.compare.current());
       },
     };
@@ -58,7 +58,7 @@ export class Terms {
     // Resume after the previous job's finally block has restored its controls.
     model.on(Events.BUSY, () => { if (!model.analysisBusy) { queueMicrotask(() => jobs.drain()); } });
     model.on(Events.TERM_SETTINGS, () => this.settingsChanged());
-    model.on(Events.RESULTS, () => refreshEmbeddingChoices(model));
+    for (const type of [Events.RESULTS, Events.DATA]) { model.on(type, () => refreshSizeChoices(model)); }
     model.on(Events.DATA, () => { this.lastSelection = model.selected; this.lastPath = ''; this.fields(); });
     for (const type of [Events.SCHEMA, Events.CONFIG]) { model.on(type, () => this.fields()); }
     for (const type of [Events.ANNOTATION, Events.VIEW]) { model.on(type, () => jobs.describe()); }
@@ -72,9 +72,9 @@ export class Terms {
   }
 
   settingsChanged() {
-    const display = this.model.termSettings.display;
-    if (display !== this.display) { this.display = display; this.jobs.rerender(); }
-    else { this.jobs.describe(); }
+    const combined = this.model.termSettings.color === 'field';
+    if (combined !== this.combined) { this.combined = combined; this.jobs.rerender(); }
+    this.jobs.describe();
   }
 
   // Brushing leaves a branch description and goes back to describing the highlight. A click that adds a phrase to
@@ -86,7 +86,7 @@ export class Terms {
     if (!moved && path === this.lastPath) { return; }
     this.lastSelection = selected;
     this.lastPath = path;
-    if (moved && treeChoice(this.model.termSettings)) { setTermSettings(this.model, { compare: 'auto' }); }
+    if (moved && treeChoice(this.model.termSettings)) { setTermSettings(this.model, { color: 'auto' }); }
     else { this.jobs.describe(); }
   }
 

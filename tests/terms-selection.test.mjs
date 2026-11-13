@@ -20,14 +20,14 @@ function fixture(run) {
 test('scrubbing resumes live subset descriptions after a clustering or branch description', () => {
   fixture(({ model, result, descriptions }) => {
     model.select([0]);
-    assert.equal(model.termSettings.compare, 'auto');
+    assert.equal(model.termSettings.color, 'auto');
     assert.equal(descriptions.count, 1);
     model.select([1, 2]);
     assert.equal(descriptions.count, 2);
-    setTermSettings(model, { compare: `tree:${result.id}` });
+    setTermSettings(model, { color: `tree:${result.id}` });
     assert.equal(descriptions.count, 3);
     model.select([]);
-    assert.equal(model.termSettings.compare, 'auto', 'brushing leaves the branch description');
+    assert.equal(model.termSettings.color, 'auto', 'brushing leaves the branch description');
     assert.equal(descriptions.count, 4);
     assert.deepEqual(result.labels, [0, 1, 0]);
   });
@@ -48,14 +48,14 @@ test('a click that changes only the query path still describes again', () => {
 test('record navigation preserves a branch description and an explicit filtered population stays chosen', () => {
   fixture(({ model, result, descriptions }) => {
     model.select([0, 2]);
-    setTermSettings(model, { compare: `tree:${result.id}` });
+    setTermSettings(model, { color: `tree:${result.id}` });
     const before = descriptions.count;
     model.select([2, 0], 2);
-    assert.equal(model.termSettings.compare, `tree:${result.id}`);
+    assert.equal(model.termSettings.color, `tree:${result.id}`);
     assert.equal(descriptions.count, before);
-    setTermSettings(model, { compare: 'population:filtered' });
+    setTermSettings(model, { color: 'none', contrast: 'rest' });
     model.select([1]);
-    assert.equal(model.termSettings.compare, 'population:filtered');
+    assert.deepEqual([model.termSettings.color, model.termSettings.contrast], ['none', 'rest']);
   });
 });
 

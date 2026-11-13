@@ -46,7 +46,7 @@ export function mountTreeLegend(legend) {
 export function describeBranch(model, result, id) {
   result.descriptionNode = Number(id);
   model.emit(Events.RESULTS);
-  setTermSettings(model, { compare: `tree:${result.id}`, groupPage: 0 });
+  setTermSettings(model, { color: `tree:${result.id}`, groupPage: 0 });
   showTermSettings(true);
   $('#description-panel').scrollIntoView({ block: 'nearest' });
 }

@@ -28,18 +28,18 @@ export class TermJobs {
     return { ...descriptionQuery(this.model, this.indexId, compare), facetKey: this.facets.key };
   }
 
-  // What a finished description is worth keeping for: the request and the query path, because the cloud
-  // leaves out phrases the path already states. A click that adds a phrase to the path changes neither the
+  // What a finished description is worth keeping for: the request, the query path (the cloud leaves out phrases the
+  // path already states) and the column tinting the phrases. Changing the path or the tint changes neither the
   // subset nor the comparison, and must still redraw the cloud.
   keyFor(payload) {
-    return JSON.stringify({ payload, path: this.pathKey() });
+    return JSON.stringify({ payload, path: this.pathKey(), tint: this.compare.tintField()?.name ?? '' });
   }
 
   pathKey() { return this.model.ast ? formatQuery(this.model.ast) : ''; }
 
-  // Whether the cloud is about the highlighted records (Automatic with a highlight, or chosen), not a whole population.
+  // Whether the cloud is about the highlighted records, not a whole population or the values of a column.
   describesHighlight() {
-    return this.model.selected.size > 0 && ['auto', 'highlight'].includes(this.compare.value);
+    return this.model.selected.size > 0 && ['auto', 'none', 'field'].includes(this.compare.value);
   }
 
   invalidate(message) {
@@ -175,7 +175,7 @@ export class TermJobs {
     if (key !== job.key) { complete('Updating the subset description…'); this.describe(); return; }
     this.last = key;
     this.render(result, job.compare);
-    this.view.heading(describeHeading(this.query(job.compare), job.compare, this.describesHighlight()));
+    this.view.heading(describeHeading(this.query(job.compare), job.compare, { highlighted: this.describesHighlight(), tint: this.compare.tintField() }));
     this.view.message(describeStatus(result, job.compare, this.model));
     complete('Subset description updated. Similarity maps unchanged.');
     if (this.compare.pending(this.indexId)) { this.describe(); }

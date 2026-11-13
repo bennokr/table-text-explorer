@@ -41,7 +41,7 @@ test('layout: defaults are informative and x clears them', async ({ app }) => {
   await expect(page.locator('.view-card')).toHaveCount(0);
 });
 
-test('layout: the legend sits by the map, names exist and the cloud uses the legend colours', async ({ app }) => {
+test('layout: the legend sits by the map, names exist and the cloud uses the legend colors', async ({ app }) => {
   const { page } = app;
   await clusteredMap(page);
   const order = (await snapshot(page)).views.map(view => view.type);
@@ -49,26 +49,26 @@ test('layout: the legend sits by the map, names exist and the cloud uses the leg
   const names = await page.locator('.cluster-legend input.cluster-name').evaluateAll(inputs => inputs.map(input => input.value));
   expect(names).toHaveLength(2);
   expect(names.every(name => !name.startsWith('#'))).toBe(true);
-  const clusterOption = await page.locator('#terms-compare option[value^="col:"]', { hasText: '· name' }).first().getAttribute('value');
-  await page.selectOption('#terms-compare', clusterOption);
-  await expect(page.locator('#terms-results .colour-key .legend-value').first()).toBeVisible({ timeout: 60000 });
+  const clusterOption = await page.locator('#terms-color option[value^="col:"]', { hasText: '· name' }).first().getAttribute('value');
+  await page.selectOption('#terms-color', clusterOption);
+  await expect(page.locator('#terms-results .color-key .legend-value').first()).toBeVisible({ timeout: 60000 });
   await expect(page.locator('#description-kind')).toHaveAttribute('title', /Distinctive phrases by .*· name/);
   await expect(page.locator('.term-cloud text').first()).toHaveAttribute('style', /fill/);
-  const entries = await page.locator('#terms-results .colour-key .legend-value').allTextContents();
+  const entries = await page.locator('#terms-results .color-key .legend-value').allTextContents();
   expect(entries.every(text => /^[^·]+ · \d+$/u.test(text.trim())), 'a cluster the legend card already names shows its dot and first phrase').toBe(true);
   const cloud = await fills(page);
-  expect(cloud, 'every word has a cluster colour').not.toContain('');
+  expect(cloud, 'every word has a cluster color').not.toContain('');
   for (const color of cloud) { expect(await legendRgb(page)).toContain(color.replace(/,\s*/gu, ', ')); }
 });
 
-test('semantic splits: phrases take the colour of the cluster where their records are, and By greys its columns out', async ({ app }) => {
+test('semantic splits: phrases take the color of the cluster where their records are, and Color stays a free choice', async ({ app }) => {
   const { page } = app;
   await clusteredMap(page);
   await page.click('#terms-options');
-  await page.selectOption('#terms-ranking', 'semantic');
+  await page.selectOption('#terms-ranking', await page.locator('#terms-ranking option[value^="semantic:"]').first().getAttribute('value'));
   await expect(page.locator('#description-hint')).toHaveAttribute('title', /Semantic splits: phrases that each split the records/, { timeout: 60000 });
-  await expect(page.locator('#terms-compare optgroup:not([disabled]) option[value^="col:"]'), 'columns are greyed out; populations remain').toHaveCount(0);
-  await expect(page.locator('#terms-compare option[value="population:all"]')).toHaveCount(1);
+  await expect(page.locator('#terms-color option[value^="col:"]'), 'Size does not take Color away').not.toHaveCount(0);
+  await expect(page.locator('#terms-results .color-key')).toContainText('takes the color of the');
   const allowed = [...await legendRgb(page), 'rgb(153, 153, 153)'];
   const colors = await fills(page);
   expect(colors.length).toBeGreaterThan(0);

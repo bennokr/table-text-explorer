@@ -11,7 +11,7 @@ import { legendNames } from './cluster-legend-data.js';
 // compared with, plus the condition a click on that value adds to the query path.
 export const MIN_GROUP = 10;
 const MAX_VALUES = 8;
-const MAX_CLUSTERS = 12; // A clustering has as many colours as this, so its values are not collapsed into Other.
+const MAX_CLUSTERS = 12; // A clustering has as many colors as this, so its values are not collapsed into Other.
 
 export function candidateFields(model) {
   const usable = field => categorical(field) || field.kind === 'number' || temporal(field);
@@ -52,7 +52,7 @@ function collectMembers(model, field, population) {
   return [...members.values()];
 }
 
-// Clusters follow their legend card, not their size, so a colour key above the cloud reads like the legend.
+// Clusters follow their legend card, not their size, so a color key above the cloud reads like the legend.
 function legendOrder(model, field) {
   const result = model.results.get(field.derived);
   if (!result?.groups) { return () => 0; }
@@ -65,7 +65,7 @@ function categoricalGroups(model, field, population) {
   const members = collectMembers(model, field, population);
   const observed = members.flatMap(group => group.ids);
   const large = members.filter(group => group.ids.length >= MIN_GROUP).sort((a, b) => b.ids.length - a.ids.length);
-  // More values than colours: the biggest keep theirs and the rest, with every small group, share a grey "Other".
+  // More values than colors: the biggest keep theirs and the rest, with every small group, share a grey "Other".
   const limit = field.derived ? MAX_CLUSTERS : MAX_VALUES;
   const chosen = large.length > limit ? large.slice(0, limit - 1) : large;
   if (field.derived) { chosen.sort(legendOrder(model, field)); }

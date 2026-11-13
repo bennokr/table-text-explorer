@@ -1,6 +1,6 @@
 import { $ } from './dom.js';
 import { phrasePredicate } from './query-predicates.js';
-import { suggestCondition } from './colour-key.js';
+import { suggestCondition, tintKey } from './color-key.js';
 import { renderCompare } from './compare-render.js';
 import { renderTerms } from './term-view.js';
 import { tintByRegion } from './term-regions.js';
@@ -27,13 +27,18 @@ export function showMessage(text) {
   for (const id of ['terms-status', 'terms-index-status', 'terms-empty']) { $(`#${id}`).textContent = text; }
 }
 
-// The heading is "<how the phrases are ranked> by <what colours them>"; `ranking` is what Automatic resolved to.
+// The heading is "<how the phrases are ranked> by <what colors them>"; `ranking` is what Automatic resolved to.
 // Distinctive phrases of a highlight are distinctive for the highlighted records.
 const NAMED_RANKINGS = ['frequency', 'balanced', 'semantic'];
 
-export function describeHeading({ content, ranking }, compare, highlighted = false) {
-  const distinctive = highlighted && !NAMED_RANKINGS.includes(ranking);
-  return { size: rankingHeading(ranking, content === 'phrases'), by: compare?.label ?? (distinctive ? 'highlighted records' : '') };
+function headingBy(ranking, compare, { highlighted, tint }) {
+  if (compare) { return compare.label; }
+  if (tint) { return tint.name; }
+  return highlighted && !NAMED_RANKINGS.includes(ranking) ? 'highlighted records' : '';
+}
+
+export function describeHeading({ content, ranking }, compare, state = {}) {
+  return { size: rankingHeading(ranking, content === 'phrases'), by: headingBy(ranking, compare, state) };
 }
 
 export function describeStatus(result, compare, model) {
@@ -45,10 +50,16 @@ function suggestPredicate(model) {
   return (field, phrase, predicate, negate) => suggestCondition(model, predicate ?? phrasePredicate(field, phrase), negate);
 }
 
-export function renderResult(container, result, compare, { model, views }) {
+// A population scored one way, its phrases tinted by the value of a column where most of their records are.
+function renderTinted(container, result, tint, { model, activate, views }) {
+  renderTerms(container, tintByRegion(model, result, tint), model, activate, views);
+  container.prepend(tintKey(model, tint, activate));
+}
+
+export function renderResult(container, result, compare, { model, views, tint }) {
   const activate = suggestPredicate(model);
   if (compare) { renderCompare(container, result, compare, { model, activate, views }); }
   else if (result.groups) { renderGroups(container, result.groups, model, activate, views); }
-  else if (result.ranking === 'semantic') { renderTerms(container, tintByRegion(model, result), model, activate, views); }
+  else if (tint) { renderTinted(container, result, tint, { model, activate, views }); }
   else { renderTerms(container, result, model, activate, views); }
 }

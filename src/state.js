@@ -12,6 +12,8 @@ export class Dataset extends EventTarget {
   selected = new Set();
   annotations = new Set();
   populations = new Map(); // Records highlighted before each path condition, keyed by condition index.
+  importedEmbeddings = new Map(); // Embeddings that came with the table or were imported, by key.
+  embeddingSequence = 0;
   active = null;
   query = () => true;
   pinned = null;
@@ -63,7 +65,7 @@ export class Dataset extends EventTarget {
     this.embeddingSequence = 0;
     this.ast = null;
     this.populations = new Map();
-    Object.assign(this.termSettings, { compare: 'auto', groupPage: 0 }); // The panel's other settings are kept.
+    Object.assign(this.termSettings, { color: 'auto', contrast: 'previous', groupPage: 0 }); // The panel's other settings are kept.
     this.config.weights = {};
     this.visible = rows.map((_, index) => index);
     this.emit(Events.DATA);

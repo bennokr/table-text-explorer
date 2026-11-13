@@ -14,12 +14,12 @@ export function bindTermSettings() {
 export function refreshDescriptionControls(model) {
   const { content, ranking } = model.termSettings;
   const labels = {
-    phrases: ['Common phrases', 'c-TF-IDF contrast', 'c-TF-IDF'],
-    facets: ['Common predicates', 'Δ share', 'Subset share'],
-    both: ['Common predicates', 'c-TF-IDF contrast / Δ share', 'c-TF-IDF / subset share'],
+    phrases: ['Common phrases', 'Distinctive phrases', 'c-TF-IDF'],
+    facets: ['Common predicates', 'Distinctive predicates', 'Subset share'],
+    both: ['Common predicates', 'Distinctive phrases and predicates', 'c-TF-IDF / subset share'],
   };
-  ['frequency', 'contrast', 'ctfidf'].forEach((ranking, index) => {
-    $(`#terms-ranking option[value="${ranking}"]`).textContent = labels[content][index];
+  ['frequency', 'contrast', 'ctfidf'].forEach((value, index) => {
+    $(`#terms-ranking option[value="${value}"]`).textContent = labels[content][index];
   });
   $('#terms-deduplicate').closest('label').hidden = content === 'facets';
   $('#description-hint').title = rankingHelp(ranking, content);

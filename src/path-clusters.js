@@ -1,5 +1,5 @@
 // A condition on a cluster column ("kmeans-k10 · name = onderwijs · kinderen") need not be spelled out when the
-// cluster legend is on screen: its colour and first phrase say which row of the legend it is.
+// cluster legend is on screen: its color and first phrase say which row of the legend it is.
 export function clusterCondition(model, node) {
   const inner = node.kind === 'not' ? node.child : node;
   if (inner.kind !== 'term' || inner.op !== '=') { return null; }
@@ -22,7 +22,7 @@ export function scrollToLegendRow(id) {
 }
 
 // The text of such a chip: the first phrase of the name when the legend shows the whole name, else the whole
-// name without the long column name. The dot's colour does the rest.
+// name without the long column name. The dot's color does the rest.
 export function clusterChipLabel(condition) {
   const text = condition.shown ? condition.name.split(' · ')[0] : condition.name;
   return condition.negated ? `NOT ${text}` : text;

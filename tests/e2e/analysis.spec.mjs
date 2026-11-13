@@ -51,7 +51,7 @@ async function cluster(page, method) {
 }
 
 async function adjacentLegend(page) {
-  // The legend is placed right after its map, so the map is already coloured by the clusters.
+  // The legend is placed right after its map, so the map is already colored by the clusters.
   expect((await snapshot(page)).views.map(view => view.type).slice(0, 2)).toEqual(['map', 'legend']);
   const color = page.locator('.view-card').first().getByRole('button', { name: 'Color by', exact: true });
   await expect(color).toBeDisabled();
@@ -73,7 +73,7 @@ async function treeAndDescriptions(page) {
   await expect(page.locator('#terms-results details[data-group-id]')).toHaveCount(1);
   await page.click('#terms-options');
   await query(page, 'group:battery');
-  await expect(page.locator('#terms-compare')).toHaveValue('auto');
+  await expect(page.locator('#terms-color')).toHaveValue('auto');
   await expect(page.locator('#terms-status')).toHaveText(/12 subset \/ 12 comparison/);
   await expect(page.locator('#terms-results details[data-group-id]')).toHaveCount(0);
   await legend.getByRole('spinbutton').fill('1');

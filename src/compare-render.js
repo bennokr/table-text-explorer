@@ -1,10 +1,10 @@
-import { colourKey, keyChip } from './colour-key.js';
+import { colorKey, keyChip } from './color-key.js';
 import { renderTerms } from './term-view.js';
 import { clusterChipLabel, clusterCondition, pulseLegendRow } from './path-clusters.js';
 
 const PER_VALUE = 10; // Phrases each value contributes to the cloud.
 
-// Each value's top phrases join one cloud; a phrase keeps the colour of the value it is most distinctive for.
+// Each value's top phrases join one cloud; a phrase keeps the color of the value it is most distinctive for.
 function mergeTerms(lists) {
   const best = new Map();
   for (const { group, terms } of lists) {
@@ -50,13 +50,13 @@ function legendNotes({ column }) {
   const notes = [];
   if (!column) { return notes; }
   if (column.coverage < 0.995) { notes.push(`${Math.round(100 * column.coverage)}% of records have a value`); }
-  if (column.eligible && !column.significant) { notes.push('not significant: these colours may reflect chance'); }
+  if (column.eligible && !column.significant) { notes.push('not significant: these colors may reflect chance'); }
   if (column.missing?.differs) { notes.push('missing values differ in text, so this column may be biased'); }
   return notes;
 }
 
 function compareLegend(compare, activate, model) {
-  const key = colourKey(compare.groups.map(group => legendEntry(group, activate, model)), legendNotes(compare));
+  const key = colorKey(compare.groups.map(group => legendEntry(group, activate, model)), legendNotes(compare));
   key.setAttribute('aria-label', `Values of ${compare.label}`);
   return key;
 }

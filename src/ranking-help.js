@@ -7,7 +7,7 @@ export function rankingHelp(ranking, content = 'phrases') {
     frequency: `Common ${what}: the most frequent among these records, compared with nothing.`,
     balanced: 'Even splits: one yes/no question per column, the most even first.',
     semantic: 'Semantic splits: phrases that each split the records in a way the earlier ones do not; size is what the split adds.',
-    contrast: `Contrast: how much more a ${content === 'facets' ? 'predicate' : 'phrase'} marks these records than the comparison records.`,
+    contrast: `Distinctive ${what}: how much more each marks these records than the comparison records.`,
     ctfidf: 'c-TF-IDF: class-based term weighting of these records, with no comparison term.',
     lift: 'Lift: how many times more often it occurs in these records than in the comparison records.',
   };

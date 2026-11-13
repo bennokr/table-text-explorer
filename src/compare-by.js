@@ -1,8 +1,10 @@
 import { $, element } from './dom.js';
 import { candidateFields, columnKind, columnPayload, fieldGroups } from './compare-columns.js';
 import { Events } from './events.js';
-import { populationGroup, treeGroup } from './compare-choices.js';
-import { setTermSettings } from './term-settings-model.js';
+import { treeGroup } from './compare-choices.js';
+import { colorColumn, setTermSettings, treeChoice } from './term-settings-model.js';
+import { phraseSettings } from './phrase-config.js';
+import { mapColumn } from './term-regions.js';
 
 const MIN_POPULATION = 60;
 const CACHED_SCREENS = 6;
@@ -19,8 +21,8 @@ export function dots(column) {
   return column.effect >= BANDS[0] ? '●●○' : '●○○';
 }
 
-// The column the map is coloured by wins when it is significant, so the cloud explains the colours on the map.
-// When no column is significant there is nothing to colour by, and the cloud shows the population's phrases.
+// The column the map is colored by wins when it is significant, so the cloud explains the colors on the map.
+// When no column is significant there is nothing to color by, and the cloud shows the population's phrases.
 function bestChoice(screen, mapColumn) {
   const ranked = screen.columns.filter(column => column.significant).sort((a, b) => b.effect - a.effect);
   if (ranked.some(column => column.name === mapColumn)) { return `col:${mapColumn}`; }
@@ -33,7 +35,7 @@ function columnLabel(field, result) {
   return `${field.label ?? field.name} ${result ? dots(result) : ''}${coverage}${flag}`.trim();
 }
 
-// "By:" chooses the column whose values colour the phrase cloud. Auto follows the highlight when
+// "By:" chooses the column whose values color the phrase cloud. Auto follows the highlight when
 // there is one and otherwise the strongest significant column; without one it shows the population as it is.
 // Columns that are not significant stay in the list: a weak column can still be the one worth looking at.
 export class CompareBy {
@@ -42,7 +44,8 @@ export class CompareBy {
 
   constructor(model, change) {
     this.model = model;
-    this.select = $('#terms-compare');
+    this.select = $('#terms-color');
+    this.contrast = $('#terms-contrast');
     model.on(Events.DATA, () => { this.screens.clear(); this.fill(null); });
     model.on(Events.SELECTION, () => this.fill(this.current()));
     model.on(Events.VIEWS, () => { if (this.value === 'auto') { this.fill(this.current()); change(); } });
@@ -50,7 +53,7 @@ export class CompareBy {
     this.fill(null);
   }
 
-  get value() { return this.model.termSettings.compare; }
+  get value() { return this.model.termSettings.color; }
 
   mapColumn() { return this.model.views.find(view => view.type === 'map')?.color; }
 
@@ -59,13 +62,25 @@ export class CompareBy {
     return highlighted.length ? highlighted : this.model.visible;
   }
 
+  // Each value's own distinctive phrases (a contrast of one value against the rest) is the Automatic or Distinctive
+  // Size; any other Size scores one population, and a Color column then tints its phrases (see tintField).
+  distinctive() { return ['auto', 'contrast'].includes(this.model.termSettings.ranking); }
+
+  // 'columns': one description per value of the Color column. 'highlight': one description of the highlight (or the
+  // current records) against its Contrast.
   mode(indexId) {
-    const settings = this.model.termSettings;
-    const chosenColumn = this.value.startsWith('col:');
-    // A chosen ranking, metadata predicates, a population or a tree describe one population, not a column's values.
-    const describing = settings.ranking !== 'auto' || settings.content === 'facets' || (this.value !== 'auto' && !chosenColumn);
-    if (!indexId || describing) { return 'highlight'; }
+    const column = this.value === 'auto' || this.value.startsWith('col:');
+    if (!indexId || this.model.termSettings.content === 'facets' || !this.distinctive() || !column) { return 'highlight'; }
     return this.value === 'auto' && this.model.selected.size ? 'highlight' : 'columns';
+  }
+
+  // The column whose values tint each phrase when one population is scored: the chosen Color column, or for
+  // semantic splits on Auto the column the map is colored by.
+  tintField() {
+    if (this.mode(this.indexId) === 'columns') { return null; }
+    const name = colorColumn(this.model.termSettings);
+    if (name) { return candidateFields(this.model).find(field => field.name === name) ?? null; }
+    return this.value === 'auto' && this.model.termSettings.ranking === 'semantic' ? mapColumn(this.model) : null;
   }
 
   key(indexId, population) {
@@ -109,7 +124,7 @@ export class CompareBy {
     return String(choice).slice(4);
   }
 
-  // The partition to colour the cloud by, or null to describe the highlight as before.
+  // The partition to color the cloud by, or null to describe the highlight as before.
   resolve(indexId) {
     if (this.mode(indexId) !== 'columns') { return null; }
     const population = this.population();
@@ -134,24 +149,23 @@ export class CompareBy {
   }
 
 
+  // Auto, None, Field (one cloud colored by field, when there are several), the columns, and a tree's branches.
   fill(screen) {
-    const ranked = this.model.termSettings.ranking !== 'auto';
-    // Columns colour a cloud by their values; a chosen ranking describes one population, so they stay listed but
-    // cannot be picked until the size is Automatic again.
     const columns = this.columnOptions(screen).filter(([, list]) => list.length)
-      .map(([label, list]) => element('optgroup', ranked ? { label, disabled: '' } : { label }, list));
-    this.select.title = ranked ? 'A chosen Size ranks the phrases of one population; set Size to Automatic to colour by a column.' : '';
-    const groups = [populationGroup(), ...columns, ...treeGroup(this.model)].filter(Boolean);
-    this.select.replaceChildren(new Option('Auto', 'auto'), ...groups);
-    if (this.unavailable(ranked)) { setTermSettings(this.model, { compare: 'auto' }); }
+      .map(([label, list]) => element('optgroup', { label }, list));
+    const several = this.model.termSettings.content !== 'phrases' || phraseSettings(this.model).fields.length > 1;
+    const field = several ? [new Option('Field', 'field')] : [];
+    this.select.replaceChildren(new Option('Auto', 'auto'), new Option('None', 'none'), ...field, ...columns, ...treeGroup(this.model));
+    if (![...this.select.options].some(option => option.value === this.value)) { setTermSettings(this.model, { color: 'auto' }); }
     this.select.options[0].text = this.autoLabel(screen);
     this.select.value = this.value;
+    this.showContrast();
   }
 
-  // The chosen comparison no longer exists, or is a column that a chosen ranking cannot use.
-  unavailable(ranked) {
-    const exists = [...this.select.options].some(option => option.value === this.value);
-    return !exists || (ranked && this.value.startsWith('col:'));
+  // Contrast matters only when no column splits the cloud into values (and no tree's branches do).
+  showContrast() {
+    const splitByValues = this.mode(this.indexId) === 'columns' || Boolean(treeChoice(this.model.termSettings));
+    this.contrast.closest('label').hidden = splitByValues;
   }
 
   // Auto describes the highlight when there is one; the dots then say which column to condition on next.

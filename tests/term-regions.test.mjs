@@ -9,7 +9,7 @@ const model = { rows, results, views: [{ type: 'map', color: 'cluster' }],
 const term = ids => ({ phrase: 'x', ids });
 const result = { ranking: 'semantic', fields: [{ name: 'text', terms: [term([0, 1, 2, 3]), term([25, 26, 27, 1])] }] };
 
-test('a semantic phrase takes the colour of the cluster most of its records belong to', () => {
+test('a semantic phrase takes the color of the cluster most of its records belong to', () => {
   const [zorg, school] = tintByRegion(model, result).fields[0].terms;
   assert.deepEqual([zorg.color, zorg.region, zorg.regionShare], ['#111111', 'zorg', 1]);
   assert.deepEqual([school.color, school.region, school.regionShare], ['#222222', 'school', 0.75]);

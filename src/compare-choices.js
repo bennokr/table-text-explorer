@@ -1,16 +1,6 @@
 import { element } from './dom.js';
 
-// Comparisons that are not a column's values: what the highlighted records are compared with, and a hierarchical
-// clustering's branches.
-export function populationGroup() {
-  return element('optgroup', { label: 'Compare to' }, [
-    new Option('Highlighted vs previous step', 'highlight'),
-    new Option('Entire dataset', 'population:all'),
-    new Option('Current filtered records', 'population:visible'),
-    new Option('Filtered vs remaining table', 'population:filtered'),
-  ]);
-}
-
+// A hierarchical clustering's branches, each compared with its siblings or the rest of the visible records.
 export function treeGroup(model) {
   const trees = model.results.list('clustering').filter(result => result.tree);
   if (!trees.length) { return []; }

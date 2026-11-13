@@ -22,7 +22,7 @@ export function showClustering(model, result) {
     if (relatedMap(model.resultFor(view), result)) { view.color = result.columns.name; }
   }
   const view = card(model, { type: 'legend', resultId: result.id });
-  // The legend goes right after its map, so the colour key sits next to what it colours.
+  // The legend goes right after its map, so the color key sits next to what it colors.
   const map = maps.find(candidate => relatedMap(model.resultFor(candidate), result)) ?? maps[0];
   if (map) { model.views.splice(model.views.indexOf(map) + 1, 0, view); } else { model.views.push(view); }
   return view;

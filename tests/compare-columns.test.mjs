@@ -50,7 +50,7 @@ test('values beyond the palette share a grey Other group, small groups included'
   assert.equal(rare.length, 1, 'nine singletons are fewer than a group, so no Other');
 });
 
-test('a cluster column keeps the colours and the order of its legend, not the order of its sizes', () => {
+test('a cluster column keeps the colors and the order of its legend, not the order of its sizes', () => {
   const rows = Array.from({ length: 60 }, (_, id) => ({ cluster: id < 40 ? 'zorg' : 'school' }));
   const results = { get: id => (id === 'r1' ? { groups: { 0: { name: 'school', color: '#111111' }, 1: { name: 'zorg', color: '#222222' } } } : null) };
   const clusterModel = { rows, results, fields: [field('cluster', { kind: 'categorical', derived: 'r1' })] };

@@ -31,7 +31,7 @@ export function bindTreeControls(model, describe) {
 }
 
 // A tree's branches, each against its siblings or the rest of the visible records. (A flat clustering is
-// a column: Compare by its name column.)
+// a column: Color by its name column.)
 export function clusterComparison(model, resultId, page = 0, mode = 'siblings') {
   const result = model.results.get(resultId);
   if (result?.kind !== 'clustering' || !result.tree) { return null; }

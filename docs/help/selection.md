@@ -22,7 +22,7 @@ The × button clears selection and query while keeping filters. The reset-filter
 
 The field holds conditions as removable tokens, then the condition you are typing. Enter turns what you typed into a token; the next one narrows the query with AND, and a token's × (or Backspace on an empty field) widens it again. Clicking a phrase, a value or a cluster does the same. A query with OR or parentheses becomes one token. The × button at the right end clears everything.
 
-Suggestions appear as you type: an empty field lists the columns with their types, then the operators that fit the column, then its values with counts (or frequent words of a text column, and `null` for missing values). Arrow keys and Enter or Tab choose; choosing a value completes the token. A token for a cluster shows the cluster's colour and first phrase while its legend is on screen; hovering it lights up the legend row.
+Suggestions appear as you type: an empty field lists the columns with their types, then the operators that fit the column, then its values with counts (or frequent words of a text column, and `null` for missing values). Arrow keys and Enter or Tab choose; choosing a value completes the token. A token for a cluster shows the cluster's color and first phrase while its legend is on screen; hovering it lights up the legend row.
 
 ## Settings
 
