@@ -6,6 +6,8 @@ export const viewTypes = [['scatter', 'Scatter'], ['histogram', 'Histogram'],
 export const isResultView = type => ['map', 'legend'].includes(type);
 export const isProjection = type => type === 'map';
 export const isPointView = type => type === 'scatter' || isProjection(type);
+// Points and stacked bars can be colored by a column.
+export const isColorView = type => isPointView(type) || type === 'bar';
 
 export function eligibleFields(fields, type) {
   const present = fields.filter(field => field.kind !== 'empty');

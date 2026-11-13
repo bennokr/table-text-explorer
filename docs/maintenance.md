@@ -51,7 +51,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
 each authored module at 250 statements, Python at 3550 total and JavaScript at
-12925 total. Imports, nested bodies, tooling and tests count. Generated files,
+13150 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -149,6 +149,11 @@ lexicon files between those checks and the report (about 25), and `tests/eval/le
 after and writes `docs/evaluation-lexicon.md`; it replaced the separate 90-word naming list. JavaScript (about 130): the file reader and bundling
 (`src/lexicon-parse.js`, `src/lexicon.js`, about 40) and their tests and an end-to-end check that the bundled lexicon is applied, which check that every language has its four files, that no word sits in two
 tiers and that the folding rules are well formed (about 60).
+
+The JavaScript budget rose from 12925 to 13150 for the interface consistency work (about 225): charts (about 70 in `src/`: natural
+order of numbers and dates, the number of bars that fit the card, stacked bars colored like the map, a histogram bin setting) with
+their unit and browser tests (about 75), the status-line Undo and the help Home button (about 25), and the browser tests for the
+glyph and dialog conventions (about 55). The dialog rewrite itself removed code (the folded sections and the invalid-control reveal).
 
 ## Codebook reader
 

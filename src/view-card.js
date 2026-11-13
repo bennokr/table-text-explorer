@@ -37,7 +37,7 @@ export class ViewCard {
       glyph('←', 'Move chart earlier', () => actions.move(this.config)),
       this.upButton(actions),
       glyph('×', 'Remove chart', () => actions.remove(this.config))]);
-    const menu = element('div', { class: 'card-menu', hidden: '' }, [this.editor.nameLabel, this.newMap, buttons]);
+    const menu = element('div', { class: 'card-menu', hidden: '' }, [this.editor.nameLabel, this.editor.binsLabel, this.newMap, buttons]);
     this.more.setAttribute('aria-controls', `${this.config.id}-options`);
     menu.id = `${this.config.id}-options`;
     this.more.setAttribute('aria-expanded', 'false');
@@ -79,7 +79,7 @@ export class ViewCard {
 
   renderIfChanged() {
     const config = this.config;
-    const shape = isProjection(config.type) ? ['projection'] : [config.type, config.x, config.y, viewSchemaKey(this.model, config)];
+    const shape = isProjection(config.type) ? ['projection'] : [config.type, config.x, config.y, viewSchemaKey(this.model, config), ...this.chartSettings()];
     const key = JSON.stringify(shape);
     if (key !== this.key || this.model.resultFor(config) !== this.result) {
       this.placeholder.node.remove();
@@ -88,6 +88,11 @@ export class ViewCard {
       this.key = key;
       this.result = this.model.resultFor(config);
     } else { this.renderer?.paint?.(); }
+  }
+
+  // What a bar chart or histogram draws beyond its columns: the stack colors and the number of bins.
+  chartSettings() {
+    return isPointView(this.config.type) ? [] : [this.config.color, this.config.bins];
   }
 
   render() {

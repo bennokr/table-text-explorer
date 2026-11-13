@@ -54,6 +54,8 @@ small { color: #737b80; font-size: 10px; }
 .card-actions button:last-child { margin-left: auto; }
 .view-name { display: flex; flex: 1; min-width: 0; align-items: center; gap: 5px; }
 .view-name input { flex: 1; min-width: 0; height: 22px; min-height: 22px; }
+.view-bins { display: flex; align-items: center; gap: 5px; }
+.view-bins input { width: 64px; height: 22px; min-height: 22px; }
 .view-plot { contain: size; flex: 1; min-height: 100px; min-width: 0; position: relative; }
 #terms { padding: 0 5px; }
 #terms fieldset { border: 1px solid #ddd; margin: 0 0 5px; padding: 5px; }

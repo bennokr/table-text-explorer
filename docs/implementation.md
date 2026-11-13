@@ -5,6 +5,9 @@
 
 ## State and event ownership
 
+In prose, a **column** is a column of the imported table and a **variable** is a column or anything derived per record
+(annotations, cluster columns); see the [glossary](help/glossary.md). Code still says `field` for a schema entry.
+
 `Dataset` owns imported rows, inferred fields, independent annotation columns,
 visible/highlighted row IDs, view configurations and session results. Original cell
 values survive type overrides and fits. Cluster name columns are read-only getters
@@ -16,16 +19,16 @@ menu ordering all update that same model order. Cards hold chart configuration a
 result IDs, while `Results` owns arrays, memberships, parameters and provenance.
 Removing cards does not discard results. There is no project reload/persistence yet.
 
+The model emits typed events, all listed in `src/events.js`; subscribing to or emitting an unknown name throws.
+
 | Event | Meaning |
 | --- | --- |
-| `data` | Dataset replaced; reset cards, indexes and prepared-feature cache |
-| `config` | Analysis settings changed without reinferring schema |
-| `schema` | Column/type structure changed; rebuild affected controls/table header |
-| `views` | Card configuration/order changed |
-| `view` | Visible row ordering/membership or displayed values refreshed |
-| `selection` | Transient highlight/representative changed |
-| `annotation` | Existing annotation values changed |
-| `results` | Saved results or group dictionaries changed |
+| `data`, `schema`, `config` | Dataset replaced; column types or labels changed; analysis defaults changed without reinferring |
+| `views`, `view`, `selection` | Chart configuration or order changed; visible/ordered records changed; highlight changed |
+| `annotation`, `results` | Annotation values changed; a map, clustering or representation was saved or edited |
+| `busy`, `fit-progress` | The analysis queue started or finished; progress of an explicit fit |
+| `term-settings`, `description-query` | A setting of the description panel changed; a phrase or value was clicked and should join the query |
+| `phrase-settings`, `text-index`, `table-columns` | Phrase counting settings, the phrase index, or the visible table columns changed |
 
 Analysis-only configuration changes retain field objects and do not refresh the
 table. Type/category-limit changes reinfer schema. Result name/cut edits update
@@ -97,7 +100,7 @@ scikit-learn 1.7 tree API is isolated in `workers/density.py` and covered by nat
 and worker checks. Stable branch dictionaries preserve edited names and colors.
 
 Phrase naming and subset descriptions share compatible sparse field matrices in a
-bounded worker registry, retaining the inspector’s active index. Coverage/contrast evidence feeds a bounded
+bounded worker registry, retaining the description panel’s active index. Coverage/contrast evidence feeds a bounded
 joint search with disjoint normalized words across active groups and sibling-name
 blocks for trees. At most 100 active groups receive bundles up to the selected maximum phrase count
 (four by default, with an implicit minimum of one); each phrase follows global n-gram settings. Insufficient
@@ -109,8 +112,10 @@ The residual density group displays Other (internal ID -1). Individual phrase ev
 ## Linked views and layout
 
 Scatter rendering serves data axes and saved maps. Bokeh models, zoom and selection
-links survive layout changes. Histograms, bars and heatmaps aggregate original row
-IDs; partial-bin selections stay precise. Legends are DOM renderers with editable
+links survive layout changes. Histograms, bars (plain or stacked by a color column) and heatmaps aggregate original row
+IDs (`aggregate.js`); partial-bin selections stay precise. Category values keep their natural order when they
+are all numbers or dates, else descending count; the number kept follows the card size (`valuesThatFit`) and the
+rest merge into Other. Histogram bins are automatic (Sturges) unless a card sets `bins`. Legends are DOM renderers with editable
 name/color dictionaries, visible counts and hierarchical folding/color families.
 Annotations remain independent of cluster edits and later fits.
 
@@ -144,20 +149,29 @@ with a larger hit area; clicks open the same help dialog at the relevant anchor.
 Back/Forward retain navigation/scroll history, and closing restores focus to the
 original form without discarding its draft. No help content or data is fetched remotely.
 
-Map field weights, long-text settings, aggregation detail and UMAP tuning start
-collapsed. Live summaries show equal/custom weights and group counts. Shared lexical
-fields are shown explicitly with a link to the phrase modal; applying it updates the
-underlying draft. Clustering prefers an existing named input representation, while
-current map settings and explicitly labeled 2D coordinates remain selectable.
+Dialogs share one template (rows of a label, a control and a `?` hint; fieldsets with a legend; a footer with the
+error message at the left and Cancel plus the primary action). Settings dialogs (phrase counting, column types)
+end in Cancel and Apply; dialogs that make something (similarity map, clustering) end in Cancel and Make; Exports
+only closes. The map dialog has no folded sections: Input, Combining and Map tuning are always visible, and every
+setting has its own hint. Live summaries show equal or custom weights and group counts. Shared lexical settings
+are shown explicitly with a link to the phrase dialog; applying it updates the underlying draft. Clustering prefers
+an existing named input representation, while current map settings and explicitly labeled 2D coordinates remain
+selectable. Glyphs mean one thing each: ⚙ opens a modal of settings, ⋯ shows more controls inline, ＋ adds a chart,
+× removes or clears. Remove all (charts) is undoable from the status line (`offerUndo`).
 
 ## Subset descriptions
 
-The inspector's predicate choice supports phrases, metadata facets or both. Facets
-work without a text index, including tables with no text fields. They share scopes,
-minimum record support, cloud/table presentation and click-to-query highlighting.
-Phrase and facet result rows carry a label, ordinary filter AST, full matching row
-IDs and subset/comparison evidence (support, precision and recall). Explicit filtering
-remains separate. Phrase matching still uses the configured lexical analyzer.
+The description panel (`Terms` binds it, `TermJobs` runs one job at a time, `CompareBy` decides the comparison)
+keeps all its settings as plain data in `model.termSettings` (`term-settings-model.js`); controls only display and
+edit it. Its predicates are phrases, metadata facets or both. Facets work without a text index, including tables
+with no text columns. They share contrast, minimum record support, cloud/table presentation and click-to-query
+highlighting. The panel's controls are **Size** (how phrases are scored), **Color** (what colors them: nothing, the
+text column, a column's values, or a clustering's tree) and **Contrast** (what the highlight is compared with: the
+records before the last condition, or the rest of the table; the current filter without contrast), plus a ⋯
+toggle for the minimum support and redundancy options. The ⚙ in the panel header opens the phrase counting dialog.
+Phrase and facet result rows carry a label, ordinary filter AST, full matching row IDs and subset/comparison
+evidence (support, precision and recall). Explicit filtering remains separate. Phrase matching still uses the
+configured lexical analyzer.
 
 Metadata candidates use a separate revision-keyed sparse presence cache. Generate
 up to 50 most-supported case-insensitive category values, both boolean values,
@@ -181,14 +195,14 @@ in-sample figures, not held-out rule evaluation. Rule induction remains future w
 
 All-record phrase counts are shared by lexical maps and descriptions. Each field has its own
 vocabulary/sparse count matrix, keyed by dataset revision, field, n-gram sizes and
-stopwords. Four index variants share compatible matrices; the active inspector index
+stopwords. Four index variants share compatible matrices; the active description panel index
 is protected from eviction. Naming can build a compatible index automatically; the
-inspector adopts it if its controls match. Different settings remain independent.
+panel adopts it if its controls match. Different settings remain independent.
 Worker cancellation clears descriptors and matrices. Subset changes reuse the index.
-The toolbar Phrase counting settings modal owns text fields, phrase lengths and
-stoplists. Named presets retain settings across cache eviction and worker resets,
+The Phrase counting settings dialog owns text columns, phrase lengths and stoplists
+(Cancel/Apply). Named presets retain settings across cache eviction and worker resets,
 clearing with the dataset. Counts build lazily for descriptions/maps/naming. The
-inspector’s inline controls contain comparison/ranking options only.
+panel's inline controls contain size/color/contrast and its ⋯ options only.
 
 Tokenization is cached independently of count settings. TF-IDF transforms the shared
 per-field count matrices after column concatenation, preserving field boundaries.
@@ -198,9 +212,12 @@ The sentence worker sorts chunks by length across 128-record tiles, groups them
 into 16-token length buckets and infers batches of up to eight, preserving record
 mapping and overlap weights. Clouds remain the default description display.
 
-Phrases do not cross records, fields, punctuation or removed-word boundaries.
-Stopwords may occur internally in phrases but are omitted at phrase boundaries;
-built-in lists retain negation. Vocabulary caps at 20,000 terms per field, selected
+Phrases do not cross records, columns, punctuation or removed-word boundaries.
+Per language (`src/lexicon/<code>/`, see its README) stop words may occur inside phrases but not at their
+edges or alone; lead words (quantifiers, degree words) may start a phrase; negations stay as phrases of their own;
+fold rules give inflected forms one key. The key merges variants when redundancy is reduced and keeps cluster
+names from repeating a word; it never changes what is counted, shown or queried. The lexicon is bundled by
+`src/lexicon.js` and sent with every index request. Vocabulary caps at 20,000 terms per field, selected
 by global occurrences. Minimum support counts records, not repetitions.
 
 For class term counts `t[c,w]`, `L[c] = sum_w t[c,w]` and `A = mean_c L[c]`:
@@ -218,13 +235,12 @@ and its score is no more than 10% below the longer phrase. Disabling redundancy
 reduction restores unpruned rankings without changing the index or scores.
 Clouds use deterministic local Canvas packing and accessible SVG text; unplaced
 phrases remain available below. Click/keyboard activation highlights exact indexed
-membership immediately. Representatives use positive-contrast weighted counts.
+membership immediately.
 
-Scopes include highlighted versus remaining visible rows, filtered versus remaining
-table rows, and clustering groups/branches with explicit rest/sibling comparisons.
-With no highlight, Automatic ranking describes current filtered records using
-record-frequency prevalence. Entire dataset and current filtered records are also
-explicit scopes. Common phrases count presence once per record; balanced splits
+Contrast chooses highlighted versus remaining visible records (the previous step), highlighted versus the rest of
+the table, or a clustering's groups/branches against siblings or the rest. With no highlight, Automatic ranking
+describes current filtered records using record-frequency prevalence; the current filter can also be described
+without contrast. Common phrases count presence once per record; balanced splits
 use binary entropy, maximized at 50/50. Both use records with usable field text as
 their denominator. Minimum support applies to both branches for split rankings.
 Semantic splits require an explicitly selected saved embedding representation and
@@ -234,9 +250,9 @@ Only records with usable field text and saved embeddings participate. Original
 embeddings are reused, never 2D map coordinates; no model is fitted implicitly.
 Sparse presence products run in bounded vocabulary blocks in the Python worker.
 
-Separate field clouds are the default. Combined clouds retain independent
-field/phrase entries, even for identical phrase text, with a compact colored field
-legend, field-qualified accessible names and a Field column in table mode.
+Separate clouds per text column are the default. Combined clouds retain independent
+column/phrase entries, even for identical phrase text, with a compact colored column
+key, column-qualified accessible names and a Column column in table mode.
 Presentation applies equally to whole populations, highlights, query selections
 and cluster/branch comparisons. Phrase clicks retain their exact field predicates.
 Cloud sizes follow the chosen score within each displayed cloud; comparative
@@ -255,8 +271,8 @@ package condition to avoid emitting another binary. GPU/JSPI backend assets are
 excluded. Assets remain locally bundlable and runtime requests stay same-origin.
 
 Ruff/ESLint enforce complexity 8, function statements 35 and module statements 250.
-Current aggregate ceilings are Python 2500 and JavaScript 10200; rationale is linked
-from [AGENTS.md](../AGENTS.md). Browser journeys cover workspace/export, card layout,
+Current aggregate ceilings are Python 3550 and JavaScript 13150; the rationale is in
+[maintenance](maintenance.md) and linked from [AGENTS.md](../AGENTS.md). Browser journeys cover workspace/export, card layout,
 map/index/clustering and explicit embeddings. Unit/native/WASM checks cover numeric
 and boundary behavior. Optional check reports are written under ignored `.cache/checks/`;
 current commands are in the README. Chromium is tested; other-browser behavior and
@@ -288,6 +304,20 @@ the clustering column and is disabled while linked; it becomes editable when the
 pair separates. Legend result changes, group renaming, color edits and tree cuts
 therefore retain matching map colors. No coordinates or memberships are refitted.
 
+
+## Color keys, chips and example results
+
+`chip.js` is the one chip component (a dot, a label, an optional count and ×). Query path chips, cloud color keys,
+the card color key under a map, scatter or bar chart (`color-key.js`) and cluster legend values all use it, so a value
+looks and acts the same wherever it is listed: a click highlights those records, Alt-click adds NOT. Colors come from
+`palette.js` and `value-colors.js` (a column's values in order of first appearance, or a clustering's own colors), so
+map, key, stacked bars and cloud agree. The search field (`query-field.js`) shows the path of conditions as removable
+tokens with suggestions (`query-suggest.js`); `query-text.js` converts between tokens and the full query text.
+
+A curated example may ship `results.json` beside its demo configuration: map coordinates and cluster labels in table
+order, with the app's own cluster names. `example-results.js` loads them as saved results marked precomputed, so a map
+and its legend are on screen when the example opens; nothing is fitted, and `scripts/curate_example_results.mjs`
+regenerates them by driving the app itself.
 
 ## Variable picker
 

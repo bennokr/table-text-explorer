@@ -20,6 +20,13 @@ You can color a chart by any variable, but phrases are always counted in text co
 - **Partition**: what a Color column does to the records: it splits them into one subset per value.
 - **Stopwords**, **lead words**, **negations**: the lists behind phrase counting; see [phrase counting](descriptions.md#phrase-counting).
 
+## Charts
+
+- **Bars**: one bar per value of a column. The values that fit the card are shown, the rest merge into **Other**; make the card taller to show more. Numbers, years and dates run in ascending order from the top, other values by size.
+- **C:** (Color) cuts each bar into segments by another column, colored as on a map, with the same color key under the card. A thin orange strip under a segment counts the highlighted records.
+- **Histogram**: numeric values in bins; the bin count is automatic (Sturges' rule) until you type one under ⋯ (Bins).
+- **Heatmap**: two columns against each other; darker cells hold more records.
+
 ## Buttons and hints
 
 - ⚙ opens a modal of settings, with Cancel and Apply. ⋯ shows more controls inline, in the same row or card.

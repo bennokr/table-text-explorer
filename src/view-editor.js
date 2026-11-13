@@ -2,7 +2,7 @@ import './variable-picker.js';
 import { variableOptions } from './variable-options.js';
 import { element, options } from './dom.js';
 import { categorical } from './schema.js';
-import { eligibleFields, isProjection, isResultView, isPointView, viewTypes, changeViewType } from './view-config.js';
+import { eligibleFields, isProjection, isResultView, isColorView, viewTypes, changeViewType } from './view-config.js';
 import { Events } from './events.js';
 
 function resultSelect(label, name, change) {
@@ -37,13 +37,16 @@ export class ViewEditor {
     this.name = element('input', { 'aria-label': 'View name', placeholder: 'Automatic name',
       onchange: event => change({ title: event.target.value.trim() }) });
     this.nameLabel = element('label', { class: 'view-name', text: 'Name' }, [this.name]);
+    this.bins = element('input', { type: 'number', min: '2', max: '100', step: '1', 'aria-label': 'Histogram bins', placeholder: 'Auto',
+      onchange: event => change({ bins: Math.round(Number(event.target.value)) || 0 }) });
+    this.binsLabel = element('label', { class: 'view-bins', text: 'Bins' }, [this.bins]);
     this.cleanup = model.on(Events.ANNOTATION, () => this.sync());
     this.sync();
   }
 
   sync() {
     const view = this.config;
-    const key = JSON.stringify([view.type, view.x, view.y, view.color, view.title, view.resultId, view.legendId,
+    const key = JSON.stringify([view.type, view.x, view.y, view.color, view.bins, view.title, view.resultId, view.legendId,
       this.model.results.list().filter(result => result.kind !== 'representation').map(result => [result.id, result.mapName, result.name]),
       this.model.fields.map(field => [field.name, field.kind, field.missing])]);
     if (key === this.key) { return; }
@@ -63,7 +66,9 @@ export class ViewEditor {
     this.map.label.hidden = !isProjection(view.type);
     this.x.label.hidden = isResultView(view.type);
     this.y.label.hidden = !['scatter', 'heatmap'].includes(view.type);
-    this.color.label.hidden = !isPointView(view.type);
+    this.color.label.hidden = !isColorView(view.type);
+    this.binsLabel.hidden = view.type !== 'histogram';
+    this.bins.value = view.bins || '';
     this.name.value = view.title || '';
     for (const item of [this.map, this.legend]) { item.select.title = item.select.selectedOptions[0]?.textContent || 'None'; }
     this.syncColor();

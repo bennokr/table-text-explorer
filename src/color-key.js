@@ -7,7 +7,7 @@ import { valuePredicate } from './query-predicates.js';
 import { negation } from './query-path.js';
 import { valueColor } from './value-colors.js';
 import { legendNames } from './cluster-legend-data.js';
-import { isPointView } from './view-config.js';
+import { isColorView } from './view-config.js';
 import { UNASSIGNED } from './palette.js';
 
 // A color key lists what the colors of a view mean: one chip per value (its dot, its label and a count).
@@ -80,7 +80,7 @@ export function tintKey(model, field) {
   return colorKey(chips, notes);
 }
 
-// The key under a map or scatter card. It shows when the card is colored by a column and no legend card
+// The key under a map, scatter or bar card. It shows when the card is colored by a column and no legend card
 // is paired with the map; a paired legend card already says what the colors mean.
 export class CardColorKey {
   signature = '';
@@ -96,7 +96,7 @@ export class CardColorKey {
 
   field() {
     const { config, model } = this;
-    if (!isPointView(config.type) || config.legendId || !config.color) { return null; }
+    if (!isColorView(config.type) || config.legendId || !config.color) { return null; }
     return model.fields.find(field => field.name === config.color) ?? null;
   }
 
