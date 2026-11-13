@@ -269,7 +269,7 @@ button.chip:hover, button.chip:focus { border-color: #426d8d; }
 .view-card .controls { flex-wrap: nowrap; }
 .view-card .control > select, .view-card .control > variable-picker { max-width: 90px; }
 .term-fields { flex-wrap: wrap; gap: 4px 6px; margin: 2px 0 5px; }
-.term-fields .control { flex: 1 1 150px; }
+.term-fields .control { flex: 1 1 105px; }
 .color-key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 4px 0; font-size: 11px; }
 .view-card > .color-key { flex: none; margin: 0; padding: 3px 4px; max-height: 56px; overflow-y: auto; border-top: 1px solid #e2e4e5; }
 .view-card > .color-key[hidden] { display: none; }

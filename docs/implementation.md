@@ -157,7 +157,7 @@ setting has its own hint. Live summaries show equal or custom weights and group 
 are shown explicitly with a link to the phrase dialog; applying it updates the underlying draft. Clustering prefers
 an existing named input representation, while current map settings and explicitly labeled 2D coordinates remain
 selectable. Glyphs mean one thing each: ⚙ opens a modal of settings, ⋯ shows more controls inline, ＋ adds a chart,
-× removes or clears. Remove all (charts) is undoable from the status line (`offerUndo`).
+× removes or clears. The × in the Charts header removes all charts and is undoable from the status line (`offerUndo`).
 
 ## Subset descriptions
 
@@ -271,7 +271,7 @@ package condition to avoid emitting another binary. GPU/JSPI backend assets are
 excluded. Assets remain locally bundlable and runtime requests stay same-origin.
 
 Ruff/ESLint enforce complexity 8, function statements 35 and module statements 250.
-Current aggregate ceilings are Python 3550 and JavaScript 13150; the rationale is in
+Current aggregate ceilings are Python 3550 and JavaScript 13160; the rationale is in
 [maintenance](maintenance.md) and linked from [AGENTS.md](../AGENTS.md). Browser journeys cover workspace/export, card layout,
 map/index/clustering and explicit embeddings. Unit/native/WASM checks cover numeric
 and boundary behavior. Optional check reports are written under ignored `.cache/checks/`;

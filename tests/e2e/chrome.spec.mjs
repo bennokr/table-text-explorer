@@ -1,4 +1,4 @@
-import { test, expect, importRows } from './fixtures.mjs';
+import { test, expect, importRows, query } from './fixtures.mjs';
 
 // Glyph rules: a gear opens a modal of settings, an ellipsis shows more controls inline.
 test('chrome: the phrase settings gear is in the descriptions panel, the ellipsis is in its controls row', async ({ app }) => {
@@ -7,6 +7,11 @@ test('chrome: the phrase settings gear is in the descriptions panel, the ellipsi
   await expect(page.locator('.topbar #phrase-settings'), 'the top bar has no phrase settings gear').toHaveCount(0);
   await expect(page.locator('#description-panel .panel-head #phrase-settings')).toBeVisible();
   await expect(page.locator('#description-panel .term-fields #terms-options')).toHaveText('⋯');
+  await query(page, 'group:camera');
+  await expect(page.locator('#terms-contrast')).toBeVisible();
+  const size = await page.locator('#terms-ranking').boundingBox();
+  const more = await page.locator('#terms-options').boundingBox();
+  expect(Math.abs(more.y - size.y), 'the ellipsis ends the Size / Color / Contrast row').toBeLessThan(8);
   await page.click('#phrase-settings');
   await expect(page.locator('#phrase-dialog')).toBeVisible();
   await page.locator('#phrase-dialog').getByRole('button', { name: 'Cancel' }).click();
