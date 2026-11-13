@@ -1,7 +1,8 @@
 import { $, element } from './dom.js';
 import { formatQuery } from './query-predicates.js';
 import { chipLabel } from './query-path.js';
-import { clusterChipLabel, clusterCondition, pulseLegendRow, scrollToLegendRow } from './path-clusters.js';
+import { clusterCondition, conditionText, legendHover, scrollToLegendRow } from './path-clusters.js';
+import { chip } from './chip.js';
 import { composeQuery, splitQuery } from './query-text.js';
 import { suggest } from './query-suggest.js';
 import { Events } from './events.js';
@@ -67,14 +68,11 @@ export class QueryField {
   chip(node, index) {
     const cluster = clusterCondition(this.model, node);
     const full = chipLabel(node);
-    const label = cluster ? [element('span', { class: 'chip-dot', style: `background: ${cluster.color}` }),
-      element('span', { text: clusterChipLabel(cluster) })] : [element('span', { text: full })];
-    const remove = element('button', { type: 'button', text: '×', 'aria-label': `Remove condition ${full}`, title: 'Remove this condition',
-      onclick: () => this.removeChip(index) });
     // Hovering or clicking a cluster condition lights up its row in the legend.
-    const hover = cluster ? { onmouseenter: () => pulseLegendRow(cluster.id, true), onmouseleave: () => pulseLegendRow(cluster.id, false),
+    const events = cluster ? { ...legendHover(cluster),
       onclick: event => { if (event.target === event.currentTarget) { scrollToLegendRow(cluster.id); } } } : {};
-    return element('span', { class: 'path-chip', title: full, ...hover }, [...label, remove]);
+    return chip({ color: cluster?.color, label: conditionText(this.model, node, full), title: full, className: 'path-chip', events,
+      remove: { label: `Remove condition ${full}`, onclick: () => this.removeChip(index) } });
   }
 
   showCount() {

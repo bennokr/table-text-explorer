@@ -15,7 +15,7 @@
 - Run `npm run check`, `npm run build` and relevant feasibility checks before handoff.
 - Ruff and ESLint cap complexity at 8 and statements per function at 35.
   AST size checks cap each authored module at 250 statements, Python at 3300 total
-  and JavaScript at 12750 total (rationale in docs/maintenance.md).
+  and JavaScript at 12775 total (rationale in docs/maintenance.md).
   Imports, functions and nested bodies count; comments and blank lines do not.
   Vendor/generated files and dependencies are excluded. Raise budgets only with a written
   explanation in docs/maintenance.md; do not add per-file bypasses.

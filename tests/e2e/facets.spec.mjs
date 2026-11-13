@@ -31,7 +31,7 @@ test('facets: numeric-only tables describe missingness and ranges; clicks highli
   expect((await snapshot(page)).selected).toEqual([]);
   expect((await snapshot(page)).visible).toBe(12);
   await page.click('#clear-filters');
-  await page.selectOption('#terms-contrast', 'all');
+  await page.selectOption('#terms-contrast', 'current');
   await page.selectOption('#terms-ranking', 'balanced');
   await expect(page.locator('#description-kind')).toHaveText('Even splits');
   await expect(page.locator('#terms-status')).toHaveText(/24 subset \/ 0 comparison/);

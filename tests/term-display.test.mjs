@@ -15,10 +15,10 @@ test('combined clouds preserve duplicate phrases as independently scored field p
   assert.equal(fields[0].terms[0].field, undefined);
 });
 
-test('whole-dataset and visible scopes remain explicit; empty selection describes visible records', () => {
+test('visible and filtered scopes remain explicit; empty selection describes visible records', () => {
   const model = { rows: Array(4).fill({}), visible: [1, 3], selected: new Set() };
   assert.deepEqual(comparisonSets(model, 'selection'), { subset: [1, 3], comparison: [] });
-  assert.deepEqual(comparisonSets(model, 'all'), { subset: [0, 1, 2, 3], comparison: [] });
+  assert.deepEqual(comparisonSets(model, 'filtered'), { subset: [1, 3], comparison: [0, 2] });
   model.selected.add(1);
   assert.deepEqual(comparisonSets(model, 'visible'), { subset: [1, 3], comparison: [] });
   assert.deepEqual(comparisonSets(model, 'selection'), { subset: [1], comparison: [3] });

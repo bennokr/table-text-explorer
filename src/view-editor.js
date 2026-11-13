@@ -7,13 +7,13 @@ import { Events } from './events.js';
 
 function resultSelect(label, name, change) {
   const select = element('select', { 'aria-label': name, onchange: event => change(event.target.value) });
-  return { select, label: element('label', {}, [element('abbr', { text: `${label}:`, title: name }), select]) };
+  return { select, label: element('label', { class: 'control' }, [element('abbr', { text: `${label}:`, title: name }), select]) };
 }
 
 function fieldPicker(label, name, change) {
   const select = element('variable-picker', { 'aria-label': name });
   select.addEventListener('change', event => change(event.detail.selected[0]));
-  return { select, label: element('span', { class: 'view-field' }, [element('abbr', { text: `${label}:`, title: name }), select]) };
+  return { select, label: element('span', { class: 'control' }, [element('abbr', { text: `${label}:`, title: name }), select]) };
 }
 
 function pickerOptions(picker, fields, selected) {
@@ -33,7 +33,7 @@ export class ViewEditor {
     this.legend = resultSelect('L', 'Clustering', resultId => change({ resultId }));
     this.map = resultSelect('M', 'Similarity map', resultId => change({ resultId }));
     this.color = fieldPicker('C', 'Color by', color => change({ color }));
-    this.fields = element('div', { class: 'view-fields' }, [this.map.label, this.legend.label, this.x.label, this.y.label, this.color.label]);
+    this.fields = element('div', { class: 'controls' }, [this.map.label, this.legend.label, this.x.label, this.y.label, this.color.label]);
     this.name = element('input', { 'aria-label': 'View name', placeholder: 'Automatic name',
       onchange: event => change({ title: event.target.value.trim() }) });
     this.nameLabel = element('label', { class: 'view-name', text: 'Name' }, [this.name]);

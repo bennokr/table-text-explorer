@@ -7,7 +7,6 @@ import { conjuncts, coveredByPath } from './query-path.js';
 const FEW_RECORDS = 30;
 
 export function comparisonSets(model, scope) {
-  if (scope === 'all') { return { subset: model.rows.map((_, id) => id), comparison: [] }; }
   if (scope === 'visible' || (scope === 'selection' && !model.selected.size)) {
     return { subset: model.visible, comparison: [] };
   }

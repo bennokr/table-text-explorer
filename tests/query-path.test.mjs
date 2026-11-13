@@ -54,3 +54,16 @@ test('a condition on a cluster column becomes a dot and the first phrase while i
   assert.equal(clusterCondition(model, { kind: 'term', field: 'other', op: '=', value: 'x' }), null);
   assert.equal(clusterCondition(model, { kind: 'term', field: 'k · name', op: '~', value: 'wet · verbod' }), null);
 });
+
+test('chips of a cluster value, in a key or a condition, share one label rule and one hover', async () => {
+  const { conditionText, legendHover } = await import('../src/path-clusters.js');
+  const result = { id: 'r1', groups: { 4: { name: 'wet · verbod', color: '#222222' } } };
+  const model = { fields: [{ name: 'k · name', derived: 'r1' }], results: { get: id => (id === 'r1' ? result : null) }, views: [{ type: 'legend', resultId: 'r1' }] };
+  const node = { kind: 'term', field: 'k · name', op: '=', value: 'wet · verbod' };
+  assert.equal(conditionText(model, node, 'wet · verbod'), 'wet', 'the legend shows the rest of the name');
+  assert.equal(conditionText({ ...model, views: [] }, node, 'wet · verbod'), 'wet · verbod');
+  assert.equal(conditionText(model, { ...node, field: 'plain' }, 'a column value'), 'a column value', 'not a cluster: unchanged');
+  assert.deepEqual(Object.keys(legendHover({ id: '4', shown: true })), ['onmouseenter', 'onmouseleave']);
+  assert.deepEqual(legendHover({ id: '4', shown: false }), {});
+  assert.deepEqual(legendHover(null), {});
+});

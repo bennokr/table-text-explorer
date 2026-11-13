@@ -49,7 +49,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
 each authored module at 250 statements, Python at 3300 total and JavaScript at
-12750 total. Imports, nested bodies, tooling and tests count. Generated files,
+12775 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -135,6 +135,11 @@ The JavaScript budget rose from 12650 to 12750 for the Size / Color / Contrast r
 Color now works with any Size, so a population-scored cloud is tinted by the Color column (the tint, its key and the job key that includes it,
 about 30); and the end-to-end specs for the new behavior and the example's shipped embeddings (about 25). It removed the display and embedding
 selects, the "Compare to" group and the rule that a chosen Size disables the columns.
+
+The JavaScript budget rose from 12750 to 12775 (11 over) for the chip and control-row consolidation. The three kinds of chip (search conditions,
+color key, cloud chips) now come from one component (`src/chip.js`) and one cluster-label rule with one hover (`conditionText`, `legendHover`),
+which replaced three hand-built copies, and the unit test for that shared rule adds about 10 statements. The control rows of the cards and the
+panel share markup and CSS, which saved CSS, not statements.
 
 ## Codebook reader
 

@@ -79,7 +79,7 @@ test('color: with no significant column Auto shows plain phrases, weak columns s
   await expect(page.locator('#terms-contrast'), 'one population is scored, so its Contrast applies').toBeVisible();
   await page.selectOption('#terms-color', 'none');
   await expect(page.locator('#terms-results .color-key')).toHaveCount(0);
-  await expect(page.locator('#terms-contrast option')).toHaveText(['Previous step', 'Rest of the table', 'Current records · no contrast', 'Whole table · no contrast']);
+  await expect(page.locator('#terms-contrast option')).toHaveText(['Previous step', 'Rest of the table', 'None (current filter)']);
 });
 
 test('even splits: one yes/no question per column, most even first, numbers split at a threshold', async ({ app }) => {

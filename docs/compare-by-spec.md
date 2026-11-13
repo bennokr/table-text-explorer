@@ -1,6 +1,6 @@
 # Compare by: conditional phrase ranking (spec)
 
-> **Renamed.** The controls are now **Size**, **Color** (the column select described here, formerly By) and **Contrast** (the baseline choices that were in its "Compare to" group). A chosen Size no longer disables Color: other Sizes tint their phrases by the Color column. This page is the design record of the column screen and the first Compare-by stage; the current controls are in `docs/help/descriptions.md`.
+> **Renamed.** The controls are now **Size**, **Color** (the column select described here, formerly By) and **Contrast** (the baseline choices that were in its "Compare to" group, without "Entire dataset": remove the filter instead). A chosen Size no longer disables Color: other Sizes tint their phrases by the Color column. This page is the design record of the column screen and the first Compare-by stage; the current controls are in `docs/help/descriptions.md`.
 
 Status: implemented and calibrated on DBRD, Rechtspraak and Tweede Kamer motions ([evaluation](evaluation.md#calibrating-the-column-screen)).
 Where the calibration changed the proposal below, the text says so. Items marked *untested* have no measurement.

@@ -1,4 +1,6 @@
 import { element } from './dom.js';
+import { chip } from './chip.js';
+import { clusterCondition, conditionText, legendHover } from './path-clusters.js';
 import { Events } from './events.js';
 import { categoryLabel, missing } from './schema.js';
 import { valuePredicate } from './query-predicates.js';
@@ -19,10 +21,7 @@ export function suggestCondition(model, condition, negate) {
   model.emit(Events.DESCRIPTION_QUERY);
 }
 
-export function keyChip({ color, label, title, onclick, hover = {} }) {
-  const dot = element('span', { class: 'legend-swatch chip-dot', style: `background: ${color}` });
-  return element('button', { type: 'button', class: 'legend-value', title, ...hover, onclick }, [dot, document.createTextNode(label)]);
-}
+export const keyChip = options => chip({ ...options, className: 'legend-value' });
 
 // The chips, then a small note when there is something to say about them.
 function keyChildren(chips, notes) {
@@ -58,11 +57,12 @@ function orderValues(model, field, values) {
 export function fieldEntries(model, field) {
   const colorOf = valueColor(model, field);
   const values = orderValues(model, field, countValues(model, field));
-  const entries = values.slice(0, MAX_VALUES).map(({ value, count }) => ({
-    color: colorOf(value) ?? UNASSIGNED,
-    label: `${categoryLabel(value, field)} · ${count.toLocaleString()}`,
-    title: `${field.name} = ${value}: highlight these records (Alt-click: NOT)`,
-    predicate: valuePredicate(field.name, value) }));
+  const entries = values.slice(0, MAX_VALUES).map(({ value, count }) => {
+    const predicate = valuePredicate(field.name, value);
+    const name = categoryLabel(value, field);
+    return { color: colorOf(value) ?? UNASSIGNED, label: `${conditionText(model, predicate, name)} · ${count.toLocaleString()}`,
+      title: `${name}: highlight these records (Alt-click: NOT)`, events: legendHover(clusterCondition(model, predicate)), predicate };
+  });
   return { entries, more: Math.max(0, values.length - MAX_VALUES) };
 }
 

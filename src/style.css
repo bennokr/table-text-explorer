@@ -42,13 +42,9 @@ small { color: #737b80; font-size: 10px; }
 #views-empty { margin: 0; }
 .view-card { min-width: 0; min-height: 0; display: flex; flex-direction: column; border: 1px solid #e2e4e5; overflow: hidden; }
 .view-card > header { display: flex; align-items: center; gap: 2px; padding: 2px; flex-wrap: nowrap; }
-.view-card > header > button, .view-card > header > select, .view-fields > label,
-.view-fields > label > select, .card-actions button { height: 22px; min-height: 22px; }
+.view-card > header > button, .view-card > header > select, .card-actions button { height: 22px; min-height: 22px; }
 .view-card > header > button, .card-actions button { min-width: 22px; width: 22px; padding: 0; border: 0; background: #f5f6f6; }
 .view-type { width: 72px; min-width: 42px; flex: 0 1 72px; padding: 0 1px; }
-.view-fields { display: flex; flex: 1; min-width: 0; flex-wrap: nowrap; align-items: center; gap: 3px; }
-.view-fields > label { display: inline-flex; flex: 1; align-items: center; gap: 1px; min-width: 0; }
-.view-fields > label > select { width: 60px; max-width: 90px; min-width: 0; flex: 1; font: inherit; padding: 0 1px; }
 .card-menu { display: flex; align-items: center; gap: 5px; padding: 4px; border-top: 1px solid #e2e4e5; }
 .card-actions { display: flex; flex-shrink: 0; gap: 3px; margin-left: auto; }
 .card-actions button:last-child { margin-left: auto; }
@@ -125,7 +121,6 @@ dialog textarea { display: block; width: 100%; }
 #cluster-error { color: #a12727; }
 
 .view-card > header > button { flex: 0 0 22px; }
-.view-fields abbr { text-decoration: none; cursor: help; }
 .view-placeholder { min-height: 190px; display: flex; flex-direction: column; align-items: center; justify-content: safe center; padding: 12px; text-align: center; gap: 8px; }
 .view-placeholder p { margin: 0; max-width: 32ch; color: #737b80; font-size: 12px; }
 .view-placeholder progress { width: min(220px, 100%); }
@@ -231,8 +226,6 @@ variable-picker[hidden] { display: none; }
 .vp-option-text > span { font-size: 12px; }
 .vp-option-text > small, .vp-summary { color: #586974; }
 .vp-panel :focus-visible { outline: 2px solid #527b9c; outline-offset: 1px; }
-.view-fields .view-field { display: inline-flex; flex: 1; align-items: center; min-width: 0; gap: 1px; }
-.view-field variable-picker { flex: 1; width: 60px; max-width: 90px; }
 .view-card > header .vp-trigger { width: 100%; min-width: 0; min-height: 22px; height: 22px; padding: 0 2px; font: inherit; }
 #feature-weights { max-height: 150px; overflow: auto; }
 #feature-weights label { display: flex; justify-content: space-between; gap: 8px; }
@@ -263,28 +256,34 @@ variable-picker[hidden] { display: none; }
 #help-content pre { white-space: pre-wrap; }
 #table-columns .vp-trigger { max-width: 160px; }
 
-.path-chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #9db4c8; border-radius: 10px; background: #eef4f9; padding: 0 3px 0 8px; }
-.path-chip button { border: 0; background: transparent; cursor: pointer; padding: 0 4px; font-size: 13px; line-height: 1.3; }
+/* Chips (src/chip.js): the conditions in the search field, the color key under a card and the chips above a cloud. */
+.chip { display: inline-flex; align-items: center; gap: 4px; min-height: 0; height: 20px; padding: 0 8px 0 6px; border: 1px solid #ccc; border-radius: 10px;
+  background: #fff; font-size: 11px; line-height: 1; white-space: nowrap; }
+button.chip { cursor: pointer; }
+button.chip:hover, button.chip:focus { border-color: #426d8d; }
+.chip > span:not(.chip-dot) { overflow: hidden; text-overflow: ellipsis; max-width: 28ch; }
+.chip-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; }
+.path-chip { padding-right: 2px; border-color: #9db4c8; background: #eef4f9; }
+.path-chip button { min-height: 0; border: 0; background: transparent; padding: 0 4px; font-size: 13px; line-height: 1; }
 .path-chip button:hover, .path-chip button:focus { color: #a33; }
 .term-note { margin: 4px 0; padding: 3px 6px; border-left: 3px solid #d9772b; background: #fdf5ec; font-size: 11px; }
 
-/* Size: and By: are the two choices that matter, so they are always visible and look like a card's M: and C:. */
-.term-fields { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 2px 0 5px; font-size: 12px; }
-.term-fields > label { display: inline-flex; flex: 1 1 140px; align-items: center; gap: 2px; min-width: 0; }
-.term-fields > label > select { flex: 1; min-width: 0; max-width: 100%; font: inherit; }
-.term-fields abbr { text-decoration: none; cursor: help; }
-.term-fields > select { min-width: 0; max-width: 100%; }
-.color-key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 4px 0; font-size: 11px; }
+/* A row of labeled controls ("M: [map]"): the header of a visualization card and the top of the description panel share it. */
+.controls { display: flex; flex: 1; align-items: center; gap: 3px; min-width: 0; }
+.control { display: inline-flex; flex: 1 1 0; align-items: center; gap: 1px; min-width: 0; height: 22px; }
+.control abbr { text-decoration: none; cursor: help; }
+.control > select, .control > variable-picker, .controls > select { flex: 1; width: 60px; min-width: 0; height: 22px; min-height: 22px; font: inherit; padding: 0 1px; }
+.view-card .controls { flex-wrap: nowrap; }
+.view-card .control > select, .view-card .control > variable-picker { max-width: 90px; }
+.term-fields { flex-wrap: wrap; gap: 4px 6px; margin: 2px 0 5px; }
+.term-fields .control { flex: 1 1 150px; }
+.color-key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 4px 0; font-size: 11px; }
 .view-card > .color-key { flex: none; margin: 0; padding: 3px 4px; max-height: 56px; overflow-y: auto; border-top: 1px solid #e2e4e5; }
 .view-card > .color-key[hidden] { display: none; }
-.legend-value { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ccc; border-radius: 10px; background: #fff; padding: 1px 8px 1px 4px; cursor: pointer; font-size: 11px; }
-.legend-value:hover, .legend-value:focus { border-color: #426d8d; }
-.legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
 
 .status-line { display: flex; align-items: center; gap: 0.3em; }
 .status-line #terms-status { margin: 0; }
 
-.chip-dot { display: inline-block; width: 0.75em; height: 0.75em; margin-right: 0.3em; border-radius: 50%; vertical-align: -0.05em; }
 .cluster-row.pulse { outline: 2px solid #527b9c; outline-offset: 1px; border-radius: 3px; }
 
 /* The search field: conditions as tokens, then the draft, with suggestions under it. */
@@ -292,7 +291,6 @@ variable-picker[hidden] { display: none; }
   border: 1px solid #8a969c; border-radius: 3px; background: #fff; }
 .search-box:focus-within { outline: 2px solid #527b9c; outline-offset: -1px; }
 .search-chips { display: contents; }
-.search-box .path-chip { font-size: 11px; white-space: nowrap; }
 .search-box input[type=search] { flex: 1; min-width: 8em; min-height: 22px; border: 0; outline: 0; background: transparent; padding: 0 2px; }
 .search-box [aria-invalid=true] { outline: 0; color: #b64733; }
 .search-count { color: #69747a; white-space: nowrap; font-size: 11px; }

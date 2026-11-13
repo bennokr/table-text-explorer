@@ -1,6 +1,6 @@
 import { colorKey, keyChip } from './color-key.js';
 import { renderTerms } from './term-view.js';
-import { clusterChipLabel, clusterCondition, pulseLegendRow } from './path-clusters.js';
+import { clusterCondition, conditionText, legendHover } from './path-clusters.js';
 
 const PER_VALUE = 10; // Phrases each value contributes to the cloud.
 
@@ -38,9 +38,9 @@ function mergeGroups(result, compare) {
 // A cluster whose legend card is on screen needs only its dot and first phrase here, as in the search field's tokens.
 function legendEntry(group, activate, model) {
   const cluster = group.predicate ? clusterCondition(model, group.predicate) : null;
-  const label = `${cluster?.shown ? clusterChipLabel(cluster) : group.name} · ${group.subset.length.toLocaleString()}`;
-  const hover = cluster?.shown ? { onmouseenter: () => pulseLegendRow(cluster.id, true), onmouseleave: () => pulseLegendRow(cluster.id, false) } : {};
-  return keyChip({ color: group.color, label, hover, title: `${group.name}: highlight these records (Alt-click: NOT)`,
+  const text = group.predicate ? conditionText(model, group.predicate, group.name) : group.name;
+  return keyChip({ color: group.color, label: `${text} · ${group.subset.length.toLocaleString()}`, events: legendHover(cluster),
+    title: `${group.name}: highlight these records (Alt-click: NOT)`,
     onclick: event => {
       if (group.predicate) { activate(null, null, group.predicate, event.altKey); } else { model.select(group.ids); }
     } });

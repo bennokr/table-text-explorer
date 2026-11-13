@@ -36,7 +36,7 @@ async function combinedQueries(page) {
   await page.selectOption('#terms-content', 'both');
   await page.selectOption('#terms-ranking', 'balanced');
   await expect(page.locator('#description-kind')).toHaveText('Even splits');
-  await page.selectOption('#terms-contrast', 'all');
+  await page.selectOption('#terms-contrast', 'current');
   await expect(page.locator('#terms-status')).toHaveText(/24 subset \/ 0 comparison/);
   await expect(page.locator('#terms-results .term-cloud[aria-busy=false]').first()).toBeVisible();
   await page.selectOption('#terms-content', 'phrases');
