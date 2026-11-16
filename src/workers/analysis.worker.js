@@ -1,18 +1,11 @@
 import { withBase } from '../base.js';
-import densitySource from './density.py?raw';
-import source from './analysis.py?raw';
-import termsSource from './terms.py?raw';
-import clusteringSource from './clustering.py?raw';
-import groupsSource from './term_groups.py?raw';
-import namesSource from './cluster_names.py?raw';
-import lexicalSource from './lexical.py?raw';
-import phraseQueries from './phrase_queries.py?raw';
-import indexesSource from './text_indexes.py?raw';
-import rankingSource from './term_ranking.py?raw';
-import facetsSource from './facets.py?raw';
-import descriptionsSource from './descriptions.py?raw';
+// Every Python module is written to the worker's file system and imported by name; worker_entry.py
+// imports the task functions explicitly. The page shares only embeddings and a progress callback (bridge.py).
+const modules = import.meta.glob('./*.py', { query: '?raw', import: 'default', eager: true });
 
 let runtime;
+let bridge; // Python modules for the page's side of the bridge, kept so no proxy is made per request.
+let entry;
 let readiness = { python: 'idle', sklearn: 'idle' };
 
 function ready(id, update) {
@@ -32,18 +25,11 @@ async function initialize(id) {
   self.postMessage({ id, progress: 'Loading scikit-learn…' });
   await python.loadPackage('scikit-learn');
   ready(id, { sklearn: 'loaded' });
-  python.FS.writeFile('/home/pyodide/text_indexes.py', indexesSource);
-  python.FS.writeFile('/home/pyodide/lexical.py', lexicalSource);
-  python.FS.writeFile('/home/pyodide/term_ranking.py', rankingSource);
-  python.FS.writeFile('/home/pyodide/facets.py', facetsSource);
-  await python.runPythonAsync(source);
-  await python.runPythonAsync(termsSource);
-  await python.runPythonAsync(densitySource);
-  await python.runPythonAsync(clusteringSource);
-  await python.runPythonAsync(groupsSource);
-  await python.runPythonAsync(namesSource);
-  await python.runPythonAsync(phraseQueries);
-  await python.runPythonAsync(descriptionsSource);
+  for (const [path, source] of Object.entries(modules)) {
+    python.FS.writeFile(`/home/pyodide/${path.slice(2)}`, source);
+  }
+  bridge = python.pyimport('bridge');
+  entry = python.pyimport('worker_entry');
   runtime = python;
   return python;
 }
@@ -51,7 +37,7 @@ async function initialize(id) {
 function operationMessage(task) {
   const messages = { phrase_matches: 'Matching exact phrases', density_select: 'Selecting groups from the saved density tree',
     cluster: 'Fitting clustering on all records', terms_build: 'Counting phrases on all records',
-    terms_tokens: 'Reusing lexical tokens for word vectors' };
+    terms_tokens: 'Reusing lexical tokens for word vectors', column_screen: 'Screening columns against the text' };
   return messages[task] ?? 'Preparing analysis';
 }
 
@@ -62,17 +48,13 @@ function initializationFailure(id) {
 
 self.onmessage = async ({ data: { id, payload } }) => {
   try {
-    const python = await initialize(id);
+    await initialize(id);
     if (payload.task === 'initialize') { self.postMessage({ id, result: true }); return; }
-    const functions = { descriptions_describe: 'describe_descriptions', phrase_matches: 'match_phrases', terms_tokens: 'index_tokens', cluster_names: 'name_clusters', density_select: 'run_density_selection', cluster: 'run_clustering', terms_groups: 'describe_groups', terms_build: 'build_term_index', terms_describe: 'describe_terms', terms_matches: 'matching_terms' };
-    const operation = functions[payload.task] ?? 'run_projection';
     self.postMessage({ id, progress: operationMessage(payload.task) });
-    python.globals.set('terms_progress', (message, completed, total) => self.postMessage({ id,
-      progress: { message, completed, total } }));
     const { features, ...parameters } = payload;
-    python.globals.set('embedding_values', features ?? null);
-    python.globals.set('payload', JSON.stringify(parameters));
-    const result = JSON.parse(await python.runPythonAsync(`${operation}(payload)`));
+    bridge.progress_callback = (message, completed, total) => self.postMessage({ id, progress: { message, completed, total } });
+    bridge.embedding_values = features ?? null;
+    const result = JSON.parse(entry.run(payload.task, JSON.stringify(parameters)));
     self.postMessage({ id, result });
   } catch (error) {
     initializationFailure(id);

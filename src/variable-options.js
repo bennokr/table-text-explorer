@@ -30,9 +30,9 @@ export function variableGroups(variables) {
   return [...groups];
 }
 
-export function selectionSummary(variables, selected, multiple) {
-  if (!selected.length) { return multiple ? 'No variables' : 'Choose variable…'; }
-  if (selected.length > 1) { return `${selected.length} variables`; }
+export function selectionSummary(variables, selected, multiple, noun = 'variables') {
+  if (!selected.length) { return multiple ? `No ${noun}` : 'Choose variable…'; }
+  if (selected.length > 1) { return `${selected.length} ${noun}`; }
   const chosen = variables.find(variable => variable.id === selected[0]);
   return chosen?.label ?? selected[0];
 }

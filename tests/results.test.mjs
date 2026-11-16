@@ -72,29 +72,7 @@ test('projection and actual embedding downloads retain row mapping without expos
   assert.deepEqual(JSON.parse(await resultExport(embedding).text()).embeddings, [1, 0, 0, 1]);
 });
 
-test('cluster comparisons use stable memberships and explicit visible complements', () => {
+test('only a tree is described branch by branch; a flat clustering is compared by its name column', () => {
   const { model, result } = fixture();
-  const before = clusterComparison(model, result.id);
-  model.select([1]);
-  assert.deepEqual(clusterComparison(model, result.id), before);
-  assert.deepEqual(before.groups.find(group => group.id === '-1').subset, [2]);
-  assert.deepEqual(before.groups.find(group => group.id === '-1').comparison, [0, 1]);
-  assert.deepEqual(before.groups.find(group => group.id === '0').subset, [0]);
-  model.pinned = new Set([0, 1]);
-  model.refresh();
-  const filtered = clusterComparison(model, result.id);
-  assert.equal(filtered.groups.length, 1);
-  assert.deepEqual(filtered.groups[0].comparison, [1]);
-});
-
-test('paged group descriptions retain records on other pages in each comparison', () => {
-  const model = new Dataset();
-  model.load({ name: 'many groups', rows: Array.from({ length: 25 }, (_, id) => ({ value: id })) });
-  const ids = model.rows.map((_, id) => id);
-  const result = model.results.add('clustering', { rowIds: ids, labels: ids, groups: clusterGroups(ids) });
-  const page = clusterComparison(model, result.id, 1);
-  assert.equal(page.groups.length, 5);
-  assert.deepEqual(page.groups[0].subset, [20]);
-  assert.equal(page.groups[0].comparison.length, 24);
-  assert.ok(page.groups[0].comparison.includes(0));
+  assert.equal(clusterComparison(model, result.id), null);
 });

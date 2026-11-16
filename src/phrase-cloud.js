@@ -22,9 +22,9 @@ function phraseText(word, tooltip, show) {
   const title = svgElement('title', {});
   title.textContent = tooltip(word.term);
   text.append(title);
-  text.onclick = () => show(word.term);
+  text.onclick = event => show(word.term, event);
   text.onkeydown = event => {
-    if (['Enter', ' '].includes(event.key)) { event.preventDefault(); show(word.term); }
+    if (['Enter', ' '].includes(event.key)) { event.preventDefault(); show(word.term, event); }
   };
   return text;
 }
@@ -42,7 +42,7 @@ function paint(root, words, placed, width, { tooltip, show }) {
       missing.map(word => element('button', { type: 'button', text: word.text, 'data-term': word.text,
         title: tooltip(word.term), style: `color: ${word.term.color ?? 'inherit'}`,
         'aria-label': word.term.field ? `${word.term.field}: ${word.text}` : word.text,
-        onclick: () => show(word.term) }))));
+        onclick: event => show(word.term, event) }))));
   }
   root.setAttribute('aria-busy', 'false');
 }

@@ -1,0 +1,27 @@
+# English negations. Unlike stopwords they are kept as phrases of their own ("not", "never"), because they flip
+# the meaning of a review or a motion. Cluster names avoid them at the edges.
+not
+no
+never
+none
+nobody
+nothing
+nowhere
+neither
+nor
+cannot
+don't
+doesn't
+didn't
+isn't
+aren't
+wasn't
+weren't
+won't
+wouldn't
+can't
+couldn't
+shouldn't
+haven't
+hasn't
+hadn't

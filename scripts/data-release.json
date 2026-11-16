@@ -1,0 +1,83 @@
+{
+  "repository": "bennokr/table-text-explorer",
+  "tag": "data-v1",
+  "model": {
+    "key": "dutch",
+    "model": "MarkSelles/dutch-minilm-l6-v2",
+    "revision": "a4838aae5e41cfe6bd1ce54bafd1a4cdf3489bd7",
+    "pooling": "attention-masked mean of 126-token chunks, averaged and normalised"
+  },
+  "datasets": [
+    {
+      "name": "rechtspraak-sample.json",
+      "assets": [
+        {
+          "name": "rechtspraak-sample.json",
+          "bytes": 7166492,
+          "sha256": "b973638b3ff7faf36aa4d0a89ac7530d253ec8012e10ac7ad6a0bf30e53e0e18",
+          "role": "table"
+        },
+        {
+          "name": "rechtspraak-sample.summary.dutch-minilm.npy",
+          "bytes": 1812608,
+          "sha256": "c5736acad1f06dad9e85d3c7b029e4cb1442edec0fbdae1e51e35f1fc56dce4a",
+          "role": "embeddings",
+          "field": "summary",
+          "dimensions": 384,
+          "records": 2360,
+          "model": "dutch",
+          "dtype": "float16"
+        },
+        {
+          "name": "rechtspraak-sample.ruling_excerpt.dutch-minilm.npy",
+          "bytes": 1812608,
+          "sha256": "455429405e9aeaeaaba3a27c6f71d4de4f310c79f4cb0aa984eee9e4ff2a1d1b",
+          "role": "embeddings",
+          "field": "ruling_excerpt",
+          "dimensions": 384,
+          "records": 2360,
+          "model": "dutch",
+          "dtype": "float16"
+        }
+      ]
+    },
+    {
+      "name": "tweedekamer-motions-sample.json",
+      "assets": [
+        {
+          "name": "tweedekamer-motions-sample.json",
+          "bytes": 1197525,
+          "sha256": "eb2270196abeaa06f78f90bc3cffcf6fbd229e82b123fa3717b387e470ec8721",
+          "role": "table"
+        },
+        {
+          "name": "tweedekamer-motions-sample.text.dutch-minilm.npy",
+          "bytes": 2753408,
+          "sha256": "659dfbd1db84e2486e78438c53a19fe32500ba053a6625cfd13b93c8f8a1e1a6",
+          "role": "embeddings",
+          "field": "text",
+          "dimensions": 384,
+          "records": 3585,
+          "model": "dutch",
+          "dtype": "float16"
+        }
+      ]
+    },
+    {
+      "name": "dbrd-test.json",
+      "assets": [
+        {
+          "name": "dbrd-test.text.dutch-minilm.npy",
+          "bytes": 1708160,
+          "sha256": "8be97f8da1dcf37d619847b3a41488c14558b43cc24b0d32e815efd1b699fe38",
+          "role": "embeddings",
+          "field": "text",
+          "dimensions": 384,
+          "records": 2224,
+          "model": "dutch",
+          "dtype": "float16"
+        }
+      ]
+    }
+  ]
+}

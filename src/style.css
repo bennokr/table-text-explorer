@@ -34,6 +34,11 @@ small { color: #737b80; font-size: 10px; }
 .empty { color: #737b80; padding: 12px; }
 #add-chart { margin-left: auto; }
 .square { width: 26px; height: 26px; padding: 0; }
+/* The small square buttons of a chart header, a card menu and a panel's control row: 22 px, like the selects beside them. */
+.mini, .view-card > header > button, .card-actions button { width: 22px; min-width: 22px; height: 22px; min-height: 22px; padding: 0; border: 0; background: #f5f6f6; }
+.mini:hover:not([disabled]) { background: #e9edef; }
+.link { border: 0; background: transparent; color: #245c85; text-decoration: underline; padding: 0 2px; min-height: 0; cursor: pointer; font: inherit; }
+#status .link { margin-left: 4px; }
 #views { flex: 1; min-height: 0; overflow: auto; padding: 0; gap: 0;
   scrollbar-gutter: stable; overflow-anchor: none; }
 .view-row { display: grid; min-width: 0; }
@@ -42,26 +47,23 @@ small { color: #737b80; font-size: 10px; }
 #views-empty { margin: 0; }
 .view-card { min-width: 0; min-height: 0; display: flex; flex-direction: column; border: 1px solid #e2e4e5; overflow: hidden; }
 .view-card > header { display: flex; align-items: center; gap: 2px; padding: 2px; flex-wrap: nowrap; }
-.view-card > header > button, .view-card > header > select, .view-fields > label,
-.view-fields > label > select, .card-actions button { height: 22px; min-height: 22px; }
-.view-card > header > button, .card-actions button { min-width: 22px; width: 22px; padding: 0; border: 0; background: #f5f6f6; }
+.view-card > header > select { height: 22px; min-height: 22px; }
 .view-type { width: 72px; min-width: 42px; flex: 0 1 72px; padding: 0 1px; }
-.view-fields { display: flex; flex: 1; min-width: 0; flex-wrap: nowrap; align-items: center; gap: 3px; }
-.view-fields > label { display: inline-flex; flex: 1; align-items: center; gap: 1px; min-width: 0; }
-.view-fields > label > select { width: 60px; max-width: 90px; min-width: 0; flex: 1; font: inherit; padding: 0 1px; }
 .card-menu { display: flex; align-items: center; gap: 5px; padding: 4px; border-top: 1px solid #e2e4e5; }
 .card-actions { display: flex; flex-shrink: 0; gap: 3px; margin-left: auto; }
 .card-actions button:last-child { margin-left: auto; }
 .view-name { display: flex; flex: 1; min-width: 0; align-items: center; gap: 5px; }
 .view-name input { flex: 1; min-width: 0; height: 22px; min-height: 22px; }
+.view-bins { display: flex; align-items: center; gap: 5px; }
+.view-bins input { width: 64px; height: 22px; min-height: 22px; }
 .view-plot { contain: size; flex: 1; min-height: 100px; min-width: 0; position: relative; }
-#terms { padding: 5px; }
+#terms { padding: 0 5px; }
 #terms fieldset { border: 1px solid #ddd; margin: 0 0 5px; padding: 5px; }
 .term-controls { display: flex; flex-wrap: nowrap; overflow-x: auto; align-items: center; gap: 5px; margin: 4px 0; }
 .term-controls > * { flex-shrink: 0; white-space: nowrap; }
 .term-controls input:not([type="checkbox"]) { width: 55px; }
 #terms-status { margin: 5px 0; font-size: 11px; color: #69747a; }
-.term-field { border-top: 1px solid #ddd; padding: 5px 0; }
+.term-field { border-bottom: 1px solid #ddd; padding: 5px 0; }
 .term-field-legend { display: flex; flex-wrap: wrap; gap: 0 8px; font-size: 10px; line-height: 1.2; }
 .term-field-legend span { overflow-wrap: anywhere; }
 .term-field header { display: flex; align-items: center; gap: 6px; }
@@ -76,8 +78,6 @@ small { color: #737b80; font-size: 10px; }
 .term-table th, .term-table td { padding: 3px; border-bottom: 1px solid #eee; text-align: right; }
 .term-table th:first-child, .term-table td:first-child { text-align: left; }
 .term-table button { border: 0; background: transparent; padding: 0; min-height: 18px; text-align: left; }
-.term-excerpts { margin: 5px 0; padding: 0; list-style: none; font-size: 11px; overflow-wrap: anywhere; }
-.term-excerpts li { margin: 5px 0; white-space: pre-wrap; }
 .missing-count { padding: 0 4px; border: 0; background: transparent; color: #737b80; min-height: 18px; font-size: 10px; }
 .data-table { border-collapse: separate; border-spacing: 0; table-layout: fixed; width: max-content; min-width: 100%; }
 .data-table th, .data-table td { min-width: 130px; max-width: 180px; height: 25px; padding: 2px 6px;
@@ -104,10 +104,19 @@ footer progress { width: 110px; height: 12px; flex-shrink: 0; align-self: center
 dialog { width: min(700px, 92vw); max-height: 88vh; overflow: auto; padding: 12px; border: 1px solid #aaa; }
 dialog::backdrop { background: #0003; }
 dialog h2 { font-size: 14px; margin: 0 0 10px; }
-dialog fieldset { margin: 8px 0; border: 1px solid #ddd; }
-dialog form > label, dialog fieldset > label { display: block; margin: 5px 0; }
+/* One dialog template: a title, fieldsets of rows (a control, then its ? hint), and a footer of actions with the
+   error message at its left. Labels sit left of their control; only a name input stretches (.wide). */
+dialog form { display: grid; gap: 8px; }
+dialog fieldset { margin: 0; padding: 6px 8px 8px; border: 1px solid #ddd; display: grid; gap: 6px; }
+dialog legend { font-weight: 600; padding: 0 4px; }
+dialog legend .help-hint { font-size: 0.75em; }
+dialog .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+dialog .row > label { display: inline-flex; align-items: center; gap: 5px; }
+dialog .row > .wide { flex: 1; min-width: min(220px, 100%); }
+dialog .row > .wide input { flex: 1; min-width: 0; }
 dialog textarea { display: block; width: 100%; }
-.dialog-actions { display: flex; justify-content: flex-end; gap: 5px; margin-top: 10px; }
+dialog [role=alert] { margin: 0 auto 0 0; color: #a12727; }
+.dialog-actions { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 4px; }
 .types-scroll { max-height: 230px; overflow: auto; }
 .types-scroll table { width: 100%; text-align: left; border-collapse: collapse; }
 .types-scroll th, .types-scroll td { padding: 2px 4px; border-bottom: 1px solid #eee; }
@@ -123,11 +132,8 @@ dialog textarea { display: block; width: 100%; }
 .saved-result { border-top: 1px solid #ccd2d6; padding: 10px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .saved-result > details, .saved-result > p { flex-basis: 100%; margin: 2px 0; }
 .saved-result pre { max-height: 200px; overflow: auto; white-space: pre-wrap; }
-#cluster-dialog label { margin-block: 6px; }
-#cluster-error { color: #a12727; }
 
 .view-card > header > button { flex: 0 0 22px; }
-.view-fields abbr { text-decoration: none; cursor: help; }
 .view-placeholder { min-height: 190px; display: flex; flex-direction: column; align-items: center; justify-content: safe center; padding: 12px; text-align: center; gap: 8px; }
 .view-placeholder p { margin: 0; max-width: 32ch; color: #737b80; font-size: 12px; }
 .view-placeholder progress { width: min(220px, 100%); }
@@ -136,20 +142,10 @@ dialog textarea { display: block; width: 100%; }
 #runtime-status { margin-left: auto; flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 10px; }
 .runtime-component { display: inline-flex; align-items: center; gap: 2px; cursor: help; }
 .runtime-component::before { content: '●'; color: #bc890c; font-size: 12px; }
-#map-error { color: #a12727; }
-.analysis-name-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
-.analysis-name { flex: 1; min-width: min(240px, 100%); }
-.analysis-name input { width: 100%; }
-.analysis-name-row > label { display: flex; align-items: center; gap: 5px; }
-.analysis-name-row > .analysis-name { flex: 1; }
-#cluster-name { display: block; width: 100%; }
 #analysis-actions { display: flex; align-items: center; gap: 5px; }
 #analysis-progress { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 80px; max-width: 320px; }
 #panel-progress { width: 110px; min-width: 50px; height: 12px; }
 #panel-status { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
-.term-stopwords { flex-wrap: nowrap; }
-.term-stopwords label { white-space: nowrap; }
-.term-controls #terms-stopwords { flex: 1; min-width: 110px; width: auto; }
 #terms-index-status { margin: 5px 0 0; color: #69747a; font-size: 11px; }
 .cluster-legend { padding: 6px; }
 .view-card:has(.cluster-legend) .view-plot { contain: none; flex-basis: auto; }
@@ -192,22 +188,14 @@ dialog textarea { display: block; width: 100%; }
   left: var(--drop-x); width: 3px; background: #527b9c; pointer-events: none; z-index: 5; }
 
 #terms-controls { border-bottom: 1px solid #ddd; margin-bottom: 5px; padding-bottom: 5px; }
-#terms-settings h3 { margin: 0 0 8px; font-size: 14px; }
 #terms-inspector > .term-controls { flex-wrap: wrap; overflow: visible; }
-#terms-scope { max-width: min(240px, 100%); }
 
-#description-kind { text-align: right; }
+#description-kind { flex: 1 1 0; min-width: 40px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
 #table-count { margin-left: auto; }
-#terms-config-controls { flex-wrap: wrap; overflow: visible; }
 #terms-config { max-width: 180px; }
-#terms-config-controls #terms-name { flex: 1; min-width: 100px; width: auto; }
 
-#cluster-parameters, .cluster-naming { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
-#cluster-centroids, #cluster-density { display: contents; }
-#cluster-parameters label, .cluster-naming label { white-space: nowrap; }
 #cluster-parameters input[type="number"] { width: 65px; }
-.cluster-naming { margin-top: 6px; }
-.cluster-naming label { display: inline-flex; align-items: center; gap: 4px; }
+#cluster-density { display: contents; }
 
 .runtime-component[data-state="idle"]::before { color: #f0ce58; }
 .runtime-component[data-state="loading"]::before { color: #efa14a; }
@@ -234,8 +222,6 @@ variable-picker[hidden] { display: none; }
 .vp-option-text > span { font-size: 12px; }
 .vp-option-text > small, .vp-summary { color: #586974; }
 .vp-panel :focus-visible { outline: 2px solid #527b9c; outline-offset: 1px; }
-.view-fields .view-field { display: inline-flex; flex: 1; align-items: center; min-width: 0; gap: 1px; }
-.view-field variable-picker { flex: 1; width: 60px; max-width: 90px; }
 .view-card > header .vp-trigger { width: 100%; min-width: 0; min-height: 22px; height: 22px; padding: 0 2px; font: inherit; }
 #feature-weights { max-height: 150px; overflow: auto; }
 #feature-weights label { display: flex; justify-content: space-between; gap: 8px; }
@@ -244,9 +230,6 @@ variable-picker[hidden] { display: none; }
 .help-hint::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; }
 .help-hint:focus-visible { outline: 2px solid #527b9c; outline-offset: 3px; }
 .help-hint[title] { min-width: 1.35em; }
-#map-form details, #cluster-form details { margin: 8px 0; }
-#map-form summary, #cluster-form summary { cursor: pointer; color: #465f6d; }
-#map-form legend .help-hint { font-size: 0.75em; }
 #group-assignments label { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, 40%); gap: 8px; align-items: center; margin: 5px 0; }
 #group-assignments input { width: 100%; min-width: 0; box-sizing: border-box; }
 #group-assignments { max-height: 220px; overflow: auto; }
@@ -265,3 +248,49 @@ variable-picker[hidden] { display: none; }
 #help-content a { color: #245c85; }
 #help-content pre { white-space: pre-wrap; }
 #table-columns .vp-trigger { max-width: 160px; }
+
+/* Chips (src/chip.js): the conditions in the search field, the color key under a card and the chips above a cloud. */
+.chip { display: inline-flex; align-items: center; gap: 4px; min-height: 0; height: 20px; padding: 0 8px 0 6px; border: 1px solid #ccc; border-radius: 10px;
+  background: #fff; font-size: 11px; line-height: 1; white-space: nowrap; }
+button.chip { cursor: pointer; }
+button.chip:hover, button.chip:focus { border-color: #426d8d; }
+.chip > span:not(.chip-dot) { overflow: hidden; text-overflow: ellipsis; max-width: 28ch; }
+.chip-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; }
+.path-chip { padding-right: 2px; border-color: #9db4c8; background: #eef4f9; }
+.path-chip button { min-height: 0; border: 0; background: transparent; padding: 0 4px; font-size: 13px; line-height: 1; }
+.path-chip button:hover, .path-chip button:focus { color: #a33; }
+.term-note { margin: 4px 0; padding: 3px 6px; border-left: 3px solid #d9772b; background: #fdf5ec; font-size: 11px; }
+
+/* A row of labeled controls ("M: [map]"): the header of a visualization card and the top of the description panel share it. */
+.controls { display: flex; flex: 1; align-items: center; gap: 3px; min-width: 0; }
+.control { display: inline-flex; flex: 1 1 0; align-items: center; gap: 1px; min-width: 0; height: 22px; }
+.control abbr { text-decoration: none; cursor: help; }
+.control > select, .control > variable-picker, .controls > select { flex: 1; width: 60px; min-width: 0; height: 22px; min-height: 22px; font: inherit; padding: 0 1px; }
+.view-card .controls { flex-wrap: nowrap; }
+.view-card .control > select, .view-card .control > variable-picker { max-width: 90px; }
+.term-fields { flex-wrap: wrap; gap: 4px 6px; margin: 2px 0 5px; }
+.term-fields .control { flex: 1 1 105px; }
+.color-key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 4px 0; font-size: 11px; }
+.view-card > .color-key { flex: none; margin: 0; padding: 3px 4px; max-height: 56px; overflow-y: auto; border-top: 1px solid #e2e4e5; }
+.view-card > .color-key[hidden] { display: none; }
+
+.status-line { display: flex; align-items: center; gap: 0.3em; }
+.status-line #terms-status { margin: 0; }
+
+.cluster-row.pulse { outline: 2px solid #527b9c; outline-offset: 1px; border-radius: 3px; }
+
+/* The search field: conditions as tokens, then the draft, with suggestions under it. */
+.search-box { position: relative; flex: 1; min-width: 160px; display: flex; align-items: center; gap: 4px; min-height: 26px; padding: 0 4px;
+  border: 1px solid #8a969c; border-radius: 3px; background: #fff; }
+.search-box:focus-within { outline: 2px solid #527b9c; outline-offset: -1px; }
+.search-chips { display: contents; }
+.search-box input[type=search] { flex: 1; min-width: 8em; min-height: 22px; border: 0; outline: 0; background: transparent; padding: 0 2px; }
+.search-box [aria-invalid=true] { outline: 0; color: #b64733; }
+.search-count { color: #69747a; white-space: nowrap; font-size: 11px; }
+.suggest-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 30; margin: 2px 0 0; padding: 2px; list-style: none; max-height: 260px; overflow-y: auto;
+  border: 1px solid #8a969c; border-radius: 3px; background: #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); font-size: 12px; }
+.suggest-list[hidden] { display: none; }
+.suggest-list [role=option] { display: flex; justify-content: space-between; gap: 12px; padding: 3px 6px; cursor: pointer; border-radius: 2px; }
+.suggest-list [role=option]:hover, .suggest-list [aria-selected=true] { background: #e3eef7; }
+.suggest-list small { color: #69747a; }
+.suggest-note { padding: 3px 6px; color: #69747a; font-size: 11px; }

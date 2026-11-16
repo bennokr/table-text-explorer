@@ -10,3 +10,7 @@ export function sentenceModelFor(key = 'multilingual') {
   if (!model) { throw new Error('Choose a supported local sentence model.'); }
   return model;
 }
+
+// Both models gave the same quality on two Dutch datasets; the Dutch one is half the size and about
+// twice as fast, so it is the default for Dutch text. Other or mixed languages need the multilingual one.
+export function defaultSentenceModel(language) { return language === 'nl' ? 'dutch' : 'multilingual'; }

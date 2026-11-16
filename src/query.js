@@ -64,7 +64,7 @@ class Parser {
     const op = this.take();
     const value = this.take();
     if (!value || ['(', ')', 'AND', 'OR'].includes(value.toUpperCase())) {
-      throw new Error('Expected a value after the field operator.');
+      throw new Error('Expected a value after the operator.');
     }
     const term = { kind: 'term', field: unquote(token), op, value: unquote(value) };
     if (op !== '~' && /^["']null["']$/i.test(value)) { term.literal = true; }

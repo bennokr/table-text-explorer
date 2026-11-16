@@ -3,25 +3,69 @@
 import json
 from functools import partial
 
+import bridge
 import numpy as np
+from fold import fold_phrase
 from lexical import analyze_terms as analyze_terms
 from lexical import analyze_tokens, tokenize_text
 from sklearn.feature_extraction.text import CountVectorizer
-from term_ranking import POPULATION_RANKINGS, embedding_population, population_scores
-from text_indexes import get_text_index, register_text_index, tokenize_column
+from term_ranking import (
+    POPULATION_RANKINGS,
+    distinct_splits,
+    embedding_population,
+    population_scores,
+)
+from text_indexes import (
+    STEP_ROWS,
+    get_text_index,
+    ignore_step,
+    register_text_index,
+    tokenize_column,
+)
 
-term_indexes = {}
-term_index_id = None
-term_record_count = 0
-terms_progress = None  # Set by the worker bridge; native tests need no callback.
-embedding_values = None  # Saved embeddings supplied by the worker bridge, never fitted here.
+
+class ActiveIndex:
+    """The text index the last request used: its fields, its identity and its record count."""
+
+    def __init__(self):
+        self.indexes = {}
+        self.index_id = None
+        self.record_count = 0
+        self.vocab = {"blocked": frozenset(), "fold": lambda word: word}
+
+    def use(self, entry, index_id):
+        self.indexes, self.index_id, self.record_count = entry["fields"], index_id, entry["rows"]
+        self.vocab = entry["vocab"]
+
+
+active = ActiveIndex()
+
+
+def counting_analyzer(analyzer, step):
+    """Wrap an n-gram analyzer so the vectorizing pass reports progress per document."""
+    seen = 0
+
+    def count(tokens):
+        nonlocal seen
+        seen += 1
+        if seen % STEP_ROWS == 0:
+            step(STEP_ROWS)
+        return analyzer(tokens)
+
+    return count
 
 
 def index_field(column, data):
     if len(column["texts"]) != data["rows"]:
         raise ValueError("Every text field must contain one value per record.")
     texts = tokenize_column(column, data, tokenize_text)
-    analyzer = partial(analyze_tokens, stopwords=set(data["stopwords"]), sizes=data["sizes"])
+    analyzer = partial(
+        analyze_tokens,
+        stopwords=set(data["stopwords"]),
+        sizes=data["sizes"],
+        leadwords=set(data.get("leadwords", [])),
+    )
+    analyzer = counting_analyzer(analyzer, data.get("_step", ignore_step))
     vectorizer = CountVectorizer(analyzer=analyzer, max_features=20000, dtype=np.int32)
     try:
         matrix = vectorizer.fit_transform(texts)
@@ -36,23 +80,23 @@ def index_field(column, data):
         "terms": vectorizer.get_feature_names_out(),
         "lookup": vectorizer.vocabulary_,
         "present": np.array([any(token[0].isalnum() for token in row) for row in texts]),
+        "words": np.array([sum(token[0].isalnum() for token in row) for row in texts]),
     }
 
 
 def build_term_index(payload):
-    global term_indexes, term_index_id, term_record_count
     data = json.loads(payload)
     if not 1 <= data["sizes"][0] <= data["sizes"][1] <= 5:
         raise ValueError("Choose n-gram lengths between one and five.")
-    entry = register_text_index(data, index_field, terms_progress)
-    term_indexes, term_index_id, term_record_count = entry["fields"], data["indexId"], entry["rows"]
+    entry = register_text_index(data, index_field, bridge.progress_callback)
+    active.use(entry, data["indexId"])
     return json.dumps(
         {
             "indexId": data["indexId"],
             "reused": entry["reused"],
             "fields": [
                 {"name": name, "vocabulary": len(field["terms"]) if field else 0}
-                for name, field in term_indexes.items()
+                for name, field in active.indexes.items()
             ],
         }
     )
@@ -99,17 +143,6 @@ def describe_counts(matrix, subset, comparison):
     }
 
 
-def representatives(matrix, subset, scores):
-    weights = np.maximum(scores["contrast"], 0)
-    if not weights.any():
-        weights = scores["ctfidf"]
-    selected = matrix[subset]
-    lengths = np.asarray(selected.sum(axis=1)).ravel()
-    values = np.asarray(selected @ weights).ravel() / np.maximum(lengths, 1)
-    order = np.argsort(-values, kind="stable")
-    return subset[order[lengths[order] > 0]]
-
-
 def membership(field, term, mask):
     column = field["lookup"].get(term)
     if column is None:
@@ -119,19 +152,13 @@ def membership(field, term, mask):
     return ids[mask[ids]]
 
 
-def term_row(field, column, scores, ranked, sizes):
+def term_row(field, column, scores, sizes):
     phrase = str(field["terms"][column])
-    mask = np.zeros(term_record_count, dtype=bool)
-    mask[ranked] = True
-    ids = membership(field, phrase, mask)
-    positions = np.full(term_record_count, term_record_count)
-    positions[ranked] = np.arange(len(ranked))
-    examples = ids[np.argsort(positions[ids], kind="stable")[:3]]
     return {
         "phrase": phrase,
         "label": phrase,
         "predicate": {"kind": "term", "field": field["name"], "op": "~", "value": phrase},
-        "ids": membership(field, phrase, np.ones(term_record_count, dtype=bool)).tolist(),
+        "ids": membership(field, phrase, np.ones(active.record_count, dtype=bool)).tolist(),
         "support": int(scores["support"][column]),
         "rest": int(scores["rest"][column]),
         "subsetSize": sizes[0],
@@ -142,15 +169,15 @@ def term_row(field, column, scores, ranked, sizes):
         "ctfidf": float(scores["ctfidf"][column]),
         "contrast": float(scores["contrast"][column]),
         "lift": float(scores["lift"][column]),
-        "examples": examples.tolist(),
         **{key: float(scores[key][column]) for key in POPULATION_RANKINGS},
         "partitionSupport": int(scores["partitionSupport"][column]),
         "population": scores["population"],
     }
 
 
-def redundant_phrase(short, long, members, values):
-    if short == long or f" {short} " not in f" {long} ":
+def covered_by(short, long, keys, members, values):
+    """The longer phrase holds the shorter one's words and nearly the same records."""
+    if f" {keys[short]} " not in f" {keys[long]} ":
         return False
     if values[long] < values[short] - 0.1 * abs(values[short]):
         return False
@@ -158,26 +185,31 @@ def redundant_phrase(short, long, members, values):
     return overlap >= 0.9
 
 
+def redundant_phrase(short, long, keys, members, values):
+    """Redundant next to a better phrase that is its variant (the same folded key, boek/boeken)
+    or that covers it."""
+    if short == long:
+        return False
+    return keys[short] == keys[long] or covered_by(short, long, keys, members, values)
+
+
 def distinct_terms(field, order, values, records):
     # A bounded ranking pool keeps repeated brushing cheap; scores/index stay intact.
     phrases = {str(field["terms"][column]): column for column in order[:150]}
-    mask = np.zeros(term_record_count, dtype=bool)
+    mask = np.zeros(active.record_count, dtype=bool)
     mask[records] = True
     members = {phrase: set(membership(field, phrase, mask)) for phrase in phrases}
     scores = {phrase: values[column] for phrase, column in phrases.items()}
+    keys = {phrase: fold_phrase(phrase, active.vocab["fold"]) for phrase in phrases}
     kept = []
     for phrase in sorted(phrases, key=lambda phrase: -len(phrase.split())):
-        if not any(redundant_phrase(phrase, long, members, scores) for long in kept):
+        if not any(redundant_phrase(phrase, long, keys, members, scores) for long in kept):
             kept.append(phrase)
     columns = {phrases[phrase] for phrase in kept}
     return [column for column in order if column in columns][:15]
 
 
-def describe_field(name, field, data, subset, comparison):
-    if field is None:
-        return {"name": name, "vocabulary": 0, "terms": [], "representatives": []}
-    scores = describe_counts(field["matrix"], subset, comparison)
-    scores.update(population_scores(field, subset, data.get("_embeddings")))
+def eligible_columns(data, scores, compared):
     eligible = np.flatnonzero(scores["support"] >= data["support"])
     if data["ranking"] in {"balanced", "semantic"}:
         support = scores["partitionSupport"]
@@ -185,36 +217,50 @@ def describe_field(name, field, data, subset, comparison):
             (support[eligible] >= data["support"])
             & (scores["population"] - support[eligible] >= data["support"])
         ]
-    if data["ranking"] in {"balanced", "semantic"} or (
-        data["ranking"] != "ctfidf" and len(comparison)
-    ):
+    if data["ranking"] in {"balanced", "semantic"} or (data["ranking"] != "ctfidf" and compared):
         eligible = eligible[scores[data["ranking"]][eligible] > 0]
-    order = eligible[np.argsort(-scores[data["ranking"]][eligible], kind="stable")]
-    order = (
-        distinct_terms(field, order, scores[data["ranking"]], np.concatenate([subset, comparison]))
-        if data.get("deduplicate", True)
-        else order[:15]
-    )
-    ranked = representatives(field["matrix"], subset, scores)
+    return eligible
+
+
+def ranked_columns(field, data, scores, eligible, records):
+    """The columns to show, best first. Semantic splits are chosen one after another."""
+    if data["ranking"] == "semantic":
+        if scores["vectors"] is None or not len(eligible):
+            return eligible[:0]
+        order, gains = distinct_splits(scores["presence"], scores["vectors"], eligible)
+        scores["semantic"][order] = gains  # What each split adds beyond the earlier ones.
+        return order
+    values = scores[data["ranking"]]
+    order = eligible[np.argsort(-values[eligible], kind="stable")]
+    if data.get("deduplicate", True):
+        return np.asarray(distinct_terms(field, order, values, records), dtype=int)
+    return order[:15]
+
+
+def describe_field(name, field, data, subset, comparison):
+    if field is None:
+        return {"name": name, "vocabulary": 0, "terms": []}
+    scores = describe_counts(field["matrix"], subset, comparison)
+    scores.update(population_scores(field, subset, data.get("_embeddings")))
+    eligible = eligible_columns(data, scores, len(comparison))
+    order = ranked_columns(field, data, scores, eligible, np.concatenate([subset, comparison]))
     sizes = (len(subset), len(comparison))
     return {
         "name": name,
         "vocabulary": len(field["terms"]),
-        "representatives": ranked[:3].tolist(),
         "textRecords": int(field["present"][subset].sum()),
         "population": scores["population"],
-        "terms": [term_row(field, column, scores, ranked, sizes) for column in order],
+        "terms": [term_row(field, column, scores, sizes) for column in order],
     }
 
 
 def description_request(payload):
-    global term_indexes, term_index_id, term_record_count
     data = json.loads(payload)
     entry = get_text_index(data["indexId"])
-    term_indexes, term_index_id, term_record_count = entry["fields"], data["indexId"], entry["rows"]
+    active.use(entry, data["indexId"])
     subset, comparison = [np.unique(data[key]).astype(int) for key in ("subset", "comparison")]
     for ids in (subset, comparison):
-        if (ids < 0).any() or (ids >= term_record_count).any():
+        if (ids < 0).any() or (ids >= active.record_count).any():
             raise ValueError("Invalid record IDs.")
     if np.intersect1d(subset, comparison).size:
         raise ValueError("Subset and comparison must be disjoint.")
@@ -228,10 +274,10 @@ def describe_terms(payload):
         or data["support"] < 1
     ):
         raise ValueError("Choose a ranking and positive record support.")
-    data["_embeddings"] = embedding_population(data, embedding_values)
+    data["_embeddings"] = embedding_population(data, bridge.values())
     result = [
         describe_field(name, field, data, subset, comparison)
-        for name, field in term_indexes.items()
+        for name, field in active.indexes.items()
     ]
     return json.dumps(
         {
@@ -246,8 +292,8 @@ def describe_terms(payload):
 
 def matching_terms(payload):
     data, subset, _ = description_request(payload)
-    field = term_indexes.get(data["field"])
-    mask = np.zeros(term_record_count, dtype=bool)
+    field = active.indexes.get(data["field"])
+    mask = np.zeros(active.record_count, dtype=bool)
     mask[subset] = True
     ids = membership(field, data["phrase"], mask) if field else np.array([], dtype=int)
     return json.dumps({"ids": ids.tolist()})

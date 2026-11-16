@@ -2,7 +2,7 @@ import { findVariables, selectionSummary } from './variable-options.js';
 import { pickerControls, renderPicker, pickerKey } from './variable-picker-dom.js';
 
 export class VariablePicker extends HTMLElement {
-  static observedAttributes = ['multiple', 'disabled', 'aria-label', 'caption', 'title'];
+  static observedAttributes = ['multiple', 'disabled', 'aria-label', 'caption', 'noun', 'title'];
   _variables = [];
   _selected = [];
   selectedOnly = false;
@@ -62,7 +62,7 @@ export class VariablePicker extends HTMLElement {
     if (!this.controls) { return; }
     const { trigger, panel } = this.controls;
     const label = this.getAttribute('aria-label') || 'Choose variables';
-    const summary = selectionSummary(this.variables, this.selected, this.multiple);
+    const summary = selectionSummary(this.variables, this.selected, this.multiple, this.getAttribute('noun') ?? undefined);
     const caption = this.getAttribute('caption');
     trigger.textContent = caption ? `${caption} · ${summary}` : summary;
     trigger.title = this.title || summary;

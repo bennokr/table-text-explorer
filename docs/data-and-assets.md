@@ -38,10 +38,9 @@ the distributable `dist/`. Do not distribute that diagnostic output with private
 
 ## Dataset provenance
 
-Example attribution: [Crawlfeeds Booking Hotel Reviews Dataset](https://huggingface.co/datasets/crawlfeeds/Booking-Hotel-Reviews-Dataset),
-revision `f39ceeede7b9d8a824909ebe88a7723ad31fa6c5`, declared CC BY-NC 4.0. The source CSV
-and dataset card are downloaded locally, not committed. Attribution is included in
-`public/attribution/crawlfeeds.md` and copied into offline builds. Dutch vectors originate from
+Attribution of the approved examples is in `examples/attribution/<dataset>/` and is copied into the build. The
+local-only Crawlfeeds example ([Booking Hotel Reviews Dataset](https://huggingface.co/datasets/crawlfeeds/Booking-Hotel-Reviews-Dataset),
+revision `f39ceeede7b9d8a824909ebe88a7723ad31fa6c5`, declared CC BY-NC 4.0) is downloaded locally, never committed or bundled. Dutch vectors originate from
 [spaCy nl_core_news_md](https://huggingface.co/spacy/nl_core_news_md) (CC BY-SA 4.0);
 English vectors from [spaCy en_core_web_md](https://huggingface.co/spacy/en_core_web_md)
 (MIT). Generated asset directories retain licenses and provenance manifests.
@@ -66,6 +65,32 @@ Dutch examples:
 checking its pinned SHA-256. It is unnecessary for a normal checkout. The Bol probe
 keeps acquisition diagnostics under ignored `.cache/`.
 
+## Example data release (`data-v1`)
+
+Two more example datasets, the Rechtspraak sample (2,360 rulings) and the Tweede Kamer motions sample (3,585 motions),
+and precomputed Dutch sentence embeddings for all three examples are published as release assets, not stored in git.
+They are restored when the site is built, pinned by hash in `scripts/data-release.json`, the same way as the sentence
+models (`scripts/restore_data_release.mjs`; `DATA_RELEASE_REQUIRED=1` makes a missing release fail the build). A
+checkout without the release still works with the tracked examples; an example's `demo.json` lists its embeddings and
+the app skips any that are missing.
+
+- **Rechtspraak** (CC0 1.0 in the data.overheid.nl catalogue): `scripts/clean_rechtspraak.py` removes the echoes of
+  court, court type and year from the text, the same way for every ruling (ECLI codes, case numbers carrying the year,
+  court names, generic court-type words, "Zittingsplaats X", four-digit years). Nothing else is scrubbed, so names the
+  court left in remain: pseudonymised is not anonymous. On the excerpts the year column fell from 0.043 to 0.012 of the
+  text variation, while court (0.237 to 0.204) and court type (0.127 to 0.122) barely moved: courts specialise, so
+  that signal is content, not echo.
+- **Tweede Kamer motions** (CC0 1.0 in the catalogue; read the portal's disclaimer): subject lines without the
+  submitters' header, so no member names, only the lead submitter's party.
+- **Embeddings**: MarkSelles/dutch-minilm-l6-v2 (Apache-2.0), 384 dimensions, half-precision `.npy`, one row per
+  record in table order. Derived from the data, so they carry its licence: the DBRD ones are CC BY-NC-SA 4.0.
+- **Provenance** is in `examples/attribution/<dataset>/` (`source.json`, `README.md`) and is copied into the build.
+- **Size**: about 8 MB of embeddings and 12 MB of JSON. The JSON compresses to under 2 MB per table over the wire, so
+  Parquet (a WASM reader and a second format to maintain) is not worth it; half precision halves the embeddings.
+
+Build the assets with `scripts/package_data_release.py` (after `npm run prepare:rechtspraak`, `prepare:tweedekamer`,
+`scripts/clean_rechtspraak.py` and `tests/eval/embed.mjs`), then upload them with `gh release create data-v1 ...`.
+
 DBRD: Benjamin van der Burgh and Suzan Verberne, *The merits of Universal Language Model
 Fine-tuning for Small Datasets – a case with Dutch book reviews* (2019),
 [dataset](https://github.com/benjaminvdb/DBRD), [paper](https://arxiv.org/abs/1910.00896).
@@ -74,3 +99,22 @@ Bol data: Fieke Middelraad, [DutchABSA](https://github.com/FM12001/DutchABSA), p
 
 
 Variable sidecars and demo defaults are documented in [codebook profile](codebook-profile.md).
+
+## Curated example results
+
+Each example opens with a similarity map and a clustering already on screen. They are stored in
+`demo-config/<table>/results.json` (about 45–70 KB), copied into the build next to `demo.json`, and loaded by
+`src/example-results.js` as ordinary saved results marked `precomputed`. Nothing is fitted when an example opens;
+fitting again with New similarity map or New clustering stays an explicit choice, and the shipped results are listed
+in Exports with their provenance.
+
+- **Format** (`version` 1): `table`, `records` (must equal the table's row count, or the file is ignored), `provenance`,
+  `map` (`name`, `method`, `x` and `y` in table order, `null` where a record has no point) and `clustering` (`name`,
+  `method`, `parameters`, `labels` in table order, `groups` with a `name`, an optional `color` and `edited: true` for a name written by hand).
+- **Generated by the app itself**: `scripts/curate_example_results.mjs <table> <clusters>` drives a local preview
+  build, fits UMAP on the example's shipped embeddings (umap-js, fixed seed, so a refit gives the same map) and k-means
+  on the saved feature space, and reads the results back through Exports. Rebuild first with `npm run build`; the
+  script refuses to overwrite an existing file without `--force`, in case it holds edits.
+- **Names**: the app's own phrase names (four phrases per cluster), as a user's first clustering would get them, so an
+  example shows what the app really produces. None are marked edited, so "Rename all" can refresh them.
+- **Privacy**: coordinates and labels are derived from public example data only; private fixtures have no results file.

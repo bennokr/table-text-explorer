@@ -33,7 +33,20 @@ jobs:
       # ESLint, size budgets, ruff check and ruff format --check, as AGENTS.md documents.
       - run: npm run check
       - run: npm test
-      - run: node scripts/prepare_assets.mjs
+      # The sentence models come from the pinned `models-v1` release, not Hugging Face. The repository is
+      # private, so `gh` authenticates with the workflow's own token (no personal token is needed); the
+      # download is cached by the hashes in scripts/model-release.json.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .cache/model-release
+            .cache/data-release/downloads
+          key: releases-${{ hashFiles('scripts/model-release.json', 'scripts/data-release.json') }}
+      - run: node scripts/prepare_assets.mjs --model
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODEL_RELEASE_REQUIRED: '1'
+          DATA_RELEASE_REQUIRED: '1'
       - name: Build for the project site path
         run: npm run build
         env:

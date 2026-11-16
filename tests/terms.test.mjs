@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { comparisonSets } from '../src/term-view.js';
-import { stopwordList } from '../src/features.js';
+import { lexiconFrom } from '../src/lexicon-parse.js';
+import { loadLexicon } from './lexicon-files.mjs';
 import { phraseSettings, retainPhraseSettings } from '../src/phrase-config.js';
 import { Dataset } from '../src/state.js';
 
@@ -12,10 +13,12 @@ test('subset descriptions use disjoint comparisons and intersect selections with
   assert.deepEqual([...model.selected], [0, 1, 4]);
 });
 
-test('inspector retains built-in negations but respects explicit additional stopwords', () => {
-  assert.ok(!stopwordList({ language: 'nl', stopwords: '' }, true).includes('niet'));
-  assert.ok(stopwordList({ language: 'nl', stopwords: 'NIET,prima' }, true).includes('niet'));
-  assert.ok(stopwordList({ language: 'nl', stopwords: '' }).includes('niet'));
+test('negations are never stopwords, and explicit additional stopwords are respected', () => {
+  const languages = loadLexicon();
+  const stop = config => lexiconFrom(languages, config).stop;
+  assert.ok(!stop({ language: 'nl', stopwords: '' }).includes('niet'));
+  assert.ok(stop({ language: 'nl', stopwords: 'NIET,prima' }).includes('niet'));
+  assert.ok(stop({ language: 'nl', stopwords: '' }).includes('deze'));
 });
 
 test('independent map columns do not change the retained shared phrase selection', () => {

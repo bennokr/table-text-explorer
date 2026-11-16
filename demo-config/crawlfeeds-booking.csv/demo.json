@@ -1,7 +1,7 @@
 {
   "version": 1,
   "analysis": {
-    "mode": "words",
+    "mode": "text",
     "language": "en",
     "vectorLanguage": "en",
     "features": [

@@ -5,7 +5,12 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 const examples = JSON.parse(await readFile('dist/examples.json', 'utf8'));
 assert.ok(examples.every(example => example.bundled));
 const approved = (await readdir('examples')).filter(name => /\.(csv|json|sav|xlsx)$/i.test(name)).sort();
-assert.deepEqual((await readdir('dist/fixtures')).sort(), approved);
+// Released datasets (data-v1) and their embeddings are approved too; a build without the release has none of them.
+const release = JSON.parse(await readFile('scripts/data-release.json', 'utf8'));
+const released = release.datasets.flatMap(dataset => dataset.assets.map(asset => asset.name));
+const bundled = (await readdir('dist/fixtures')).sort();
+assert.deepEqual(bundled.filter(name => !approved.includes(name) && !released.includes(name)), [], 'only approved files are distributed');
+assert.deepEqual(approved.filter(name => !bundled.includes(name)), [], 'every approved example is distributed');
 assert.deepEqual((await readdir('dist/demos')).sort(), examples.filter(example => example.demo).map(example => example.name).sort());
 for (const path of ['dist/feasibility.html', 'dist/reference']) {
   assert.equal(await stat(path).catch(error => {

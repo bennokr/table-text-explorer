@@ -16,54 +16,65 @@
     <button id="import" title="Import a local table" aria-label="Import a local table">↥</button>
     <input id="file" type="file" accept=".csv,.json,.sav,.xlsx" hidden>
     <select id="examples" aria-label="Example dataset" title="Load an example from the local fixtures folder"><option value="">Examples…</option></select>
-    <button id="phrase-settings" class="square" title="Phrase counting settings" aria-label="Phrase counting settings">⚙</button>
     <button id="export" title="Exports" aria-label="Exports">↧</button>
-    <input id="search" type="search" aria-label="Search records" placeholder='Search · field:value · AND / OR / NOT'
-      title='Highlight matching visible records as you type; use ⏷ to filter. Search every field, or use field:value, field>=10, parentheses and AND / OR / NOT. Quote names containing spaces. Use field~"phrase" for exact n-gram matching.'>
+    <div id="search-box" class="search-box" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-owns="suggest-list">
+      <span id="search-chips" class="search-chips"></span>
+      <input id="search" type="search" aria-label="Search records" placeholder="Search · variable:value · AND / OR / NOT" autocomplete="off"
+        aria-autocomplete="list" aria-controls="suggest-list"
+        title='Highlights matching records as you type; Enter turns the condition into a removable token.'>
+      <small id="search-count" class="search-count" hidden></small>
+      <ul id="suggest-list" class="suggest-list" role="listbox" aria-label="Suggestions" hidden></ul>
+    </div>
     <button id="filter-selection" title="Filter to highlighted records" aria-label="Filter to highlighted records">⏷</button>
     <button id="clear-selection" title="Clear selection and query" aria-label="Clear selection and query">×</button>
     <button id="clear-filters" title="Clear all filters" aria-label="Clear all filters">↺</button>
-    <button id="help" data-help="start" title="Help and shortcuts" aria-label="Help and shortcuts">?</button>
+    <button id="help" data-help="start" title="Help" aria-label="Help">?</button>
   </nav>
   <main class="workspace">
-    <section id="visual-panel" class="panel" aria-label="Linked visualizations">
-      <header class="panel-head"><h2>Visualizations</h2>
-        <div id="analysis-actions"><button id="analysis-inputs" title="Choose input fields and representation for a new similarity map">New similarity map</button>
+    <section id="visual-panel" class="panel" aria-label="Linked charts">
+      <header class="panel-head"><h2>Charts</h2>
+        <div id="analysis-actions"><button id="analysis-inputs" title="Choose input columns and representation for a new similarity map">New similarity map</button>
         <button id="cluster" title="Cluster all records">New clustering</button></div>
         <div id="analysis-progress" hidden><progress id="panel-progress" aria-label="Analysis progress"></progress><span id="panel-status"></span></div>
         <button id="cancel" hidden title="Cancel analysis" aria-label="Cancel analysis">■</button>
-        <button id="add-chart" class="square" title="New visualization card" aria-label="New visualization card">＋</button>
+        <button id="add-chart" class="mini" title="New chart" aria-label="New chart">＋</button>
+        <button id="clear-views" class="mini" title="Remove all charts (Undo is offered)" aria-label="Remove all charts">×</button>
       </header>
-      <div id="views"><p id="views-empty" class="empty">Import a table, then add visualizations.</p></div>
+      <div id="views"><p id="views-empty" class="empty">No charts. Make a similarity map or clustering, or add a chart with ＋.</p></div>
     </section>
     <section id="description-panel" class="panel" aria-label="Subset descriptions">
-      <header class="panel-head"><h2>Subset descriptions</h2><small id="description-kind">Distinctive phrases</small><button id="terms-options" class="square" aria-controls="terms-controls" title="Subset description settings" aria-label="Subset description settings" aria-expanded="true">⚙</button></header>
+      <header class="panel-head"><h2>Subset descriptions</h2><small id="description-kind">Distinctive phrases</small><button type="button" id="description-hint" class="help-hint" data-help="descriptions#size-color-and-contrast" aria-label="About this ranking">?</button><button id="phrase-settings" class="mini" title="Phrase counting settings" aria-label="Phrase counting settings">⚙</button></header>
       <div id="terms" class="scroll">
-        <div id="terms-controls">
-        <div id="terms-inspector" hidden>
-        <div class="term-controls"><select id="terms-content" aria-label="Description predicates"><option value="phrases">Phrases</option><option value="facets">Metadata facets</option><option value="both">Phrases + facets</option></select>
-          <select id="terms-scope" aria-label="Subset comparison"><option value="selection">Highlighted / current records</option><option value="all">Entire dataset</option><option value="visible">Current filtered records</option><option value="filtered">Filtered vs remaining table</option></select>
+        <div class="term-fields controls">
+          <label class="control"><abbr title="Size: how phrases are scored, which sets their size in the cloud">Size:</abbr>
+            <select id="terms-ranking" aria-label="Size"><option value="auto">Automatic</option><option value="frequency">Common phrases</option><option value="contrast">Distinctive phrases</option><optgroup id="size-splits" label="Splits"><option value="balanced">Even splits</option></optgroup><optgroup label="Advanced"><option value="ctfidf">c-TF-IDF</option><option value="lift">Document lift</option></optgroup></select></label>
+          <label class="control"><abbr title="Color: what colors the phrases, such as the values of a column">Color:</abbr>
+            <select id="terms-color" aria-label="Color"></select></label>
+          <label class="control" hidden><abbr title="Contrast: what the highlighted records are compared with">Contrast:</abbr>
+            <select id="terms-contrast" aria-label="Contrast"><option value="previous">Previous step</option><option value="rest">Rest of the table</option><option value="current">None (current filter)</option></select></label>
           <select id="terms-tree-node" aria-label="Tree branches to describe" hidden></select>
           <select id="terms-tree-comparison" aria-label="Tree comparison" hidden><option value="siblings">Branch vs siblings</option><option value="rest">Branch vs rest of visible</option></select>
           <select id="terms-group-page" aria-label="Groups to describe" hidden></select>
-          <select id="terms-ranking" aria-label="N-gram ranking"><option value="auto">Automatic</option><option value="frequency">Common phrases</option><option value="balanced">Balanced splits</option><option value="semantic">Semantic splits</option><option value="contrast">c-TF-IDF contrast</option><option value="ctfidf">c-TF-IDF</option><option value="lift">Document lift</option></select>
-          <select id="terms-embedding" aria-label="Semantic split embeddings" title="Reuse original embeddings from a saved result; no new model is fitted" hidden></select>
-          <select id="terms-display" aria-label="Phrase field display"><option value="separate">Separate field clouds</option><option value="combined">Combined · color by field</option></select>
+          <button id="terms-options" class="mini" aria-controls="terms-controls" title="More settings" aria-label="More description settings" aria-expanded="true">⋯</button>
+        </div>
+        <div id="terms-controls">
+        <div id="terms-inspector" hidden>
+        <div class="term-controls"><select id="terms-content" aria-label="Description predicates"><option value="phrases">Phrases</option><option value="facets">Metadata facets</option><option value="both">Phrases + facets</option></select>
           <label title="Minimum matching records; split rankings require this many records on both sides">Min records <input id="terms-support" type="number" min="1" max="20000" value="2" required></label>
           <label><input id="terms-deduplicate" type="checkbox" checked> Reduce redundant phrases</label></div>
-        <p id="terms-status" role="status">Counts are prepared when needed.</p>
-        <button type="button" class="help-hint" data-help="descriptions#settings">?</button>
+        <div class="status-line"><p id="terms-status" role="status">Counts are prepared when needed.</p>
+        <button type="button" class="help-hint" data-help="descriptions#settings">?</button></div>
         </div>
         </div>
-        <p id="terms-empty">Highlight records to prepare phrase descriptions.</p>
+        <p id="terms-empty" class="empty">Highlight records to prepare phrase descriptions.</p>
         <div id="terms-results"></div>
       </div>
     </section>
     <section class="panel" aria-label="Table view">
       <header class="panel-head"><h2 id="dataset-name">No table</h2>
         <label title="Temporarily show only highlighted records in this table; other views and fitted similarity maps stay unchanged"><input id="preview-selection" type="checkbox">Preview selection</label>
-        <variable-picker id="table-columns" multiple aria-label="Visible table columns" caption="Columns"></variable-picker><small id="table-count"></small><button type="button" class="help-hint" data-help="selection">?</button>
-        <button id="column-types" class="square" title="Column types" aria-label="Column types">⚙</button></header>
+        <variable-picker id="table-columns" multiple aria-label="Visible table columns" caption="Show"></variable-picker><small id="table-count"></small><button type="button" class="help-hint" data-help="selection">?</button>
+        <button id="column-types" class="mini" title="Column types" aria-label="Column types">⚙</button></header>
       <div id="table-scroll" class="scroll"></div>
     </section>
     <section class="panel" aria-label="Full record">
@@ -82,104 +93,107 @@
     <div id="row-divider" class="divider row-divider" role="separator" tabindex="0" aria-label="Resize top and bottom panels" aria-orientation="horizontal" aria-valuemin="30" aria-valuemax="75" aria-valuenow="57"></div>
   </main>
   <footer><span id="counts"></span><progress id="task-progress" hidden aria-label="Task progress"></progress><span id="status" role="status" aria-live="polite">Import a local file or choose an example. Your data stays on this machine.</span><span id="runtime-status" role="status" aria-label="Local analysis libraries" aria-atomic="true"><span id="python-status" class="runtime-component" data-state="idle" title="Python: not loaded yet">Py</span><span id="sklearn-status" class="runtime-component" data-state="idle" title="scikit-learn: not loaded yet">SK</span></span></footer>
-  <dialog id="phrase-dialog" aria-labelledby="phrase-title"><form id="phrase-form"><h2 id="phrase-title">Phrase counting settings</h2><fieldset id="phrase-controls">
-        <fieldset id="terms-config-controls" class="term-controls"><label>Preset <select id="terms-config" aria-label="Phrase counting preset"><option value="">Current settings</option></select></label>
-          <input id="terms-name" aria-label="New text index name" placeholder="Name for copy">
-          <button id="terms-save" type="button">Save as…</button></fieldset>
-        <section id="terms-settings"><h3>Text fields and phrases</h3>
-        <fieldset id="terms-index-controls" aria-label="Phrase counting">
-          <variable-picker id="terms-fields" multiple aria-label="Phrase fields" caption="Text fields"></variable-picker>
-          <div class="term-controls term-stopwords"><label>N-grams <select id="terms-sizes"><option value="1:5">1–5 words</option><option value="2:4">2–4 words</option><option value="3:5">3–5 words</option><option value="1:3">1–3 words</option><option value="1:1">Words</option><option value="2:2">Bigrams</option><option value="3:3">Trigrams</option><option value="1:2">1–2 words</option></select></label>
-          <label>Stoplist <select id="terms-language"><option value="nl">Dutch · basic</option><option value="en">English · basic</option><option value="nl,en">Dutch + English</option><option value="none">None</option></select></label>
-          <input id="terms-stopwords" aria-label="Additional n-gram stopwords" placeholder="Additional stopwords"></div>
-          <button type="button" class="help-hint" data-help="descriptions#phrase-counting">?</button>
-          <p id="terms-index-status" role="status">Counts are prepared when needed.</p>
-        </fieldset>
-        </section>
-</fieldset><p id="phrase-error" role="alert"></p><div class="dialog-actions"><button type="button" data-close>Cancel</button><button id="phrase-apply" type="submit">Apply settings</button></div></form></dialog>
+  <dialog id="phrase-dialog" aria-labelledby="phrase-title"><form id="phrase-form">
+    <h2 id="phrase-title">Phrase counting settings</h2>
+    <fieldset id="terms-config-controls"><legend>Preset</legend>
+      <div class="row"><label>Preset <select id="terms-config" aria-label="Phrase counting preset"><option value="">Current settings</option></select></label>
+        <label class="wide"><input id="terms-name" aria-label="New text index name" placeholder="Name for copy"></label>
+        <button id="terms-save" type="button">Save as…</button></div>
+    </fieldset>
+    <fieldset id="terms-index-controls" aria-label="Phrase counting"><legend>Text columns and phrases <button type="button" class="help-hint" data-help="descriptions#phrase-counting">?</button></legend>
+      <div class="row"><variable-picker id="terms-fields" multiple aria-label="Phrase columns" caption="Phrases from" noun="columns"></variable-picker></div>
+      <div class="row"><label>N-grams <select id="terms-sizes"><option value="1:1">Words</option><option value="1:3">Short phrases (1–3 words)</option><option value="1:5">Longer phrases (1–5 words)</option></select></label>
+        <label>Stoplist <select id="terms-language"><option value="nl">Dutch</option><option value="en">English</option><option value="nl,en">Dutch + English</option><option value="none">None</option></select></label>
+        <label class="wide"><input id="terms-stopwords" aria-label="Additional n-gram stopwords" placeholder="Additional stopwords"></label></div>
+      <p id="terms-index-status" role="status">Counts are prepared when needed.</p>
+    </fieldset>
+    <div class="dialog-actions"><p id="phrase-error" role="alert"></p><button type="button" data-close>Cancel</button><button id="phrase-apply" type="submit">Apply settings</button></div>
+  </form></dialog>
   <dialog id="help-dialog" aria-labelledby="help-title">
-    <header class="help-heading"><h2 id="help-title">Help and shortcuts</h2><button type="button" data-close aria-label="Close help">×</button></header>
-    <nav class="help-navigation" aria-label="Help navigation"><button id="help-back" type="button" aria-label="Previous help page">←</button><button id="help-forward" type="button" aria-label="Next help page">→</button><select id="help-topic" aria-label="Help topic"></select></nav>
+    <header class="help-heading"><h2 id="help-title">Help</h2><button type="button" class="square" data-close aria-label="Close help" title="Close">×</button></header>
+    <nav class="help-navigation" aria-label="Help navigation"><button id="help-home" type="button" class="square" aria-label="Help home" title="Help home">⌂</button><button id="help-back" type="button" class="square" aria-label="Previous help page" title="Back">←</button><button id="help-forward" type="button" class="square" aria-label="Next help page" title="Forward">→</button><select id="help-topic" aria-label="Help topic"></select></nav>
     <article id="help-content" tabindex="0"></article>
   </dialog>
   <dialog id="cluster-dialog" aria-labelledby="cluster-title"><form id="cluster-form">
     <h2 id="cluster-title">New clustering</h2>
-    <label class="analysis-name">Name <input id="cluster-name" required maxlength="120"></label>
-    <label>Input <select id="cluster-source"></select></label>
-    <output id="cluster-source-summary"></output><button type="button" class="help-hint" data-help="clustering">?</button>
-    <label>Method <select id="cluster-method"><option value="minibatch">MiniBatch K-means · fast default</option><option value="agglomerative">Agglomerative · hierarchical</option><option value="hdbscan">HDBSCAN · density with Other</option></select></label>
-    <div id="cluster-parameters"><label id="cluster-count-label">Groups <input id="cluster-count" type="number" min="2" step="1" value="8" required></label>
-    <div id="cluster-density" hidden><label>Minimum group size <input id="cluster-min-size" type="number" min="2" step="1" value="15" required></label>
-      <label>Minimum neighbors <input id="cluster-min-samples" type="number" min="1" step="1" value="5" required></label></div>
-    <details><summary>Advanced tuning</summary><div id="cluster-centroids"><label>Batch size <input id="cluster-batch" type="number" min="16" max="65536" step="1" value="1024" required></label>
-      <label>Max iterations <input id="cluster-iterations" type="number" min="1" max="1000" step="1" value="100" required></label></div>
-    <label id="cluster-linkage-label" hidden>Linkage <select id="cluster-linkage"><option value="ward">Ward</option><option value="average">Average</option><option value="complete">Complete</option><option value="single">Single</option></select></label>
-    <label title="Normalize each input vector to unit length"><input id="cluster-normalize" type="checkbox">Normalize vectors</label></details></div>
-    <div id="cluster-naming" class="cluster-naming"><label title="Reuse a compatible all-record text index, or build one automatically. Edited names are preserved."><input id="cluster-suggest-names" type="checkbox">Suggest phrase names</label></div>
-    <button type="button" class="help-hint" data-help="clustering#technical-details">?</button>
-    <p id="cluster-error" role="alert"></p>
-    <div class="dialog-actions"><button type="button" data-close>Close</button><button id="cluster-submit" type="submit">Make clustering</button></div>
+    <div class="row">
+      <label>Method <select id="cluster-method"><option value="kmeans">K-means · default</option><option value="agglomerative">Agglomerative · hierarchical</option><option value="hdbscan">HDBSCAN · density with Other (experimental)</option></select></label><button type="button" class="help-hint" data-help="clustering#methods">?</button>
+      <label class="wide">Name <input id="cluster-name" required maxlength="120"></label>
+    </div>
+    <fieldset id="cluster-input"><legend>Input <button type="button" class="help-hint" data-help="clustering">?</button></legend>
+      <div class="row"><label>From <select id="cluster-source"></select></label><output id="cluster-source-summary"></output></div>
+    </fieldset>
+    <fieldset id="cluster-settings"><legend>Settings <button type="button" class="help-hint" data-help="clustering#settings">?</button></legend>
+      <div id="cluster-parameters" class="row"><label id="cluster-count-label">Groups <input id="cluster-count" type="number" min="2" step="1" value="8" required></label>
+        <div id="cluster-density" class="row" hidden><label>Minimum group size <input id="cluster-min-size" type="number" min="2" step="1" value="15" required></label>
+          <label>Minimum neighbors <input id="cluster-min-samples" type="number" min="1" step="1" value="5" required></label></div>
+        <label id="cluster-linkage-label" hidden>Linkage <select id="cluster-linkage"><option value="ward">Ward</option><option value="average">Average</option><option value="complete">Complete</option><option value="single">Single</option></select></label></div>
+    </fieldset>
+    <fieldset id="cluster-names"><legend>Names <button type="button" class="help-hint" data-help="clustering#technical-details">?</button></legend>
+      <div id="cluster-naming" class="row"><label title="Reuse a compatible all-record text index, or build one automatically. Edited names are preserved."><input id="cluster-suggest-names" type="checkbox" checked>Suggest phrase names</label></div>
+    </fieldset>
+    <div class="dialog-actions"><p id="cluster-error" role="alert"></p><button type="button" data-close>Cancel</button><button id="cluster-submit" type="submit">Make clustering</button></div>
   </form></dialog>
   <dialog id="export-dialog" aria-labelledby="export-title">
     <h2 id="export-title">Exports</h2>
-    <form id="export-form"><fieldset><legend>Table and annotations</legend>
-      <label>Format <select id="export-format"><option value="csv">CSV</option><option value="json">JSON records</option><option value="xlsx">XLSX</option></select></label>
-      <label>Rows <select id="export-scope"><option value="all">All original records</option><option value="visible">Current filtered records</option></select></label>
-      <button type="button" class="help-hint" data-help="data#exports">?</button>
-      <button type="submit">Download table</button>
-    </fieldset></form>
-    <h3>Analysis results</h3>
-    <p>Results stay in memory until you close this page.</p>
-    <div id="results-list"></div>
+    <fieldset><legend>Table and annotations <button type="button" class="help-hint" data-help="data#exports">?</button></legend>
+      <form id="export-form" class="row">
+        <label>Format <select id="export-format"><option value="csv">CSV</option><option value="json">JSON records</option><option value="xlsx">XLSX</option></select></label>
+        <label>Rows <select id="export-scope"><option value="all">All original records</option><option value="visible">Current filtered records</option></select></label>
+        <button type="submit">Download table</button>
+      </form>
+    </fieldset>
+    <fieldset><legend>Analysis results</legend>
+      <p>Results stay in memory until you close this page.</p>
+      <div id="results-list"></div>
+    </fieldset>
     <div class="dialog-actions"><button type="button" data-close>Close</button></div>
   </dialog>
   <dialog id="map-dialog" aria-labelledby="map-title"><form id="map-form">
     <h2 id="map-title">New similarity map</h2>
-    <div class="analysis-name-row">
-      <label>Method <select id="map-method"><option value="umap">UMAP</option><option value="pca">PCA</option><option value="svd">SVD</option></select></label>
-      <label class="analysis-name">Name <input id="map-name" required maxlength="120"></label>
+    <div class="row">
+      <label>Method <select id="map-method"><option value="umap">UMAP</option><option value="linear">Linear projection</option></select></label><button type="button" class="help-hint" data-help="maps#settings">?</button>
+      <label class="wide">Name <input id="map-name" required maxlength="120"></label>
     </div>
-    <fieldset><legend>Input features <button type="button" class="help-hint" data-help="maps">?</button></legend>
-      <label>Input <select id="feature-mode"><option value="table">Numeric and categorical columns</option><option value="text">Text · TF-IDF</option><option value="words">Text · static word vectors</option><option value="sentences">Text · sentence embeddings</option></select></label>
-      <variable-picker id="feature-list" multiple aria-label="Map input columns" caption="Input columns"></variable-picker>
-      <div id="lexical-settings-note" hidden><button id="shared-fields" type="button"></button><button type="button" class="help-hint" data-help="maps#input-columns">?</button></div>
+    <fieldset id="map-input"><legend>Input <button type="button" class="help-hint" data-help="maps">?</button></legend>
+      <div class="row"><label>Input <select id="feature-mode"><option value="table">Numeric and categorical columns</option><option value="text">Text · TF-IDF</option><option value="words">Text · static word vectors</option><option value="sentences">Text · sentence embeddings</option></select></label></div>
+      <div class="row"><variable-picker id="feature-list" multiple aria-label="Map input columns" caption="Input" noun="columns"></variable-picker><button type="button" class="help-hint" data-help="maps#input-columns">?</button></div>
+      <div id="lexical-settings-note" class="row" hidden><button id="shared-fields" type="button"></button><button type="button" class="help-hint" data-help="descriptions#phrase-counting">?</button></div>
       <div id="word-options" hidden>
-        <label>Vector model <select id="vector-language"><option value="nl">Dutch · spaCy</option><option value="en">English · spaCy</option></select></label><button type="button" class="help-hint" data-help="text-models">?</button>
-        <details data-map-fold><summary>Word pooling</summary><label>Words within each field <select id="word-pooling"><option value="mean">Mean of word vectors</option><option value="tfidf">TF-IDF weighted mean</option></select></label></details>
+        <div class="row"><label>Vector model <select id="vector-language"><option value="nl">Dutch · spaCy</option><option value="en">English · spaCy</option></select></label><button type="button" class="help-hint" data-help="text-models">?</button></div>
+        <div class="row"><label>Words within each column <select id="word-pooling"><option value="mean">Mean of word vectors</option><option value="tfidf">TF-IDF weighted mean</option></select></label><button type="button" class="help-hint" data-help="text-models#settings">?</button></div>
       </div>
       <div id="sentence-options" hidden>
-        <label>Sentence model <select id="sentence-model"></select></label><button type="button" class="help-hint" data-help="text-models">?</button>
-        <details data-map-fold><summary>Long text settings <button type="button" class="help-hint" data-help="text-models#long-text">?</button></summary>
-          <label>Long text <select id="sentence-chunking"><option value="chunks">Average chunks · use all text</option><option value="truncate">First chunk only</option></select></label>
-          <label>Tokens per chunk <input id="sentence-chunk-size" type="number" min="16" max="126" value="126"></label>
-          <label>Overlapping tokens <input id="sentence-overlap" type="number" min="0" max="125" value="0"></label>
-        </details>
+        <div class="row"><label>Sentence model <select id="sentence-model"></select></label><button type="button" class="help-hint" data-help="text-models">?</button>
+          <button type="button" id="embedding-import" title="Use vectors you already have: a .npy file or raw float32 (.f32), one row per record in table order">Import embeddings…</button><button type="button" class="help-hint" data-help="text-models#reusing-embeddings">?</button>
+          <input id="embedding-file" type="file" accept=".npy,.f32,.bin" hidden></div>
+        <div class="row"><label>Long text <select id="sentence-chunking"><option value="chunks">Average chunks · use all text</option><option value="truncate">First chunk only</option></select></label><button type="button" class="help-hint" data-help="text-models#long-text">?</button></div>
       </div>
-      <div id="embedding-options" hidden>
-        <label>Combine fields <select id="field-combine"></select></label><button type="button" class="help-hint" data-help="combining">?</button>
-        <details data-map-fold><summary>Advanced combining</summary>
-          <div id="description-options"><label><input id="include-descriptions" type="checkbox">Include field descriptions</label><button type="button" class="help-hint" data-help="text-models#field-descriptions">?</button></div>
-          <div id="group-combining" hidden>
-            <label>Preserve group identity <input id="group-identity" type="range" min="0" max="100" step="5" value="20"><output id="group-identity-value" for="group-identity">20%</output></label><button type="button" class="help-hint" data-help="combining#preserve-group-identity">?</button>
-            <details data-map-fold><summary><span id="groups-summary">Variable groups</span><button type="button" class="help-hint" data-help="combining#variable-groups">?</button></summary><div id="group-assignments"></div></details>
-          </div>
-        </details>
-      </div>
-      <details id="weights-details" data-map-fold hidden><summary><span id="weights-summary">Field weights · Equal weights</span><button type="button" class="help-hint" data-help="combining#field-weights">?</button></summary><div id="feature-weights"></div><button id="weights-reset" type="button">Reset weights</button></details>
-      <details id="umap-options" data-map-fold><summary>Map tuning <button type="button" class="help-hint" data-help="maps#settings">?</button></summary>
-        <label>UMAP neighbors <input id="neighbors" type="number" min="2" max="100" required></label>
-        <label>UMAP epochs <input id="epochs" type="number" min="50" max="1000" step="10" required></label>
-      </details>
     </fieldset>
-    <p id="map-error" role="alert"></p>
-    <div class="dialog-actions"><button type="button" data-close>Cancel</button><button id="map-submit" type="submit">Make similarity map</button></div>
+    <fieldset id="embedding-options" hidden><legend>Combining <button type="button" class="help-hint" data-help="combining">?</button></legend>
+      <div class="row"><label>Combine columns <select id="field-combine"></select></label><button type="button" class="help-hint" data-help="combining">?</button></div>
+      <div id="description-options" class="row"><label><input id="include-descriptions" type="checkbox">Include column descriptions</label><button type="button" class="help-hint" data-help="text-models#column-descriptions">?</button></div>
+      <div id="group-combining" hidden>
+        <div class="row"><label>Preserve group identity <input id="group-identity" type="range" min="0" max="100" step="5" value="20"><output id="group-identity-value" for="group-identity">20%</output></label><button type="button" class="help-hint" data-help="combining#preserve-group-identity">?</button></div>
+        <div class="row"><strong id="groups-summary">Variable groups</strong><button type="button" class="help-hint" data-help="combining#variable-groups">?</button></div>
+        <div id="group-assignments"></div>
+      </div>
+      <div id="weights-details">
+        <div class="row"><strong id="weights-summary">Column weights · Equal weights</strong><button type="button" class="help-hint" data-help="combining#column-weights">?</button><button id="weights-reset" type="button">Reset weights</button></div>
+        <div id="feature-weights"></div>
+      </div>
+    </fieldset>
+    <fieldset id="umap-options"><legend>Map tuning <button type="button" class="help-hint" data-help="maps#settings">?</button></legend>
+      <div class="row"><label>UMAP neighbors <input id="neighbors" type="number" min="2" max="100" required></label><button type="button" class="help-hint" data-help="maps#settings">?</button>
+        <label>UMAP epochs <input id="epochs" type="number" min="50" max="1000" step="10" required></label><button type="button" class="help-hint" data-help="maps#settings">?</button></div>
+    </fieldset>
+    <div class="dialog-actions"><p id="map-error" role="alert"></p><button type="button" data-close>Cancel</button><button id="map-submit" type="submit">Make similarity map</button></div>
   </form></dialog>
   <dialog id="column-types-dialog" aria-labelledby="column-types-title"><form id="column-types-form">
     <h2 id="column-types-title">Column types</h2>
-    <fieldset><legend>Type inference and overrides</legend>
-      <label>Text categories: at most <input id="category-limit" type="number" min="2" max="100" required> distinct values</label>
-      <label>Numeric categories: at most <input id="numeric-category-limit" type="number" min="2" max="100" required> distinct values</label>
-      <button type="button" class="help-hint" data-help="data#column-types">?</button>
+    <fieldset><legend>Type inference and overrides <button type="button" class="help-hint" data-help="data#column-types">?</button></legend>
+      <div class="row"><label>Text categories: at most <input id="category-limit" type="number" min="2" max="100" required> distinct values</label></div>
+      <div class="row"><label>Numeric categories: at most <input id="numeric-category-limit" type="number" min="2" max="100" required> distinct values</label></div>
       <div class="types-scroll"><table><thead><tr><th>Column</th><th>Type override</th><th>Unique</th><th>Missing</th></tr></thead><tbody id="field-types"></tbody></table></div>
     </fieldset>
     <div class="dialog-actions"><button type="button" data-close>Cancel</button><button type="submit">Apply column types</button></div>

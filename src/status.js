@@ -1,4 +1,5 @@
-import { $ } from './dom.js';
+import { $, element } from './dom.js';
+import { Events } from './events.js';
 
 export function status(message, error = false) {
   for (const selector of ['#status', '#panel-status']) {
@@ -9,9 +10,23 @@ export function status(message, error = false) {
   }
 }
 
+// A message with an Undo link beside it for a few seconds; the next message replaces both.
+export function offerUndo(message, undo, milliseconds = 8000) {
+  status(message);
+  const link = element('button', { type: 'button', class: 'link', text: 'Undo', onclick: () => { link.remove(); undo(); } });
+  $('#status').append(link);
+  setTimeout(() => link.remove(), milliseconds);
+}
+
 export function complete(message, error = false) {
   for (const selector of ['#task-progress', '#panel-progress']) { $(selector).hidden = true; }
   status(message, error);
+}
+
+// Whole percent in 0..100, or null when the task has no usable total.
+export function percent(task) {
+  if (!(task?.total > 0)) { return null; }
+  return Math.floor(100 * Math.min(Math.max(task.completed, 0), task.total) / task.total);
 }
 
 export function progress(update) {
@@ -22,10 +37,11 @@ export function progress(update) {
     bar.setAttribute('aria-label', task.message);
     if (task.total > 0) {
       bar.max = task.total;
-      bar.value = task.completed;
+      bar.value = Math.min(task.completed, task.total);
     } else { bar.removeAttribute('value'); }
   }
-  const message = task.total > 0 ? `${task.message} · ${Math.floor(100 * task.completed / task.total)}%` : task.message;
+  const done = percent(task);
+  const message = done === null ? task.message : `${task.message} · ${done}%`;
   status(message);
 }
 
@@ -35,6 +51,6 @@ export function analysisControls(model) {
     $('#analysis-progress').hidden = !model.analysisBusy;
     if (model.analysisBusy) { progress('Preparing analysis…'); }
   };
-  model.on('busy', update);
+  model.on(Events.BUSY, update);
   update();
 }

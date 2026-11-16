@@ -1,0 +1,31 @@
+{
+  "dataset": "fixtures/rechtspraak-sample.json",
+  "written_before_results": "Expectations come from domain reasoning about Dutch courts, not from output.",
+  "text_fields": {
+    "summary": "Court-written case summary. Often names the legal area, so it can leak the label.",
+    "ruling_excerpt": "First 2,500 characters of the ruling. Parties and headers dominate; leaks less."
+  },
+  "columns": {
+    "legal_subarea": {"expected": "strong", "why": "12 sub-areas with distinct legal vocabulary."},
+    "legal_area": {"expected": "strong", "why": "Coarse level: administrative, civil, criminal."},
+    "procedure": {"expected": "moderate", "why": "Procedure type (appeal, cassation, injunction) changes the register."},
+    "court_type": {"expected": "moderate", "why": "Hoge Raad, Raad van State and district courts write differently and hear different matters."},
+    "court": {"expected": "weak", "why": "Individual courts specialise a little; place names appear in texts."},
+    "year": {"expected": "weak", "why": "Topics drift slowly; only some laws and events are dated."},
+    "summary_words": {"expected": "length", "why": "Text length itself. Should not outrank real structure once length is controlled."},
+    "ruling_words": {"expected": "length", "why": "Full ruling length, correlated with the excerpt only indirectly."},
+    "ecli_sequence": {"expected": "uncertain", "why": "Running number within court and year; may proxy court size. Reported, not scored."}
+  },
+  "controls": {
+    "shuffled": ["legal_subarea", "legal_area", "procedure", "court_type", "year"],
+    "shuffles_per_column": 3,
+    "noise_categories": [3, 5, 12],
+    "noise_numeric": 3
+  },
+  "hierarchy": {"coarse": "legal_area", "fine": "legal_subarea"},
+  "scored_as": {
+    "primary": "every strong column outranks every null control",
+    "secondary": "strong and moderate columns versus null controls (AUC)",
+    "confound": "length columns rank below every strong column"
+  }
+}

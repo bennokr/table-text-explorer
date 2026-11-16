@@ -1,0 +1,21 @@
+# Folding rules for Dutch: inflected forms of one word get the same key, so boek/boeken, kind/kinderen and
+# school/scholen count as one when near-duplicate phrases are merged and when cluster names avoid repeating a word.
+# The key is only ever used for that comparison. It never changes what is shown, counted or queried, and it is
+# deliberately light: it will sometimes merge two words (wet/weten) and miss irregular forms (vinden/vond).
+#
+# Rules apply once, top to bottom: the first whose suffix matches, leaving at least `minimum` letters, wins.
+#   suffix  replacement  minimum      (a replacement of - means nothing)
+# Then the directives run: collapse (aa/ee/oo/uu before a last consonant becomes one letter: school -> schol)
+# and undouble (a doubled last consonant becomes one: mann -> man).
+@collapse
+@undouble
+
+heden heid 2
+eren - 2
+etje - 3
+tje - 3
+je - 3
+'s - 3
+en - 3
+e - 4
+s - 4

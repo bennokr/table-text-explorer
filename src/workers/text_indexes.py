@@ -1,9 +1,12 @@
 """Shared sparse fields with bounded, addressable index variants."""
 
+from fold import compile_fold
+
 index_registry = {}
 field_indexes = {}
 token_indexes = {}
 current_revision = None
+STEP_ROWS = 1000  # Rows between progress reports; keeps the callback cost negligible.
 
 
 def get_text_index(identity):
@@ -12,11 +15,41 @@ def get_text_index(identity):
     return index_registry[identity]
 
 
+def ignore_step(rows):
+    """Progress sink for native callers and tests, which report nothing."""
+
+
+def column_stepper(progress, label, done_before, total):
+    """Return step(rows): report overall row-steps every STEP_ROWS rows.
+
+    Indexing one column is two passes over its rows (tokenize, then count n-grams),
+    so a build over N pending columns has 2 * N * rows steps in total.
+    """
+    state = {"done": done_before, "unreported": 0}
+
+    def step(rows):
+        state["done"] += rows
+        state["unreported"] += rows
+        if state["unreported"] >= STEP_ROWS:
+            state["unreported"] = 0
+            progress(label, state["done"], total)
+
+    return step
+
+
 def tokenize_column(column, data, tokenizer):
     key = (data["_namespace"], column["name"])
-    if key not in token_indexes:
-        token_indexes[key] = [tokenizer(value) for value in column["texts"]]
-    return token_indexes[key]
+    step = data.get("_step", ignore_step)
+    if key in token_indexes:
+        step(len(column["texts"]))
+        return token_indexes[key]
+    tokens = []
+    for start in range(0, len(column["texts"]), STEP_ROWS):
+        chunk = column["texts"][start : start + STEP_ROWS]
+        tokens.extend(tokenizer(value) for value in chunk)
+        step(len(chunk))
+    token_indexes[key] = tokens
+    return tokens
 
 
 def reset_revision(data):
@@ -29,27 +62,50 @@ def reset_revision(data):
     current_revision = data["revision"]
 
 
+def field_key(namespace, column, data):
+    return (
+        namespace,
+        column["name"],
+        tuple(data["sizes"]),
+        tuple(sorted(set(data["stopwords"]))),
+        tuple(sorted(set(data.get("leadwords", [])))),
+    )
+
+
+def build_fields(data, builder, progress, namespace):
+    """Build or reuse one index per column, reporting row-level progress."""
+    keys = [field_key(namespace, column, data) for column in data["columns"]]
+    pending = [key for key in keys if key not in field_indexes]
+    rows_per_column = 2 * data["rows"]
+    total = len(pending) * rows_per_column
+    done = 0
+    for column, key in zip(data["columns"], keys, strict=True):
+        if key in field_indexes:
+            continue
+        label = f"Indexing {column['name']}"
+        if progress is not None:
+            data["_step"] = column_stepper(progress, label, done, total)
+        field_indexes[key] = builder(column, data)
+        done += rows_per_column
+        if progress is not None:
+            progress(label, done, total)
+    data.pop("_step", None)
+    names = [column["name"] for column in data["columns"]]
+    fields = {name: field_indexes[key] for name, key in zip(names, keys, strict=True)}
+    return fields, set(keys), not pending
+
+
+def index_vocabulary(data):
+    """What names and merging need: the words names avoid, and the folding."""
+    blocked = {*data["stopwords"], *data.get("leadwords", []), *data.get("negations", [])}
+    return {"blocked": frozenset(blocked), "fold": compile_fold(data.get("fold"))}
+
+
 def register_text_index(data, builder, progress=None):
     reset_revision(data)
     namespace = data.get("revision", data.get("cacheKey", object()))
     data["_namespace"] = namespace
-    fields = {}
-    keys = set()
-    reused = True
-    for position, column in enumerate(data["columns"]):
-        key = (
-            namespace,
-            column["name"],
-            tuple(data["sizes"]),
-            tuple(sorted(set(data["stopwords"]))),
-        )
-        if key not in field_indexes:
-            if progress is not None:
-                progress(f"Indexing {column['name']}", position, len(data["columns"]))
-            field_indexes[key] = builder(column, data)
-            reused = False
-        fields[column["name"]] = field_indexes[key]
-        keys.add(key)
+    fields, keys, reused = build_fields(data, builder, progress, namespace)
     documents = {
         name: token_indexes.get((namespace, name), [[] for _ in range(data["rows"])])
         for name in fields
@@ -57,6 +113,7 @@ def register_text_index(data, builder, progress=None):
     entry = {
         "documents": documents,
         "stopwords": set(data["stopwords"]),
+        "vocab": index_vocabulary(data),
         "fields": fields,
         "rows": data["rows"],
         "keys": keys,

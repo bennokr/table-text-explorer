@@ -2,6 +2,7 @@
 
 import json
 
+import bridge
 import numpy as np
 from scipy.sparse import hstack
 from sklearn.decomposition import PCA, TruncatedSVD
@@ -10,7 +11,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.preprocessing import StandardScaler
 from text_indexes import get_text_index
 
-embedding_values = None  # Replaced by the worker bridge for each request.
+SVD_COMPONENTS = 32  # Dimensions kept before maps and clustering; callers may pass "components".
 
 
 def table_features(data):
@@ -40,18 +41,17 @@ def text_features(data):
 
 def project(data):
     if data["mode"] == "prepared":
-        return coordinates(np.asarray(embedding_values.to_py(), dtype=np.float32), data["method"])
+        return coordinates(np.asarray(bridge.values(), dtype=np.float32), data["method"])
     if len(data["rows"]) < 2 or not data["fields"]:
         raise ValueError("Choose at least one feature and import at least two records.")
     if data["mode"] in {"words", "sentences"}:
-        matrix = np.asarray(embedding_values.to_py(), dtype=np.float32).reshape(
-            -1, data["dimensions"]
-        )
+        matrix = np.asarray(bridge.values(), dtype=np.float32).reshape(-1, data["dimensions"])
     else:
         matrix = text_features(data) if data["mode"] == "text" else table_features(data)
     if matrix.shape[1] == 0:
         raise ValueError("No usable features. Choose other columns or stopwords.")
-    components = min(32, matrix.shape[0] - 1, matrix.shape[1])
+    wanted = data.get("components", SVD_COMPONENTS)
+    components = min(wanted, matrix.shape[0] - 1, matrix.shape[1])
     reduced = (
         np.asarray(matrix.toarray() if hasattr(matrix, "toarray") else matrix)
         if matrix.shape[1] == 1

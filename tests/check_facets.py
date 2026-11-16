@@ -18,6 +18,23 @@ import terms
 from descriptions import describe_descriptions
 
 
+def even_field(name, predicates, flags=None):
+    flags = flags or [{} for _ in predicates]
+    return {
+        "name": name,
+        "label": name,
+        "predicates": [
+            {
+                "label": label,
+                "predicate": {"kind": "term", "field": name, "op": "=", "value": label},
+                "ids": list(ids),
+                **flag,
+            }
+            for (label, ids), flag in zip(predicates, flags, strict=True)
+        ],
+    }
+
+
 def request(**overrides):
     return {
         "content": "facets",
@@ -97,7 +114,9 @@ class FacetTests(unittest.TestCase):
             describe(request(facets={"key": "changed", "rows": 4}))
 
     def test_balanced_and_semantic_population_includes_missing_records(self):
-        result = describe(request(subset=[0, 1, 2, 3], comparison=[], ranking="balanced"))
+        result = describe(
+            request(subset=[0, 1, 2, 3], comparison=[], ranking="balanced", evenMinimum=1)
+        )
         item = result["facets"][0]["terms"][0]
         self.assertEqual(item["label"], "A")
         self.assertEqual(
@@ -117,6 +136,70 @@ class FacetTests(unittest.TestCase):
         self.assertAlmostEqual(result["facets"][0]["terms"][0]["semantic"], 1)
         self.assertEqual(
             len(describe(request(ranking="balanced", support=3))["facets"][0]["terms"]), 0
+        )
+
+    def test_even_splits_give_one_predicate_per_column_and_need_records_on_both_sides(self):
+        fields = [
+            even_field("zone", [("north", range(0, 50)), ("south", range(50, 100))]),
+            even_field("kind", [("a", range(0, 20)), ("b", range(20, 100))]),
+        ]
+        data = {"subset": list(range(100)), "comparison": [], "ranking": "balanced", "support": 2}
+        result = describe(request(**data, facets={"key": "even", "rows": 100, "fields": fields}))
+        self.assertEqual(
+            [item["name"] for item in result["facets"]], ["zone", "kind"], "most even first"
+        )
+        self.assertTrue(all(len(item["terms"]) == 1 for item in result["facets"]))
+        self.assertEqual(result["facets"][0]["terms"][0]["balanced"], 1)
+        small = describe(
+            request(
+                **{**data, "subset": list(range(15))},
+                facets={"key": "even", "rows": 100, "fields": fields},
+            )
+        )
+        self.assertEqual(
+            sum(len(item["terms"]) for item in small["facets"]), 0, "fewer than 10 on a side"
+        )
+
+    def test_numbers_get_thresholds_for_even_splits_and_bins_for_everything_else(self):
+        bins = [("≤ 24", range(0, 25)), ("> 24 and ≤ 49", range(25, 50)), ("> 49", range(50, 100))]
+        thresholds = [("≤ 24", range(0, 25)), ("≤ 49", range(0, 50))]
+        flags = [{"range": True}] * 3 + [{"cumulative": True}] * 2
+        field = even_field("size", bins + thresholds, flags)
+        data = {
+            "subset": list(range(100)),
+            "comparison": [],
+            "support": 2,
+            "facets": {"key": "n", "rows": 100, "fields": [field]},
+        }
+        even = describe(request(**data, ranking="balanced"))["facets"][0]["terms"]
+        self.assertEqual(
+            [item["label"] for item in even], ["≤ 49"], "the threshold nearest an even split"
+        )
+        common = describe(request(**data, ranking="frequency"))["facets"][0]["terms"]
+        self.assertNotIn(
+            "cumulative", [key for item in common for key in item if item.get(key) is True]
+        )
+        self.assertEqual(len(common), 3, "quartile bins only, no thresholds")
+
+    def test_a_missing_versus_present_split_is_used_only_when_no_value_split_exists(self):
+        value = even_field("kind", [("a", range(0, 50)), ("b", range(50, 100))])
+        only_missing = even_field(
+            "note",
+            [("Missing", range(0, 50)), ("Not missing", range(50, 100))],
+            [{"missing": True}] * 2,
+        )
+        both = even_field(
+            "mixed", [("x", range(0, 30)), ("Missing", range(0, 50))], [{}, {"missing": True}]
+        )
+        fields = [value, only_missing, both]
+        data = {"subset": list(range(100)), "comparison": [], "ranking": "balanced", "support": 2}
+        result = describe(request(**data, facets={"key": "m", "rows": 100, "fields": fields}))
+        labels = {
+            item["name"]: item["terms"][0]["label"] for item in result["facets"] if item["terms"]
+        }
+        self.assertEqual(labels["note"], "Missing")
+        self.assertEqual(
+            labels["mixed"], "x", "a value split wins even when a missing split is more even"
         )
 
     def test_phrase_and_facet_evidence_share_the_same_populations_for_multiple_groups(self):

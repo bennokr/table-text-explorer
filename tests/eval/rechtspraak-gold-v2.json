@@ -1,0 +1,44 @@
+{
+  "name": "rechtspraak",
+  "revision": 2,
+  "revision_note": "Written AFTER seeing the v1 results, so it is not blind. v1 (rechtspraak-gold.json) is kept unchanged. Changes: the excerpt starts with the court name, date and case number, so year, court and court type are echoed in that field; ruling_words and (for the excerpt) summary_words are real properties of a ruling, not artefacts of the analysed text; more shuffled controls per column.",
+  "dataset": "fixtures/rechtspraak-sample.json",
+  "text_fields": {
+    "summary": "Court-written case summary (median 27 words).",
+    "ruling_excerpt": "First 2,500 characters of the ruling: header (court, date, case number, parties) and opening text."
+  },
+  "columns": {
+    "legal_subarea": {"expected": "strong", "why": "12 sub-areas with distinct legal vocabulary."},
+    "legal_area": {"expected": "strong", "why": "Coarse level: administrative, civil, criminal."},
+    "procedure": {"expected": "moderate", "why": "Procedure type changes the register."},
+    "court_type": {"expected": "moderate", "why": "Hoge Raad, Raad van State and district courts write differently."},
+    "court": {"expected": "weak", "why": "Individual courts specialise a little."},
+    "year": {"expected": "weak", "why": "Topics drift slowly."},
+    "summary_words": {"expected": "length", "why": "Length of the analysed summary itself. Cannot be detected beyond length by construction."},
+    "ruling_words": {"expected": "structure", "why": "Full ruling length is a property of the case (criminal judgments run longer). Reported, not scored."},
+    "ecli_sequence": {"expected": "uncertain", "why": "Running number within court and year. Reported, not scored."}
+  },
+  "field_overrides": {
+    "ruling_excerpt": {
+      "year": "echoed",
+      "court": "echoed",
+      "court_type": "echoed",
+      "summary_words": "structure"
+    }
+  },
+  "controls": {
+    "shuffled": ["legal_subarea", "legal_area", "procedure", "court_type", "year"],
+    "shuffles_per_column": 6,
+    "noise_categories": [3, 5, 12],
+    "noise_numeric": 3
+  },
+  "hierarchy": {"coarse": "legal_area", "fine": "legal_subarea"},
+  "length_column": "ruling_words",
+  "extra_labels": ["procedure", "court_type", "year"],
+  "scored_as": {
+    "primary": "every strong column beats every null control on skill beyond length",
+    "secondary": "strong and moderate columns versus null controls (AUC)",
+    "length": "length columns are not detected beyond length",
+    "unscored": "echoed, structure and uncertain columns are reported only"
+  }
+}

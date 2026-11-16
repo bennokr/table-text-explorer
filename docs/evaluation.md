@@ -1,0 +1,263 @@
+# Evaluating structure discovery and explanations
+
+> **Status.** The generated `evaluation-*-report.md` files predate the lexicon (stop, lead and negation words and
+> folding, see [evaluation-lexicon.md](evaluation-lexicon.md)), which changes phrase lists and slightly shifts the
+> text vectors behind the column screen; rerun the harness to refresh them.
+
+The harness in `tests/eval/` scores what the app already does (phrase descriptions, clustering,
+maps) against known annotations. It runs natively on the same Python modules as the Pyodide
+worker, with the app's default settings, and keeps all data local.
+
+## Data: Rechtspraak sample
+
+`npm run prepare:rechtspraak` samples Dutch court rulings from the CC0 open-data API
+(`data.rechtspraak.nl`) into the ignored `fixtures/rechtspraak-sample.json`. Raw responses are
+cached in `.cache/rechtspraak/`, so reruns are offline. The sample is balanced on purpose:
+up to 20 rulings for each of 12 legal sub-areas and each year 2016-2025 (2,360 after
+filtering; about 62% of random draws qualify, and 36 draws per cell were made), drawn at uniformly random
+offsets with a fixed seed, keeping only rulings that carry exactly one legal area. Balanced
+quotas give a known chance level; they do not represent the real mix of rulings.
+
+Columns: legal area and sub-area (two-level gold hierarchy), court, court type, procedure, year,
+ruling date, two text fields (`summary`, `ruling_excerpt`), two length counts and the ECLI
+running number.
+
+The API rejects the default Python User-Agent, so the script sends a generic client name.
+
+## Gold manifest
+
+`tests/eval/rechtspraak-gold.json` (v1) states, per column, whether the text is expected to vary
+with it (strong, moderate, weak, length, uncertain) and why. It was written before the first
+evaluation run and is kept unchanged. `rechtspraak-gold-v2.json` was written after seeing the v1
+results, so it is not blind: it marks year, court and court type as echoed in the excerpt (its
+header names the court and date), treats full-ruling length as a property of the case, and adds
+shuffled controls. `dbrd-gold.json` covers the column screen on the vendored DBRD reviews.
+Null controls are added by the harness: shuffled copies of real columns and random noise columns.
+
+## What is measured
+
+1. **Which columns does the text vary with?** For each column, a regularised logistic regression
+   predicts its groups from the app's own 32-d text vectors, scored by repeated 5-fold
+   cross-validation. Skill is the proportional reduction in log-loss against a baseline that
+   knows only the text length ("skill beyond length", the ranking score). Proportional skill does
+   not depend on a column's number of groups, and held-out scoring puts noise below zero. 36 null
+   controls (shuffled and random columns) set the floor; a column is detected when it beats
+   almost all of them (empirical p, which needs at least 19 nulls to reach 0.05). A column that
+   length alone explains by 90% or more is marked length-determined and not scored, because the
+   ratio is meaningless there. This screen is a candidate; the app has no equivalent yet.
+2. **Do phrase descriptions explain a group?** For each group (12 sub-areas, 3 areas) against
+   the rest, the app's `describe_terms` ranks phrases on a random half of the records. The top
+   10 phrases are judged on the other half: AUC for recovering membership, mean phrase
+   precision, member coverage. Random groups of matching sizes give the chance level, and a
+   longest-quartile group probes the length confound. Averaged over three random splits.
+3. **Do clusters and maps recover the known structure?** The app's text features (TF-IDF, SVD)
+   feed its MiniBatch K-means, agglomerative and HDBSCAN. Agreement is ARI and NMI against area,
+   sub-area and other columns, with shuffled labels as chance. Maps (PCA, SVD, UMAP with the
+   app's defaults) are scored by the share of each record's 10 nearest neighbours that share
+   its label, against a shuffled-label baseline.
+
+Every measurement except the phrase descriptions is repeated for five text representations, each
+passed through the app's own reduction to 32 SVD dimensions before analysis: TF-IDF, spaCy Dutch
+word vectors (mean and TF-IDF-weighted pooling), the multilingual MiniLM-L12 and the Dutch
+MiniLM-L6 sentence models. `tests/eval/embed.mjs` embeds a field with the app's own encoders,
+offline. Further measurements: a split-surfacing test (do balanced and semantic splits line up
+with the gold columns?), 20 paired MiniBatch runs on 80% subsamples with a new seed each time, UMAP
+over 5 seeds, and a sensitivity screen on unreduced vectors. Both text fields are run. The summary is short (median 27 words) and sometimes names the legal
+area. The excerpt is 2,500 characters of header and opening text. I expected the excerpt to leak
+less; the first run does not support that (it recovers the labels better, see below).
+
+## Results
+
+Full tables: [Rechtspraak](evaluation-rechtspraak-report.md), [DBRD](evaluation-dbrd-report.md),
+regenerated by `npm run eval:rechtspraak -- tests/eval/rechtspraak-gold-v2.json` and the same with
+`dbrd-gold.json` (the raw-dimension section was produced by separate, identically seeded runs
+per dataset and text field, then merged).
+
+- **Controls behave.** Random groups score AUC 0.50 for every ranking, shuffled and noise columns
+  score below zero skill, and shuffled labels give ARI of 0.00.
+- **TF-IDF is hard to beat.** On the app's 32-d vectors it leads or ties the embeddings in almost
+  every column-screen, cluster and map cell on both datasets. Static word vectors are weakest.
+  Sentence embeddings match it only for fine-grained clustering of short texts.
+- **The 32-d reduction costs embeddings, not TF-IDF.** On unreduced vectors (tuned regularisation)
+  the embeddings gain 0.05-0.12 skill and come within about 0.02-0.05 of TF-IDF on the excerpt and
+  on DBRD sentiment; TF-IDF stays ahead on the short summaries.
+- **Semantic splits surface the dominant structure, not the one you want.** On Rechtspraak they
+  beat balanced splits clearly (excerpt: 94-96th percentile against 38th); on DBRD no ranking
+  surfaces sentiment (percentiles 34-65).
+- **Text axes do not replace semantic splits.** The main directions of variation of the 32-d vectors
+  (median split, each side described with c-TF-IDF contrast) beat the true null (random record splits) and
+  balanced splits, but trail semantic splits where the embeddings are good: on the Rechtspraak excerpts,
+  information about legal area 0.12-0.15 for axes against 0.20 for semantic splits (null 0.057, best
+  possible 0.24); on the summaries 0.034-0.041 against 0.042-0.043 (null 0.014). Axes work for TF-IDF
+  without embeddings (excerpt 0.150, percentile 79, against 0.060 for balanced). Random directions are
+  not a null: they score between the true null and the axes (0.08-0.10 on excerpts) because the vectors'
+  variance is concentrated in a few components. On DBRD nothing surfaces sentiment: axes, semantic splits
+  and the null are all 0.003-0.006 (best possible 0.021).
+- **Balanced splits add nothing on short texts.** When no phrase occurs in more than half the
+  records (true for the summaries, 0 of 2,360 phrases) the balanced and common-phrase rankings
+  are identical.
+- **Maps.** UMAP keeps nearly all neighbourhood label structure and is stable across seeds (sd 0.002-0.015);
+  PCA and SVD lose most of the fine level, and lose more of the coarse level for embeddings.
+- **Clustering is the unstable part.** MiniBatch at k = 3 varies by +-0.10-0.21 ARI for TF-IDF
+  across subsamples and seeds; k = 12 varies by +-0.02-0.05. HDBSCAN at the app's defaults leaves
+  15-100% of records unassigned in every representation.
+- **Descriptions.** `contrast` (the app's Automatic choice when a comparison exists) beats the
+  other lexical rankings (summary AUC 0.79 against 0.71-0.73; excerpt 0.96 against 0.81-0.93).
+
+### Caveats on significance
+
+Paired differences use 20 subsamples of 80% of the same records, so they describe algorithm and
+subsample variance for this dataset, not generalisation to other data. The subsamples overlap and
+no multiple-comparison correction is applied; treat intervals that touch zero as ties. Seed variance
+for UMAP does not capture data sampling variance either.
+
+The raw-dimension screen tunes regularisation by inner cross-validation. Within that table the
+32-d and raw columns are comparable, but its absolute values are lower than the main screen's for
+the same vectors (TF-IDF legal area 0.63 against 0.73), so model choice moves absolute skill; I
+have not investigated why. Compare columns and representations within one table.
+
+### Changes since the first run (1,190 rulings)
+
+- **The first column screen was replaced** by held-out skill beyond text length. The old
+  length-stratified chi-square z was not comparable across columns with different group counts.
+- **Sample size doubled** (2,360 rulings), and descriptions and maps hold up.
+
+### Weaknesses of the column screen
+
+- Marginal, not conditional: legal area, sub-area, court type and procedure are all detected, but
+  courts specialise, so court type's skill may be largely explained by legal area.
+- Detection means "beats shuffled labels", not "important". Rank by skill, not by p.
+- The 0.9 length-determined cutoff was set from synthetic data. With it disabled, DBRD
+  `word_count` scores +0.028 (an artifact, 16x below sentiment) and `character_count` -0.054.
+- 13 of 2,360 summaries have no matched word vectors; the app would drop those rows, the harness
+  keeps them as zero vectors.
+
+## Defaults taken from the evaluation
+
+| Default | Evidence |
+|---|---|
+| Text maps start from TF-IDF; demos use it | Static word vectors were weakest everywhere; TF-IDF needs no model download. |
+| Exact K-means with 10 restarts up to 5,000 records | On 80% subsamples the k = 3 ARI spread on summaries fell from +-0.10 (MiniBatch, 3 restarts) to +-0.02, and on excerpts the mean rose from 0.68 to 0.90. Twenty restarts added nothing. |
+| 32 SVD dimensions kept | Tested 32, 64 and 128 for every embedding: K-means ARI and neighbourhood purity were flat, and the column screen peaked at 64 (+0.01-0.03) and fell at 128. The gain on unreduced vectors came from a classifier using all dimensions, not from clustering or maps. |
+| Linear maps use PCA | PCA was better than SVD in 27 of 30 cells, tied in 2 and 0.006 behind in 1. |
+| Dutch sentence model for Dutch text | Quality tied with the multilingual model; half the size, about twice as fast. |
+| No single-character phrase edges | `1`, `2`, `c`, `v` appeared as distinctive phrases on excerpts. Digits of two or more characters stay, because they can be statute references. |
+| Balanced splits moved to Advanced | Identical to common phrases when no phrase occurs in more than half the records (all 2,360 summaries); weakest ranking elsewhere. |
+| Column screen: effect floor 0.01, minimum population 60, absolute dots (0.03, 0.10), gamma p-values, quartile bins for numbers, word-count length | [Calibrating the column screen](#calibrating-the-column-screen). |
+| Missing-value test floor 0.001 | Shuffled indicators peak at 0.0003; random missingness never flagged, 0.6-against-0.2 dependence always. |
+
+## Tweede Kamer motions
+
+`npm run prepare:tweedekamer` fetches 3,585 motions (36 blocks of 100 spread over 2017-2024, so every year is
+present) from the open OData API (`gegevensmagazijn.tweedekamer.nl/OData/v4/2.0`, no key needed) into
+`fixtures/tweedekamer-motions-sample.json` (ignored by Git). The API has 66,426 motions in total.
+
+- **Text** is the motion's one-line subject without the header that names the submitters ("Motie van het lid X
+  c.s. over ..."), median about 10 words. Full texts exist as PDFs (about 130 words) but were not used.
+- **Columns**: `party` (lead submitter's party, 24 values), `outcome` (first voting decision; 7 values, 8% missing),
+  `appreciation` (the cabinet's stance: `Ontraden`, `Oordeel Kamer`, ...), `vote_type`, `submitters`, `year`.
+  `appreciation` was not recorded before April 2019, so 31% is missing in a way that depends on the year.
+  The lead committee is `TK` for every motion, so there is no topic label.
+- **Character**: short texts, a diffuse outcome signal and party effects the text barely carries. It is the table where
+  the screen should find little, which makes it the check against overclaiming.
+
+## Calibrating the column screen
+
+`npm run eval:calibrate-screen -- <real|null|population|missing> [dataset ...]` runs the app's own
+`column_screen.py` on DBRD, Rechtspraak (summaries and excerpts) and Tweede Kamer. The screen
+measures how much of the text variation, beyond length, a column's groups explain (adjusted R-squared of the 32-d
+text vectors; numbers are cut into quartiles). The constants below were set from these runs.
+
+**What the real columns look like** (effect = share of variation explained):
+
+| Table | Columns the screen flags | Columns it does not |
+|---|---|---|
+| DBRD reviews | rating 0.018, sentiment 0.015 | word count, character count (about -0.001) |
+| Rechtspraak summaries | legal sub-area 0.152, court 0.097, procedure 0.088, court type 0.071, legal area 0.039, ruling length 0.015 | year 0.0035, summary length |
+| Rechtspraak excerpts | sub-area 0.26, court 0.24, procedure 0.13, court type 0.13, legal area 0.064, year 0.043, ruling length 0.017 | summary length 0.008 |
+| Tweede Kamer motions | none | appreciation 0.0075, party 0.0050, year 0.0022, outcome 0.0013, vote type 0.0006, submitters 0.0003 |
+
+The excerpt `year` (0.043) is real: the excerpt prints the ruling date. In summaries year is only 0.0035.
+
+**What changed because of it**
+
+1. **Length is the word count.** The screen first removes text length. Its measure was the n-gram count, which
+   tracks length poorly in short, stopword-heavy text: the correlation with the word count was 0.97-0.99 on DBRD and
+   Rechtspraak but 0.79 on motions. There a column that *is* the word count scored 0.026 (the strongest
+   motion column) and noisy copies of length scored 0.008-0.024, all flagged. With the word count as the measure the
+   same columns score -0.008 to 0.000 and nothing is flagged. Regression on the true word count gave
+   the same result as the fix, so this is the cause.
+2. **Numbers use quartile bins, not a regression.** Regressing a number on the 32 dimensions gave 0.22 for
+   Rechtspraak ruling length, against 0.15 for the best category: a different quantity (how well the text predicts
+   the number), so it topped the ranking and Auto. The null spread was also 0.07 at 120 records, 5 times the
+   floor, and a heavy-tailed random number reached 0.016. Cut into quartiles, ruling length scores 0.015 on the
+   same scale as categories, the null maximum is 0.0007 and power is the same (83-100% from 120 records).
+3. **P-values use a gamma curve.** The 99 shuffled scores are right-skewed. Normal tails flagged 5.2% of null
+   columns at 0.05 and 1.6% at 0.01 (1,438 null categories); a gamma curve fitted to the same shuffles gave
+   4.4% and 1.1% in the committed run, and the empirical p-value with 499 shuffles, which is too slow for every
+   column, gave 5.7% and 0.7%. 49, 99, 199 and 499 shuffles gave the same normal-tail rates, so the count is not
+   the issue and stays 99.
+4. **Dots are absolute.** 0.01-0.03 is one dot, 0.03-0.10 two, above 0.10 three. The relative rule gave DBRD
+   sentiment, at 0.015, three dots because it was the strongest column there, while 0.15 in Rechtspraak also
+   got three.
+5. **Missing-value test has its own floor.** A present/missing split has two groups, so it explains far
+   less than a column. Shuffled missingness indicators peaked at 0.0003 in 540 tests; the floor is now 0.001
+   (was 0.01, which flagged nothing short of 0.9-against-0.1).
+6. **Minimum population is 60** (was 30).
+
+**Evidence for the constants**
+
+- *Effect floor 0.01 stays.* Held-out classification (an exploratory run, not committed) (logistic regression on the same vectors, skill beyond a
+  length-only model, against 8 shuffled copies) predicts DBRD rating and sentiment and every flagged Rechtspraak
+  column out of sample, and none of the Tweede Kamer columns or Rechtspraak summary `year`. Columns the text predicts
+  start at 0.015 and ones it cannot end at 0.0075 (appreciation), so any floor from 0.008 to 0.015 separates them
+  equally well. Margin on DBRD is thin (0.015 against a floor of 0.01).
+  Null columns reach 0.0017 at most (categories, 30 settings) and 0.0007 (numbers).
+- *Calibration of the null.* Across 3 tables, 30 settings of 40 shuffled columns (2-50 groups, uneven sizes,
+  Gaussian and log-normal numbers, 90% and 70% coverage): 4.4% below p = 0.05 and 1.1% below 0.01; no null
+  column was flagged after Holm and the floor, and text length itself is never flagged.
+- *Small populations* (random subsets, 4 noise categories and the table's signal column, 40 runs each):
+
+  | Records | Runs with a false flag (3 tables) | DBRD sentiment found (0.015) | Rechtspraak legal area found (0.039) |
+  |---|---|---|---|
+  | 30 | 7 of 120 | 2 of 40 | 10 of 40 |
+  | 60 | 5 of 120 | 20 of 40 | 33 of 40 |
+  | 120 | 7 of 120 | 34 of 40 | 40 of 40 |
+  | 250 and more | 0 of 360 | 40 of 40 | 40 of 40 |
+
+  False flags track the nominal 5% down to 30 records and vanish from 250 because the floor then exceeds the null
+  spread. Power is the reason for the minimum of 60: a weak but real column is found half the time there. Read "none"
+  below about 120 records as "not detected", not "absent".
+- *Missingness* (a noise column whose missingness depends on the table's signal column, 40 runs each):
+  0.4 against 0.4 (random): 0 of 120 flagged. 0.5 against 0.3: 1 of 40 on DBRD and 5 of 40 on Rechtspraak.
+  0.6 against 0.2 and stronger: 40 of 40 on both. Tweede Kamer party: never, since the text barely carries party
+  (0.005). Real `appreciation` (missing by year) is not flagged: its missing indicator scores 0.0006 at p < 0.001,
+  below the floor.
+
+**Not established**: three tables, one language, one phrase setting (1-3 words) and 32 dimensions.
+Dots at 0.03 and 0.10 are order-of-magnitude bands, not tuned. The ranking is by variance explained, so a
+22-group column outranks a 3-group one (Rechtspraak court 0.097 against legal area 0.039, while legal area is
+the better predictor, held-out skill 0.72 against 0.25). Auto picks the largest effect, which is not always the
+most interpretable column. Timing in the browser (Pyodide) was not measured.
+
+## Controls on the harness
+
+`npm run test:eval` runs `tests/eval/check_harness.py` on synthetic data with planted structure:
+the length-controlled screen must find planted columns and ignore noise, and descriptions must
+recover planted groups but not random ones.
+
+## Known weaknesses of the evaluation
+
+- Gold labels are procedural as well as topical: party roles (verdachte, gedaagde, appellant)
+  track the legal area, so high recovery partly measures register, not topic.
+- Phrase quality is only read off examples: single digits and letters ("1", "2", "c") appear as
+  distinctive phrases in excerpts, and nested n-grams (voet, staande voet) survive deduplication.
+  Neither is quantified yet.
+- 2,360 rulings; one seed; the sample is balanced, not representative.
+- The gold v2 manifest was written after seeing v1 results.
+
+## Not covered
+
+- English embedding models, and the English spaCy vectors (prepared but unused).
+- Human tasks: time, steps and correctness for real users, and the simulated analyst.
+- Other datasets and dtype mixes.

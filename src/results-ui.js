@@ -1,10 +1,13 @@
 import { $, element } from './dom.js';
 import { resultExport } from './results.js';
+import { npyForRecords } from './embedding-files.js';
 import { complete } from './status.js';
+import { Events } from './events.js';
 
-function downloadResult(result) {
-  const url = URL.createObjectURL(resultExport(result));
-  const anchor = element('a', { href: url, download: `${result.name.replace(/[^\p{L}\p{N}_-]/gu, '_')}.json` });
+function downloadResult(result, extension = 'json', records = 0) {
+  const blob = extension === 'npy' ? npyForRecords(result.embeddings, result.rowIds, result.embeddingDimensions, records) : resultExport(result);
+  const url = URL.createObjectURL(blob);
+  const anchor = element('a', { href: url, download: `${result.name.replace(/[^\p{L}\p{N}_-]/gu, '_')}.${extension}` });
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -21,16 +24,23 @@ function corrections(model, result) {
   } });
 }
 
+function embeddingButton(model, result) {
+  if (result.kind !== 'representation' || !result.embeddings) { return []; }
+  return [element('button', { type: 'button', text: 'Download embeddings (.npy)',
+    title: 'Float32 vectors, one row per record (zeros where there is no text). Import them again to skip encoding.',
+    onclick: () => downloadResult(result, 'npy', model.rows.length) })];
+}
+
 function entry(model, result) {
   const name = element('input', { value: result.name, 'aria-label': 'Result name',
     onchange: event => { result.name = event.target.value.trim() || result.id;
       if (result.kind === 'projection') { result.mapName = result.name.replace(/-2d$/u, ''); }
-      model.emit('results'); } });
-  const buttons = [element('button', { type: 'button', text: 'Download JSON', onclick: () => downloadResult(result) })];
+      model.emit(Events.RESULTS); } });
+  const buttons = [element('button', { type: 'button', text: 'Download JSON', onclick: () => downloadResult(result) }), ...embeddingButton(model, result)];
   if (['projection', 'clustering'].includes(result.kind)) {
     buttons.unshift(element('button', { type: 'button', text: result.kind === 'clustering' ? 'Open legend' : 'Open card', onclick: () => {
       model.openResultId = result.id;
-      model.emit('open-result');
+      model.emit(Events.OPEN_RESULT);
       $('#export-dialog').close();
     } }));
   }
@@ -38,7 +48,7 @@ function entry(model, result) {
     element('pre', { text: JSON.stringify({ id: result.id, created: result.created,
       source: result.sourceId ?? result.representationId, config: result.config,
       parameters: result.parameters, sentenceModel: result.sentenceModel, aggregation: result.aggregation,
-      coverage: result.coverage, originalDimensions: result.dimensions }, null, 2) })]);
+      coverage: result.coverage, originalDimensions: result.dimensions, precomputed: result.precomputed }, null, 2) })]);
   const children = [name, element('span', { text: `${result.kind === 'projection' ? 'Similarity map' : result.kind} · ${result.rowIds.length} records` }), ...buttons, details];
   if (result.kind === 'representation') {
     children.push(element('p', { text: result.embeddings

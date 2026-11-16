@@ -5,15 +5,17 @@
 """Native checks for the exact phrase evidence/assignment code used in the worker."""
 
 import json
-import runpy
 import sys
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1] / "src/workers"
 sys.path.insert(0, str(ROOT))
-terms = runpy.run_path(ROOT / "terms.py")
-names = runpy.run_path(ROOT / "cluster_names.py", init_globals=terms)
+import cluster_names  # noqa: E402
+import terms as terms_module  # noqa: E402
+
+terms = vars(terms_module)
+names = vars(cluster_names)
 
 
 def request(texts, groups, **options):
@@ -145,7 +147,7 @@ class ClusterNames(unittest.TestCase):
         fields = {}
         choose = names["choose_names"]
         original = choose.__globals__["name_candidates"]
-        choose.__globals__["name_candidates"] = lambda item, _: [
+        choose.__globals__["name_candidates"] = lambda item, *_: [
             {"phrase": phrase, "words": sorted(names["name_words"](phrase)), "score": score}
             for phrase, score in {
                 "0": [("shared", 1), ("camera", 0.8)],
@@ -170,6 +172,38 @@ class ClusterNames(unittest.TestCase):
         labels = json.loads(names["name_clusters"](payload))["labels"]
         self.assertNotIn("0", labels)
         self.assertTrue(labels["1"]["phrase"].startswith("#"))
+
+    def test_names_avoid_function_words_and_negations_at_their_edges(self):
+        texts = ["niet echt goed over", "niet echt goed over", "mooi boek van", "mooi boek van"]
+        groups = [group(0, [0, 1], [2, 3]), group(1, [2, 3], [0, 1])]
+        lexicon = {"stopwords": ["over", "van"], "leadwords": ["echt"], "negations": ["niet"]}
+        payload = request(texts, groups, maxPhrases=1, **lexicon)
+        labels = json.loads(names["name_clusters"](payload))["labels"]
+        blocked = {"over", "van", "echt", "niet"}
+        for item in labels.values():
+            for phrase in item["phrases"]:
+                tokens = phrase["phrase"].split()
+                self.assertNotIn(tokens[0], blocked)
+                self.assertNotIn(tokens[-1], blocked)
+        self.assertFalse(labels["0"]["phrase"].startswith("niet"))
+
+    def test_a_name_does_not_repeat_a_word_in_another_form(self):
+        fold = {"collapse": False, "undouble": False, "dropE": False, "rules": [["en", "", 3]]}
+        texts = ["boek lezen"] * 3 + ["boeken lezen"] * 3 + ["film kijken"] * 3
+        groups = [group(0, [0, 1, 2], [3, 4, 5, 6, 7, 8]), group(1, [3, 4, 5], [0, 1, 2, 6, 7, 8])]
+        for folding, repeated in ((None, True), (fold, False)):
+            payload = request(texts, groups, maxPhrases=1, fold=folding)
+            labels = json.loads(names["name_clusters"](payload))["labels"]
+            words = [name_word for item in labels.values() for name_word in item["words"]]
+            self.assertEqual("boek" in words and "boeken" in words, repeated)
+
+    def test_a_group_whose_best_word_is_common_still_gets_a_name_not_a_number(self):
+        texts = ["camera sharp"] * 2 + ["camera"] * 2 + ["battery"] * 2
+        groups = [group(0, [0, 1], [2, 3, 4, 5]), group(1, [2, 3], [0, 1, 4, 5])]
+        labels = json.loads(names["name_clusters"](request(texts, groups, maxPhrases=1)))["labels"]
+        self.assertEqual(labels["0"]["phrase"], "sharp")
+        self.assertEqual(labels["1"]["phrase"], "camera", "common, but better than #2")
+        self.assertTrue(labels["1"].get("loose"))
 
     def test_identical_empty_numeric_and_other_text_have_honest_fallbacks(self):
         for texts in [["same", "same"], ["", ""], ["123", "456"], ["Other", "Other"]]:

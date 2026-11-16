@@ -1,0 +1,52 @@
+# Dutch lead words: they change the meaning of what follows, so they may start a phrase or sit inside one
+# ("zonder kinderen", "heel goed", "niet echt slecht"), but they never stand alone and never end a phrase.
+
+# prepositions and degree words that change a phrase
+zonder
+tegen
+te
+meer
+minder
+veel
+weinig
+heel
+zeer
+erg
+bijna
+nauwelijks
+vrijwel
+alleen
+slechts
+zelfs
+extra
+
+# frequency and manner
+echt
+gewoon
+precies
+ongeveer
+vooral
+steeds
+altijd
+soms
+vaak
+misschien
+bijzonder
+absoluut
+helemaal
+volledig
+totaal
+nogal
+
+# quantifiers
+alle
+allen
+elk
+elke
+iedere
+ieder
+sommige
+enkele
+beide
+andere
+anders

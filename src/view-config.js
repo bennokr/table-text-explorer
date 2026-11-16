@@ -6,6 +6,8 @@ export const viewTypes = [['scatter', 'Scatter'], ['histogram', 'Histogram'],
 export const isResultView = type => ['map', 'legend'].includes(type);
 export const isProjection = type => type === 'map';
 export const isPointView = type => type === 'scatter' || isProjection(type);
+// Points and stacked bars can be colored by a column.
+export const isColorView = type => isPointView(type) || type === 'bar';
 
 export function eligibleFields(fields, type) {
   const present = fields.filter(field => field.kind !== 'empty');
@@ -52,15 +54,36 @@ export function changeViewType(model, view, type) {
   return { type, x, y: ['scatter', 'heatmap'].includes(type) ? y : '' };
 }
 
+const MAX_BAR_VALUES = 30;
+
+// Bars work best for a handful of values: prefer 2 to 12, then the column with the fewest gaps.
+function barColumns(fields) {
+  const count = field => field.unique?.length ?? 0;
+  const few = field => count(field) >= 2 && count(field) <= MAX_BAR_VALUES;
+  const rank = field => (count(field) <= 12 ? 0 : 1000) + field.missing / 1000 + count(field) / 100;
+  return fields.filter(field => categorical(field) && few(field)).sort((a, b) => rank(a) - rank(b));
+}
+
+// Views that say something at a glance: the main categories, and how one measure or date is spread.
+// A scatter appears only when there are two measures and no categories, never against the row number.
 export function defaultViews(model) {
-  const fields = model.fields.filter(field => field.kind !== 'empty' && !field.identifier);
-  const axes = fields.filter(field => (field.kind === 'number' || temporal(field)));
-  const category = fields.find(categorical);
-  const histogram = fields.find(field => !categorical(field));
-  const views = [{ type: 'scatter', x: axes[0]?.name ?? '', y: axes[1]?.name ?? '' }];
-  if (category) { views.push({ type: 'bar', x: category.name }); }
-  if (histogram) { views.push({ type: 'histogram', x: histogram.name }); }
+  const fields = model.fields.filter(field => field.kind !== 'empty' && !field.identifier && !field.annotation
+    && !field.derived && !field.constant);
+  const bars = barColumns(fields).slice(0, 2);
+  const numbers = fields.filter(field => field.kind === 'number');
+  const measure = numbers[0] ?? fields.find(temporal);
+  const views = bars.map(field => ({ type: 'bar', x: field.name }));
+  if (measure) { views.push({ type: 'histogram', x: measure.name }); }
+  if (!bars.length && numbers.length > 1) { views.unshift({ type: 'scatter', x: numbers[0].name, y: numbers[1].name }); }
+  if (!views.length) { views.push({ type: 'scatter', x: '', y: '' }); }
   return views.map((view, index) => ({ color: '', title: '', ...view, id: `view-${index + 1}` }));
+}
+
+// The card the plus button adds: a scatter of the first two measures, else the first default view.
+export function newView(model) {
+  const numbers = model.fields.filter(field => field.kind === 'number' && !field.identifier && !field.derived);
+  if (!numbers.length) { return { ...defaultViews(model)[0] }; }
+  return { color: '', title: '', type: 'scatter', x: numbers[0].name, y: numbers[1]?.name ?? '' };
 }
 
 export function axisCoordinates(model, view) {

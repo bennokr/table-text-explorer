@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "analysis": {
+    "mode": "sentences",
+    "language": "nl",
+    "vectorLanguage": "nl",
+    "features": [
+      "text"
+    ],
+    "neighbors": 15,
+    "epochs": 150
+  },
+  "views": [
+    {
+      "type": "bar",
+      "x": "outcome"
+    },
+    {
+      "type": "bar",
+      "x": "party"
+    },
+    {
+      "type": "bar",
+      "x": "year"
+    }
+  ],
+  "embeddings": [
+    {
+      "file": "tweedekamer-motions-sample.text.dutch-minilm.npy",
+      "field": "text",
+      "model": "dutch",
+      "default": true
+    }
+  ]
+}

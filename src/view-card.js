@@ -5,6 +5,8 @@ import { AggregateView } from './charts.js';
 import { ViewEditor } from './view-editor.js';
 import { ViewPlaceholder } from './view-placeholder.js';
 import { isPointView, isProjection, viewTitle, viewFieldsValid, viewSchemaKey } from './view-config.js';
+import { CardColorKey } from './color-key.js';
+import { Events } from './events.js';
 
 export class ViewCard {
   constructor(model, config, actions, reportError) {
@@ -13,28 +15,29 @@ export class ViewCard {
     this.reportError = reportError;
     this.editor = new ViewEditor(model, config, patch => actions.update(config, patch));
     const make = () => actions.settings(config);
-    this.settings = glyph('＋', 'New similarity map', make);
-    this.expand = glyph('⛶', 'Expand or restore view', () => actions.expand(config));
+    this.newMap = element('button', { type: 'button', text: 'New map here…', onclick: make });
+    this.expand = glyph('⛶', 'Expand or restore chart', () => actions.expand(config));
     this.expand.setAttribute('aria-pressed', 'false');
-    this.grip = glyph('⠿', 'Drag visualization card', () => {});
+    this.grip = glyph('⠿', 'Drag chart', () => {});
     this.grip.className = 'card-grip';
-    this.more = glyph('⋯', 'View options', () => this.toggleMenu());
-    this.header = element('header', {}, [this.grip, this.editor.type, this.editor.fields, this.settings, this.expand, this.more]);
+    this.more = glyph('⋯', 'Chart options', () => this.toggleMenu());
+    this.header = element('header', {}, [this.grip, this.editor.type, this.editor.fields, this.expand, this.more]);
     this.menu = this.options(actions);
     this.container = element('div', { class: 'view-plot' });
     this.placeholder = new ViewPlaceholder(model, config, this.container, make);
-    this.node = element('section', { class: 'view-card', 'data-view-id': config.id }, [this.header, this.menu, this.container]);
-    this.cleanup = model.on('busy', () => this.busy());
+    this.colorKey = new CardColorKey(model, config);
+    this.node = element('section', { class: 'view-card', 'data-view-id': config.id }, [this.header, this.menu, this.container, this.colorKey.node]);
+    this.cleanup = model.on(Events.BUSY, () => this.busy());
     this.sync();
   }
 
   options(actions) {
     const buttons = element('div', { class: 'card-actions' }, [
-      glyph('⧉', 'Duplicate visualization', () => actions.duplicate(this.config)),
-      glyph('←', 'Move view earlier', () => actions.move(this.config)),
+      glyph('⧉', 'Duplicate chart', () => actions.duplicate(this.config)),
+      glyph('←', 'Move chart earlier', () => actions.move(this.config)),
       this.upButton(actions),
-      glyph('×', 'Remove visualization', () => actions.remove(this.config))]);
-    const menu = element('div', { class: 'card-menu', hidden: '' }, [this.editor.nameLabel, buttons]);
+      glyph('×', 'Remove chart', () => actions.remove(this.config))]);
+    const menu = element('div', { class: 'card-menu', hidden: '' }, [this.editor.nameLabel, this.editor.binsLabel, this.newMap, buttons]);
     this.more.setAttribute('aria-controls', `${this.config.id}-options`);
     menu.id = `${this.config.id}-options`;
     this.more.setAttribute('aria-expanded', 'false');
@@ -57,8 +60,9 @@ export class ViewCard {
     this.editor.sync();
     this.node.dataset.point = String(isPointView(config.type));
     this.node.setAttribute('aria-label', viewTitle(config, this.model));
-    this.settings.hidden = !isProjection(config.type);
+    this.newMap.hidden = !isProjection(config.type);
     this.renderIfChanged();
+    this.colorKey.sync();
     const description = this.description();
     this.editor.type.title = `${viewTitle(config, this.model)} · ${description}`;
     this.editor.type.setAttribute('aria-description', description);
@@ -75,7 +79,7 @@ export class ViewCard {
 
   renderIfChanged() {
     const config = this.config;
-    const shape = isProjection(config.type) ? ['projection'] : [config.type, config.x, config.y, viewSchemaKey(this.model, config)];
+    const shape = isProjection(config.type) ? ['projection'] : [config.type, config.x, config.y, viewSchemaKey(this.model, config), ...this.chartSettings()];
     const key = JSON.stringify(shape);
     if (key !== this.key || this.model.resultFor(config) !== this.result) {
       this.placeholder.node.remove();
@@ -84,6 +88,11 @@ export class ViewCard {
       this.key = key;
       this.result = this.model.resultFor(config);
     } else { this.renderer?.paint?.(); }
+  }
+
+  // What a bar chart or histogram draws beyond its columns: the stack colors and the number of bins.
+  chartSettings() {
+    return isPointView(this.config.type) ? [] : [this.config.color, this.config.bins];
   }
 
   render() {
@@ -97,7 +106,7 @@ export class ViewCard {
   }
 
   busy() {
-    this.settings.disabled = this.model.analysisBusy;
+    this.newMap.disabled = this.model.analysisBusy;
     this.placeholder.sync(isProjection(this.config.type) && !this.renderer);
   }
 
@@ -105,6 +114,7 @@ export class ViewCard {
     this.cleanup();
     this.editor.destroy();
     this.placeholder.destroy();
+    this.colorKey.destroy();
     this.renderer?.destroy();
     this.node.remove();
   }

@@ -37,13 +37,13 @@ async function exerciseComponent(page) {
 }
 
 async function chartPicker(page) {
-  const picker = page.locator('.view-card').first().locator('variable-picker[aria-label="X column"]');
+  const picker = page.locator('[data-point-index="0"]').locator('variable-picker[aria-label="X column"]');
   await picker.getByRole('button', { name: 'X column', exact: true }).click();
   await picker.getByRole('searchbox').fill('y');
   await picker.getByRole('searchbox').press('ArrowDown');
   await page.keyboard.press('Enter');
   await expect(picker.getByRole('button', { name: 'X column', exact: true })).toBeFocused();
-  expect((await snapshot(page)).views[0].x).toBe('y');
+  expect((await snapshot(page)).views.find(view => view.type === 'scatter').x).toBe('y');
   await expect(picker.locator('.vp-panel')).not.toBeVisible();
 }
 
@@ -57,7 +57,7 @@ async function columnPicker(page) {
   expect((await snapshot(page)).fields.some(field => field.name === 'text')).toBe(true);
   await page.click('#phrase-settings');
   const phrases = page.locator('#terms-fields');
-  await phrases.getByRole('button', { name: 'Phrase fields', exact: true }).click();
+  await phrases.getByRole('button', { name: 'Phrase columns', exact: true }).click();
   await phrases.getByRole('searchbox').fill('text');
   await expect(phrases.getByRole('checkbox')).toBeChecked();
   await phrases.getByRole('searchbox').fill('group');
@@ -72,6 +72,7 @@ async function columnPicker(page) {
 
 test('variable picker searches metadata, preserves selection and supports keyboard, charts and table columns', async ({ app }) => {
   await importRows(app.page);
+  await app.page.click('#add-chart');
   await exerciseComponent(app.page);
   await chartPicker(app.page);
   await columnPicker(app.page);

@@ -153,3 +153,15 @@ test('datetime inference, validation and numeric conversion preserve time rather
   assert.equal(numberOf('29/08/2025 12:50:55', { kind: 'datetime', format: '%d/%m/%Y %H:%M:%S' }), Date.UTC(2025, 7, 29, 12, 50, 55));
   assert.equal(rows.filter(parseQuery('when>"2026-10-28T09:45:00Z"', [field]).test).length, 1);
 });
+
+test('the model refuses events that are not in the list, so a typo fails at once', () => {
+  const model = new Dataset();
+  assert.throws(() => model.on('veiw', () => {}), /Unknown model event "veiw"/);
+  assert.throws(() => model.emit('selections'), /Unknown model event/);
+  let seen = 0;
+  const off = model.on('views', () => { seen += 1; });
+  model.emit('views');
+  off();
+  model.emit('views');
+  assert.equal(seen, 1);
+});

@@ -5,7 +5,7 @@ export function descriptionEnabled(config) {
 }
 
 export function groupName(field, overrides = {}) {
-  return String(overrides[field.name] ?? field.group ?? '').trim() || 'Other fields';
+  return String(overrides[field.name] ?? field.group ?? '').trim() || 'Other columns';
 }
 
 function vectorGroups(fields) {
@@ -51,7 +51,7 @@ function aggregationRecipe(settings) {
 
 export function sentenceAggregation(payload, dimensions) {
   const weights = payload.fields.map(field => weightOf(payload.weights, field.name));
-  if (!weights.every(weight => Number.isFinite(weight) && weight >= 0)) { throw new Error('Field weights must be finite and nonnegative.'); }
+  if (!weights.every(weight => Number.isFinite(weight) && weight >= 0)) { throw new Error('Column weights must be finite and nonnegative.'); }
   if (payload.combine === 'group-mean') {
     const settings = groupSettings(payload, dimensions);
     return { dimensions: settings.dimensions, recipe: aggregationRecipe(settings),

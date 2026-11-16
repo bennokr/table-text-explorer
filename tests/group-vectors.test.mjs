@@ -61,7 +61,7 @@ test('metadata groups and map-specific overrides enter feature keys and exported
   data.load({ name: 'groups', rows: [{ a: 'yes', b: 'no' }], metadata: { a: { group: 'Context' } } });
   data.configure({ ...data.config, mode: 'sentences', features: ['a', 'b'], combine: 'group-mean', includeDescriptions: true });
   assert.equal(groupName(data.fields[0]), 'Context');
-  assert.equal(payload(data, 'prepare').fields[1].group, 'Other fields');
+  assert.equal(payload(data, 'prepare').fields[1].group, 'Other columns');
   const original = featureKey(data);
   data.config.fieldGroups = { a: 'Custom' };
   assert.notEqual(featureKey(data), original);

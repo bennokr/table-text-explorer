@@ -1,0 +1,82 @@
+{
+  "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
+  "fieldsMatch": "partial",
+  "fields": [
+    {
+      "type": "string",
+      "name": "ecli",
+      "x-linked-codebook": {
+        "identifying": true
+      }
+    },
+    {
+      "type": "string",
+      "name": "date"
+    },
+    {
+      "type": "integer",
+      "name": "year",
+      "x-linked-codebook": {
+        "level": "ordinal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "court",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "court_type",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "procedure",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "legal_area",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "legal_subarea",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "integer",
+      "name": "ecli_sequence",
+      "x-linked-codebook": {
+        "identifying": true
+      }
+    },
+    {
+      "type": "string",
+      "name": "summary"
+    },
+    {
+      "type": "string",
+      "name": "ruling_excerpt"
+    },
+    {
+      "type": "integer",
+      "name": "summary_words"
+    },
+    {
+      "type": "integer",
+      "name": "ruling_words"
+    }
+  ]
+}

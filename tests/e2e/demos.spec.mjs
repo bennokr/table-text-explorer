@@ -1,11 +1,11 @@
-import { test, expect, snapshot, importRows } from './fixtures.mjs';
+import { test, expect, snapshot, importRows, records } from './fixtures.mjs';
 
 async function expectCards(page, count) {
   await expect(page.locator('.view-card')).toHaveCount(count);
   expect((await snapshot(page)).views).toHaveLength(count);
   const cards = await page.locator('.view-card').evaluateAll(nodes => nodes.map(node => ({
     id: node.dataset.viewId, type: node.querySelector('.view-type').value,
-    x: node.querySelector('variable-picker[aria-label="X column"]').selected[0],
+    x: node.querySelector('variable-picker[aria-label="X column"]').selected[0] ?? '',
   })));
   expect(cards).toEqual((await snapshot(page)).views.map(({ id, type, x }) => ({ id, type, x })));
 }
@@ -13,8 +13,8 @@ async function expectCards(page, count) {
 async function removeCards(page, initial = 3) {
   for (let count = initial - 1; count >= 0; count -= 1) {
     const card = page.locator('.view-card').first();
-    await card.getByRole('button', { name: 'View options', exact: true }).click();
-    await card.getByRole('button', { name: 'Remove visualization', exact: true }).click();
+    await card.getByRole('button', { name: 'Chart options', exact: true }).click();
+    await card.getByRole('button', { name: 'Remove chart', exact: true }).click();
     await expectCards(page, count);
   }
   await expect(page.locator('#views-empty')).toBeVisible();
@@ -26,12 +26,13 @@ async function replaceExpandedDataset(page) {
   await importRows(page);
   for (let index = 0; index < 3; index += 1) { await page.click('#add-chart'); }
   await expect(page.locator('.view-card')).toHaveCount(6);
-  await page.locator('.view-card').first().getByRole('button', { name: 'Expand or restore view' }).click();
+  await page.locator('.view-card').first().getByRole('button', { name: 'Expand or restore chart' }).click();
   await expect(page.locator('.view-card:visible')).toHaveCount(1);
   await page.selectOption('#examples', 'dbrd-test.json');
   await expect.poll(async () => (await snapshot(page)).rows).toBe(2224);
-  await expectCards(page, 3);
-  await expect(page.locator('.view-card:visible')).toHaveCount(3);
+  // The example's own map and legend (precomputed) come first, then its three views.
+  await expectCards(page, 5);
+  await expect(page.locator('.view-card:visible')).toHaveCount(5);
 }
 
 async function shorterDemo(page) {
@@ -42,8 +43,8 @@ async function shorterDemo(page) {
   } }));
   await page.selectOption('#examples', 'dbrd-test.json');
   await expect.poll(async () => (await snapshot(page)).rows).toBe(2224);
-  await expectCards(page, 2);
-  await removeCards(page, 2);
+  await expectCards(page, 4);
+  await removeCards(page, 4);
 }
 
 test('demo codebooks and views replace previous cards completely and reset on ordinary import', async ({ app }) => {
@@ -51,12 +52,14 @@ test('demo codebooks and views replace previous cards completely and reset on or
   await replaceExpandedDataset(page);
   const demo = await snapshot(page);
   expect(demo.fields.find(field => field.name === 'text').kind).toBe('text');
-  expect(demo.views.map(view => view.x)).toEqual(['word_count', 'sentiment', 'word_count']);
+  expect(demo.views.map(view => view.x)).toEqual(['', '', 'word_count', 'sentiment', 'word_count']);
   await page.click('#analysis-inputs');
-  await expect(page.locator('#feature-mode')).toHaveValue('words');
+  // The demo starts from its precomputed embeddings when the build has them (data release), else from TF-IDF.
+  await expect(page.locator('#feature-mode')).toHaveValue(/^(text|sentences)$/u);
   await page.locator('#map-dialog [data-close]').click();
-  await removeCards(page);
-  await importRows(page);
+  await removeCards(page, 5);
+  // Rows without a text column go back to the table input; with text the default is TF-IDF.
+  await importRows(page, records.map(row => ({ id: row.id, x: row.x, y: row.y, group: row.group })));
   await expectCards(page, 3);
   await page.click('#analysis-inputs');
   await expect(page.locator('#feature-mode')).toHaveValue('table');

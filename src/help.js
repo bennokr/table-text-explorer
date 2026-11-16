@@ -43,6 +43,7 @@ export function bindHelp() {
   };
   options($('#help-topic'), Object.entries(pages).map(([name, page]) => [name, page.title]));
   $('#help-topic').onchange = event => open(event.target.value);
+  $('#help-home').onclick = () => open('start');
   $('#help-back').onclick = () => travel(-1);
   $('#help-forward').onclick = () => travel(1);
   dialog.addEventListener('close', () => { if (returnFocus?.isConnected) { returnFocus.focus(); } });
@@ -53,7 +54,7 @@ export function bindHelp() {
   for (const button of document.querySelectorAll('button[data-help]')) {
     const [name, anchor] = button.dataset.help.split('#');
     const info = pages[name].sections[anchor] ?? pages[name];
-    button.title = info.summary;
+    if (!button.title) { button.title = info.summary; }
     button.setAttribute('aria-label', `Help: ${info.title}`);
   }
 }

@@ -28,6 +28,18 @@ test('view configurations keep independent fits through filters, annotations and
   assert.deepEqual(model.views, []);
 });
 
+test('default views show the main categories and one measure, never an ID or the row number', () => {
+  const model = new Dataset();
+  const rows = Array.from({ length: 60 }, (_, id) => ({ id: `r${id}`, party: ['A', 'B', 'C'][id % 3], outcome: id % 2 ? 'ja' : 'nee',
+    court: `Rechtbank ${id % 25}`, words: 10 + id, chars: 50 + 5 * id, text: `motie over onderwerp ${id} en meer woorden` }));
+  model.load({ name: 'motions', rows });
+  const views = defaultViews(model);
+  assert.deepEqual(views.map(view => view.type), ['bar', 'bar', 'histogram']);
+  assert.deepEqual(views.slice(0, 2).map(view => view.x), ['outcome', 'party']);
+  assert.equal(views[2].x, 'words');
+  assert.ok(views.every(view => view.x !== 'id' && view.x !== 'text'));
+});
+
 test('aggregate brush modifiers combine record membership without expanding partial bins', () => {
   const previous = new Set([1, 2, 8]);
   assert.deepEqual(combineSelection(previous, [2, 3], 'replace'), [2, 3]);

@@ -16,7 +16,7 @@ async function filterBrush(page) {
   await page.click('#filter-selection');
   expect((await snapshot(page)).visible).toBe(selected.length);
   expect((await snapshot(page)).selected).toEqual([]);
-  await expect(page.locator('#search')).toHaveValue('');
+  await expect(page.locator('#search-box')).toHaveAttribute('data-query', '');
   await page.click('#clear-filters');
 }
 
@@ -26,7 +26,7 @@ async function annotateExport(page, testInfo) {
   await page.fill('#annotation-value', 'Checked');
   await page.click('#assign');
   const ids = (await snapshot(page)).selected;
-  const color = page.locator('.view-card').first().locator('variable-picker[aria-label="Color by"]');
+  const color = page.locator('[data-point-index="0"]').locator('variable-picker[aria-label="Color by"]');
   await color.getByRole('button', { name: 'Color by', exact: true }).click();
   await color.getByRole('searchbox').fill('review');
   await expect(color.locator('.vp-option')).toContainText(`${ids.length} non-missing`);
@@ -49,13 +49,14 @@ async function annotateExport(page, testInfo) {
 test('workspace: query highlight, explicit filter, linked brushing, cards and annotation export', async ({ app }, testInfo) => {
   const { page, models } = app;
   await importRows(page, undefined, true);
+  await page.click('#add-chart'); // The default cards are bars and a histogram; brushing needs a scatter.
   await query(page, 'group:camera');
   expect((await snapshot(page)).visible).toBe(24);
   expect((await snapshot(page)).selected).toHaveLength(12);
   await page.click('#filter-selection');
   expect((await snapshot(page)).visible).toBe(12);
   expect((await snapshot(page)).selected).toEqual([]);
-  await expect(page.locator('#search')).toHaveValue('');
+  await expect(page.locator('#search-box')).toHaveAttribute('data-query', '');
   await query(page, '(camera AND');
   await expect(page.locator('#search')).toHaveAttribute('aria-invalid', 'true');
   expect((await snapshot(page)).visible).toBe(12);
@@ -68,14 +69,14 @@ test('workspace: query highlight, explicit filter, linked brushing, cards and an
   await page.check('#preview-selection');
   await expect(page.locator('#table-count')).toHaveText(`${(await snapshot(page)).selected.length} shown`);
   await page.uncheck('#preview-selection');
-  const card = page.locator('.view-card').first();
-  await card.getByRole('button', { name: 'View options', exact: true }).click();
+  const card = page.locator('[data-point-index="0"]');
+  await card.getByRole('button', { name: 'Chart options', exact: true }).click();
   await card.getByLabel('View name', { exact: true }).fill('My scatter');
   await card.getByLabel('View name', { exact: true }).press('Tab');
   await expect(card.getByLabel('Chart type', { exact: true })).toHaveAttribute('title', /My scatter/);
-  await card.getByRole('button', { name: 'Expand or restore view' }).click();
-  await expect(card.getByRole('button', { name: 'Expand or restore view' })).toHaveText('•');
-  await card.getByRole('button', { name: 'Expand or restore view' }).click();
+  await card.getByRole('button', { name: 'Expand or restore chart' }).click();
+  await expect(card.getByRole('button', { name: 'Expand or restore chart' })).toHaveText('•');
+  await card.getByRole('button', { name: 'Expand or restore chart' }).click();
   await annotateExport(page, testInfo);
   expect(models).toEqual([]);
   await expect(page.locator('footer #runtime-status')).toBeVisible();

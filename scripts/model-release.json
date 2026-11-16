@@ -1,0 +1,22 @@
+{
+  "repository": "bennokr/table-text-explorer",
+  "tag": "models-v1",
+  "assets": [
+    {
+      "key": "multilingual",
+      "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2",
+      "revision": "2c4055b",
+      "name": "minilm-multilingual-l12-q8.tar.gz",
+      "bytes": 76856124,
+      "sha256": "c3951658be605cf9f3b2786e1993d7f7992a1753c1c47d2ae1369712b1e17b94"
+    },
+    {
+      "key": "dutch",
+      "model": "MarkSelles/dutch-minilm-l6-v2",
+      "revision": "a4838aae5e41cfe6bd1ce54bafd1a4cdf3489bd7",
+      "name": "minilm-dutch-l6-q8.tar.gz",
+      "bytes": 53344576,
+      "sha256": "475d0afc866c6989bd83b904df1fc35b4a444fc1e8a055ea1bc88314a86c13df"
+    }
+  ]
+}

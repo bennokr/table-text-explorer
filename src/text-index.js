@@ -1,3 +1,4 @@
+import { Events } from './events.js';
 // Descriptors contain settings, never text. Sparse matrices live in the Python worker.
 export class TextIndexes {
   entries = new Map();
@@ -9,7 +10,7 @@ export class TextIndexes {
   constructor(model, run) {
     this.model = model;
     this.run = run;
-    model.on('data', () => { this.clear(); this.configurations.clear(); });
+    model.on(Events.DATA, () => { this.clear(); this.configurations.clear(); });
   }
 
   clear() { this.generation += 1; this.entries.clear(); this.activeId = null; }
@@ -29,8 +30,9 @@ export class TextIndexes {
   }
 
   key(settings) {
-    return JSON.stringify([this.model.revision, [...settings.fields].sort(),
-      settings.sizes, [...new Set(settings.stopwords)].sort()]);
+    const words = list => [...new Set(list ?? [])].sort();
+    return JSON.stringify([this.model.revision, [...settings.fields].sort(), settings.sizes, words(settings.stopwords),
+      words(settings.leadwords), words(settings.negations), settings.fold ?? null]);
   }
 
   get(settings) { return this.entries.get(this.key(settings)); }
@@ -46,7 +48,7 @@ export class TextIndexes {
     const entry = { ...output, indexId };
     this.entries.set(indexId, entry);
     this.trim(indexId);
-    this.model.emit('text-index');
+    this.model.emit(Events.TEXT_INDEX);
     return entry;
   }
 

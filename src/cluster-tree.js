@@ -1,3 +1,4 @@
+import { OTHER } from './palette.js';
 // Tree node IDs are stable within a fitted result: leaves first, then branches.
 export function treeRoot(result) { return result.rowIds.length + result.tree.children.length - 1; }
 
@@ -70,7 +71,7 @@ export function initializeTree(result) {
     });
   }
   if (result.tree.kind === 'density') {
-    result.groups[-1] = { name: 'Other', color: '#999999' };
+    result.groups[-1] = { name: 'Other', color: OTHER };
     result.selection = { method: 'eom', epsilon: 0 };
   } else { cutTree(result, result.parameters.clusters); }
 }

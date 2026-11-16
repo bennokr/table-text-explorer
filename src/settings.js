@@ -6,23 +6,18 @@ import { featureList, readMapConfig, fillMapConfig } from './map-form.js';
 import { mapName, suggestName, uniqueAnalysisName } from './analysis-names.js';
 import { combiningControls } from './map-fields.js';
 import { retainPhraseSettings } from './phrase-config.js';
-
-function revealInvalidControl(event) {
-  for (let parent = event.target.parentElement; parent; parent = parent.parentElement) {
-    if (parent.tagName === 'DETAILS') { parent.open = true; }
-  }
-}
+import { Events } from './events.js';
 
 class SimilarityMaps {
   constructor(model, projection) {
     this.model = model;
     this.projection = projection;
-    model.on('busy', () => { $('#map-submit').disabled = model.analysisBusy; });
+    model.on(Events.BUSY, () => { $('#map-submit').disabled = model.analysisBusy; });
     $('#feature-mode').onchange = () => { featureList(model, this.base); this.name(); };
     $('#field-combine').onchange = combiningControls;
     $('#group-identity').oninput = combiningControls;
     $('#shared-fields').onclick = () => $('#phrase-settings').click();
-    model.on('phrase-settings', () => {
+    model.on(Events.PHRASE_SETTINGS, () => {
       if ($('#map-dialog').open && ['text', 'words'].includes($('#feature-mode').value)) { featureList(model, this.base); this.name(); }
     });
     $('#map-method').onchange = () => this.controls();
@@ -42,7 +37,6 @@ class SimilarityMaps {
   open(view) {
     const method = this.context(view);
     fillMapConfig(this.model, this.base, method);
-    for (const details of $('#map-form').querySelectorAll('[data-map-fold]')) { details.open = false; }
     $('#map-name').value = '';
     $('#map-error').textContent = '';
     this.controls();
@@ -57,7 +51,8 @@ class SimilarityMaps {
   }
 
   name() {
-    suggestName($('#map-name'), mapName(this.model, readMapConfig(this.model), $('#map-method').value));
+    const config = readMapConfig(this.model);
+    suggestName($('#map-name'), mapName(this.model, config, config.mapMethod));
   }
 
   async make() {
@@ -80,7 +75,6 @@ class SimilarityMaps {
 }
 
 export function settings(model, projection, status) {
-  document.addEventListener('invalid', revealInvalidControl, true);
   const maps = new SimilarityMaps(model, projection);
   columnTypes(model, status);
   for (const button of document.querySelectorAll('[data-close]')) {

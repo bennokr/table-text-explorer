@@ -1,0 +1,24 @@
+# Folding rules for English: inflected forms of one word get the same key, so book/books, make/making and
+# party/parties count as one when near-duplicate phrases are merged and when cluster names avoid repeating a word.
+# The key is only ever used for that comparison. It never changes what is shown, counted or queried, and it is
+# deliberately light: it will sometimes merge two words and miss irregular forms (go/went).
+#
+# Rules apply once, top to bottom: the first whose suffix matches, leaving at least `minimum` letters, wins.
+#   suffix  replacement  minimum      (a replacement of - means nothing; a rule that maps a suffix to itself
+#                                      protects words such as "class" and "status" from the plural rule)
+# Then the directives run: undouble (a doubled last consonant becomes one: runn -> run) and drop-e (a last e goes:
+# make -> mak, so make, makes and making agree).
+@undouble
+@drop-e
+
+sses ss 2
+ss ss 0
+us us 0
+is is 0
+ies y 2
+ied y 2
+ing - 3
+ed - 3
+es - 3
+s - 3
+ly - 4

@@ -1,8 +1,7 @@
 import { categorical, categoryLabel, keyOf } from './schema.js';
+import { Events } from './events.js';
 
 export const B = window.Bokeh;
-export const palette = ['#527b9c', '#c88948', '#6b9277', '#a5759c', '#b6a34e', '#678f99',
-  '#bc7373', '#7f83ae', '#8c9478', '#a68a70'];
 
 export function figure(attributes = {}) {
   const { tooltips, ...options } = attributes;
@@ -104,6 +103,6 @@ export function linkRecords(source, model) {
     updating = false;
   };
   sync();
-  const remove = model.on('selection', sync);
+  const remove = model.on(Events.SELECTION, sync);
   return () => { remove(); source.selected.properties.indices.change.disconnect(change); };
 }

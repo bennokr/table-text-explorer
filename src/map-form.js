@@ -1,11 +1,12 @@
 import './variable-picker.js';
 import { variableOptions } from './variable-options.js';
 import { phraseSettings } from './phrase-config.js';
-import { sentenceModels } from './sentence-models.js';
+import { availableSentenceModel, refreshChoices } from './embedding-import.js';
 import { fieldCombinationOptions } from './sentence-vectors.js';
 import { $, options } from './dom.js';
 import { featureCandidates, featureFields, isEmbeddingMode } from './features.js';
 import { descriptionEnabled } from './group-vectors.js';
+import { mapMethod, methodChoice } from './map-method.js';
 import { resetFieldOptions, readFieldOptions, renderFieldOptions, combiningControls } from './map-fields.js';
 
 export function featureList(model, base) {
@@ -42,8 +43,8 @@ export function readMapConfig(model) {
     stopwords: model.config.stopwords, neighbors: Number($('#neighbors').value),
     epochs: Number($('#epochs').value), vectorLanguage: $('#vector-language').value,
     pooling: $('#word-pooling').value, combine: $('#field-combine').value,
-    mapMethod: $('#map-method').value, sentenceChunking: $('#sentence-chunking').value,
-    sentenceModel: $('#sentence-model').value, sentenceChunkSize: Number($('#sentence-chunk-size').value), sentenceOverlap: Number($('#sentence-overlap').value),
+    mapMethod: mapMethod($('#map-method').value, $('#feature-mode').value), sentenceChunking: $('#sentence-chunking').value,
+    sentenceModel: $('#sentence-model').value,
     includeDescriptions: $('#feature-mode').value === 'sentences' && $('#include-descriptions').checked,
     groupIdentity: Number($('#group-identity').value) / 100, ...readFieldOptions() };
 }
@@ -54,11 +55,12 @@ export function fillMapConfig(model, config, method) {
   resetFieldOptions(config);
   $('#include-descriptions').checked = descriptionEnabled(config);
   $('#group-identity').value = Math.round(100 * (config.groupIdentity ?? 0.2));
-  options($('#sentence-model'), Object.entries(sentenceModels).map(([key, item]) => [key, item.label]), config.sentenceModel ?? 'multilingual');
+  const sentenceModel = availableSentenceModel(model, config);
+  refreshChoices(model, sentenceModel);
   const controls = { 'feature-mode': config.mode,
     neighbors: config.neighbors, epochs: config.epochs, 'vector-language': config.vectorLanguage,
-    'sentence-model': config.sentenceModel ?? 'multilingual', 'sentence-chunking': config.sentenceChunking, 'sentence-chunk-size': config.sentenceChunkSize,
-    'sentence-overlap': config.sentenceOverlap, 'word-pooling': config.pooling, 'field-combine': combine, 'map-method': method };
+    'sentence-model': sentenceModel, 'sentence-chunking': config.sentenceChunking,
+    'word-pooling': config.pooling, 'field-combine': combine, 'map-method': methodChoice(method) };
   for (const [id, value] of Object.entries(controls)) { $(`#${id}`).value = value; }
   featureList(model, config);
 }

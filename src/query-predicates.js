@@ -24,10 +24,24 @@ function hasConjunct(query, predicate) {
   return query.kind === 'and' && (hasConjunct(query.left, predicate) || hasConjunct(query.right, predicate));
 }
 
+function opposite(predicate) {
+  return predicate.kind === 'not' ? predicate.child : { kind: 'not', child: predicate };
+}
+
+function withoutConjunct(query, predicate) {
+  if (formatQuery(query) === formatQuery(predicate)) { return null; }
+  if (query.kind !== 'and') { return query; }
+  const [left, right] = [withoutConjunct(query.left, predicate), withoutConjunct(query.right, predicate)];
+  if (!left || !right) { return left ?? right; }
+  return { kind: 'and', left, right };
+}
+
+// Adding the same condition again changes nothing; adding its opposite replaces it (a flip).
 export function appendPredicate(query, predicate) {
   if (!query) { return predicate; }
   if (hasConjunct(query, predicate)) { return query; }
-  return { kind: 'and', left: query, right: predicate };
+  const flipped = hasConjunct(query, opposite(predicate)) ? withoutConjunct(query, opposite(predicate)) : query;
+  return flipped ? { kind: 'and', left: flipped, right: predicate } : predicate;
 }
 
 function queryValue(node) {

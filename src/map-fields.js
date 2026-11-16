@@ -21,7 +21,7 @@ export function readFieldOptions() {
 function refreshFieldSummary() {
   readFieldOptions();
   const changed = fields.filter(field => weightOf(draft.weights, field.name) !== 1).length;
-  $('#weights-summary').textContent = changed ? `Field weights · ${changed} customized` : 'Field weights · Equal weights';
+  $('#weights-summary').textContent = changed ? `Column weights · ${changed} customized` : 'Column weights · Equal weights';
   const count = new Set(fields.map(field => groupName(field, draft.fieldGroups))).size;
   $('#groups-summary').textContent = `Variable groups · ${count} ${count === 1 ? 'group' : 'groups'}`;
 }

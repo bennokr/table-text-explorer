@@ -15,10 +15,10 @@ test('combined clouds preserve duplicate phrases as independently scored field p
   assert.equal(fields[0].terms[0].field, undefined);
 });
 
-test('whole-dataset and visible scopes remain explicit; empty selection describes visible records', () => {
+test('visible and filtered scopes remain explicit; empty selection describes visible records', () => {
   const model = { rows: Array(4).fill({}), visible: [1, 3], selected: new Set() };
   assert.deepEqual(comparisonSets(model, 'selection'), { subset: [1, 3], comparison: [] });
-  assert.deepEqual(comparisonSets(model, 'all'), { subset: [0, 1, 2, 3], comparison: [] });
+  assert.deepEqual(comparisonSets(model, 'filtered'), { subset: [1, 3], comparison: [0, 2] });
   model.selected.add(1);
   assert.deepEqual(comparisonSets(model, 'visible'), { subset: [1, 3], comparison: [] });
   assert.deepEqual(comparisonSets(model, 'selection'), { subset: [1], comparison: [3] });
@@ -28,4 +28,13 @@ test('partition evidence distinguishes scored text coverage from all-record cove
   const term = { partitionSupport: 3, population: 4, semantic: .5 };
   assert.match(populationTooltip(term, 'semantic'), /3\/4 \(75%\).*1 \(25%\).*50/);
   assert.doesNotMatch(populationTooltip(term, 'frequency'), /Semantic/);
+});
+
+test('the ranking hint explains each ranking and follows the type of predicate', async () => {
+  const { rankingHelp } = await import('../src/ranking-help.js');
+  assert.match(rankingHelp('semantic'), /Semantic splits/);
+  assert.match(rankingHelp('auto', 'facets'), /predicates/);
+  assert.match(rankingHelp('auto', 'phrases'), /phrases/);
+  assert.match(rankingHelp('balanced', 'facets'), /yes\/no question/);
+  assert.equal(rankingHelp('unknown'), rankingHelp('auto'));
 });

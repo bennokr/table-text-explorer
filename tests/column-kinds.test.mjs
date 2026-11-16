@@ -24,3 +24,24 @@ test('text and numeric categories have separate default limits', () => {
   assert.deepEqual(categoryLimits({ categoryLimit: 20 }), { text: 20, number: 8 });
   assert.deepEqual(categoryLimits({ numericCategoryLimit: 3 }), { text: 50, number: 3 });
 });
+
+test('long labels that repeat are categories, and unique single tokens identify records instead of being text', () => {
+  const courts = ['Rechtbank Den Haag', 'Gerecht in eerste aanleg van Sint Maarten', 'Gemeenschappelijk Hof van Justitie van Aruba'];
+  const rows = Array.from({ length: 60 }, (_, id) => ({ court: courts[id % 3], ecli: `ECLI:NL:RVS:2016:${id}`,
+    summary: `De rechter oordeelt in zaak ${id} dat de verdachte schuldig is aan feit ${id}.` }));
+  const by = Object.fromEntries(inferSchema(rows).map(field => [field.name, field]));
+  assert.equal(by.court.kind, 'categorical');
+  assert.equal(by.ecli.identifier, true);
+  assert.equal(by.summary.kind, 'text');
+  assert.equal(by.summary.identifier, false);
+});
+
+test('the default text field is long and different for every record, not a label shared by many', async () => {
+  const { Dataset } = await import('../src/state.js');
+  const { featureFields } = await import('../src/features.js');
+  const rows = Array.from({ length: 360 }, (_, id) => ({ title: `Wijziging van de Wet zorg en gezondheid dossier nummer ${id % 60} en nog veel meer`,
+    text: `rapporteren over de gevolgen voor kinderen in zaak ${id}` }));
+  const model = new Dataset();
+  model.load({ name: 'motions', rows });
+  assert.deepEqual(featureFields({ fields: model.fields, config: { ...model.config, mode: 'text' } }).map(field => field.name), ['text']);
+});

@@ -1,4 +1,5 @@
 import { facetField } from './facet-predicates.js';
+import { Events } from './events.js';
 
 // One dataset/schema snapshot; brushing and filtering never change the candidates.
 // The worker holds sparse presence columns, separately from lexical counts.
@@ -9,7 +10,7 @@ export class FacetIndex {
 
   constructor(model) {
     this.model = model;
-    for (const event of ['data', 'schema', 'annotation', 'results']) {
+    for (const event of [Events.DATA, Events.SCHEMA, Events.ANNOTATION, Events.RESULTS]) {
       model.on(event, () => { this.version += 1; this.fields = null; this.sent = null; });
     }
   }

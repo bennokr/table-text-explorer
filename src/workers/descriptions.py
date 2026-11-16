@@ -2,8 +2,10 @@
 
 import json
 
+import bridge
 from facets import describe_facets, prepare_facets
 from term_ranking import POPULATION_RANKINGS, embedding_population
+from terms import describe_terms
 
 
 def describe_population(data, facets, embeddings, phrases):
@@ -28,10 +30,8 @@ def describe_descriptions(payload, phrases=None, vectors=None):
     ):
         raise ValueError("Choose a ranking and positive record support.")
     facets = prepare_facets(data.pop("facets", None))
-    embeddings = embedding_population(
-        data, vectors if vectors is not None else globals().get("embedding_values")
-    )
-    phrases = phrases or globals().get("describe_terms")
+    embeddings = embedding_population(data, vectors if vectors is not None else bridge.values())
+    phrases = phrases or describe_terms
     groups = data.get("groups")
     if groups is None:
         return json.dumps(describe_population(data, facets, embeddings, phrases), allow_nan=False)

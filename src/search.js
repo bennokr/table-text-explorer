@@ -1,8 +1,11 @@
 import { $ } from './dom.js';
 import { parseQuery } from './query.js';
 import { formatQuery, appendPredicate } from './query-predicates.js';
+import { conjuncts } from './query-path.js';
+import { QueryField } from './query-field.js';
 import { PhraseQueries } from './phrase-queries.js';
 import { status } from './status.js';
+import { Events } from './events.js';
 
 export function highlightQuery(model, input, context) {
   const parsed = parseQuery(input, model.fields, context);
@@ -13,6 +16,7 @@ export function highlightQuery(model, input, context) {
 class QuerySearch {
   version = 0;
   appliedInput = '';
+  pathInput = ''; // The query text our own clicks produced; a different text means the user edited it.
   highlighting = false;
 
   constructor(model, analysis) {
@@ -20,21 +24,24 @@ class QuerySearch {
     this.analysis = analysis;
     this.lastSelection = model.selected;
     this.phrases = new PhraseQueries(model, analysis);
-    $('#search').oninput = () => {
-      this.version += 1;
-      this.filterRequested = false;
-      clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.apply(), 180);
-    };
-    $('#search').onkeydown = event => { if (event.key === 'Enter') { this.apply(); } };
+    this.field = new QueryField(model, { onedit: () => this.edited(), onsubmit: () => this.apply(),
+      onremove: index => this.conditionRemoved(index) });
     $('#filter-selection').onclick = () => this.filter();
     $('#clear-selection').onclick = () => this.clearSelection();
     $('#clear-filters').onclick = () => this.clear();
-    model.on('description-query', () => this.addPredicate());
-    model.on('selection', () => this.selectionChanged());
-    model.on('data', () => { this.lastSelection = model.selected; this.resetQuery(); });
-    model.on('busy', () => { if (!model.analysisBusy && this.queued) { queueMicrotask(() => this.apply()); } });
+    model.on(Events.DESCRIPTION_QUERY, () => this.addPredicate());
+    model.on(Events.SELECTION, () => this.selectionChanged());
+    model.on(Events.DATA, () => { this.lastSelection = model.selected; this.resetQuery(); });
+    model.on(Events.BUSY, () => { if (!model.analysisBusy && this.queued) { queueMicrotask(() => this.apply()); } });
     analysis?.workers.addEventListener('idle', () => { if (this.queued) { this.apply(); } });
+  }
+
+  // Typing highlights live: the query is applied shortly after the last keystroke.
+  edited() {
+    this.version += 1;
+    this.filterRequested = false;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.apply(), 180);
   }
 
   addPredicate() {
@@ -44,11 +51,27 @@ class QuerySearch {
     clearTimeout(this.timer);
     this.timer = null;
     try {
-      const { ast } = parseQuery($('#search').value, this.model.fields, { phrase: () => () => false });
-      $('#search').value = formatQuery(appendPredicate(ast, this.model.querySuggestion));
-      $('#search').focus();
+      const { ast } = parseQuery(this.field.text, this.model.fields, { phrase: () => () => false });
+      this.rememberPopulation(ast);
+      this.field.text = formatQuery(appendPredicate(ast, this.model.querySuggestion));
+      this.pathInput = this.field.text;
       this.apply();
     } catch (error) { this.failed(error, version); }
+  }
+
+  // The records before a click are what the next cloud is compared with ("the previous step").
+  rememberPopulation(ast) {
+    const count = conjuncts(ast).length;
+    if (this.field.text !== this.pathInput) { this.model.populations = new Map(); }
+    const before = ast ? this.model.visible.filter(id => this.model.selected.has(id)) : this.model.visible;
+    this.model.populations.set(count, before);
+  }
+
+  // Removing a condition widens the query; the records before it are no longer a "previous step".
+  conditionRemoved(index) {
+    for (const key of [...this.model.populations.keys()]) { if (key >= index) { this.model.populations.delete(key); } }
+    this.pathInput = this.field.text;
+    this.apply();
   }
 
   selectionChanged() {
@@ -69,6 +92,7 @@ class QuerySearch {
   }
 
   publish(input) {
+    if (input !== this.pathInput) { this.model.populations = new Map(); }
     this.highlighting = true;
     try { highlightQuery(this.model, input, this.phrases.context()); }
     finally { this.highlighting = false; }
@@ -102,7 +126,7 @@ class QuerySearch {
     const generation = this.analysis?.generation;
     let busy = false;
     try {
-      const input = $('#search').value;
+      const input = this.field.text;
       const requests = this.phrases.requests(input);
       if (this.defer(requests)) { return false; }
       this.queued = false;
@@ -129,7 +153,7 @@ class QuerySearch {
 
   filter() {
     // Flush unprocessed edits; an applied query may have been replaced by a brush.
-    if (this.timer || this.queued || $('#search').value !== this.appliedInput) {
+    if (this.timer || this.queued || this.field.text !== this.appliedInput) {
       this.filterRequested = true;
       return this.apply();
     }
@@ -143,8 +167,10 @@ class QuerySearch {
     this.queued = false;
     clearTimeout(this.timer);
     this.timer = null;
-    $('#search').value = '';
+    this.field.text = '';
     this.appliedInput = '';
+    this.pathInput = '';
+    this.model.populations = new Map();
     $('#search').removeAttribute('aria-invalid');
     this.model.ast = null;
   }

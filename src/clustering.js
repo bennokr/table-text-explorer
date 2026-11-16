@@ -6,6 +6,11 @@ import { showClustering } from './analysis-views.js';
 import { initializeTree } from './cluster-tree.js';
 import { nameClusters } from './cluster-names.js';
 import { complete } from './status.js';
+import { Events } from './events.js';
+
+// Fixed, not user settings: neither changes what a clustering finds, only how long it takes.
+const MINIBATCH_SIZE = 1024;
+const MAX_ITERATIONS = 100;
 
 function inputSummary(model, source) {
   if (!source) { return `${model.rows.length} records · ${model.config.mode} · current map settings`; }
@@ -13,6 +18,8 @@ function inputSummary(model, source) {
 }
 
 export class Clustering {
+  normalize = true;
+
   constructor(model, analysis) {
     this.model = model;
     this.analysis = analysis;
@@ -25,22 +32,21 @@ export class Clustering {
       event.preventDefault();
       this.fit();
     };
-    model.on('name-clusters', () => this.nameGroups(model.namingResult));
-    model.on('density-selection', () => this.selectDensity(model.densityRequest));
-    model.on('busy', () => this.busy());
-    model.on('data', () => this.busy());
+    model.on(Events.NAME_CLUSTERS, () => this.nameGroups(model.namingResult));
+    model.on(Events.DENSITY_SELECTION, () => this.selectDensity(model.densityRequest));
+    model.on(Events.BUSY, () => this.busy());
+    model.on(Events.DATA, () => this.busy());
     this.busy();
   }
 
   open() {
-    for (const details of $('#cluster-form').querySelectorAll('details')) { details.open = false; }
     const saved = this.model.results.list().filter(result => result.kind !== 'clustering');
     const preferred = saved.find(result => result.id === this.analysis.cache?.result.representationId)
       ?? saved.find(result => result.kind === 'representation');
     options($('#cluster-source'), [['', 'Current map settings'],
       ...saved.map(result => [result.id, `${result.name} · ${result.kind === 'projection' ? '2D coordinates' : 'Saved inputs'}`])], preferred?.id ?? '');
     $('#cluster-name').value = '';
-    $('#cluster-suggest-names').checked = false;
+    $('#cluster-suggest-names').checked = true;
     this.nameLength.value = '4';
     this.sourceDefaults();
     this.controls();
@@ -55,13 +61,13 @@ export class Clustering {
     $('#cluster-count').value = Math.min(8, count);
     $('#cluster-min-size').value = Math.min(15, count);
     $('#cluster-min-samples').value = Math.min(5, count);
-    $('#cluster-normalize').checked = source?.kind !== 'projection' && (source?.config?.mode ?? this.model.config.mode) !== 'table';
+    // Unit-length vectors suit text representations; 2D maps and table columns keep their scale.
+    this.normalize = source?.kind !== 'projection' && (source?.config?.mode ?? this.model.config.mode) !== 'table';
     this.name();
   }
 
   controls() {
     const method = $('#cluster-method').value;
-    $('#cluster-centroids').hidden = method !== 'minibatch';
     $('#cluster-linkage-label').hidden = method !== 'agglomerative';
     $('#cluster-density').hidden = method !== 'hdbscan';
     $('#cluster-count-label').hidden = method === 'hdbscan';
@@ -83,9 +89,9 @@ export class Clustering {
 
   parameters() {
     return { method: $('#cluster-method').value, clusters: Number($('#cluster-count').value),
-      batchSize: Number($('#cluster-batch').value), iterations: Number($('#cluster-iterations').value),
+      batchSize: MINIBATCH_SIZE, iterations: MAX_ITERATIONS,
       linkage: $('#cluster-linkage').value, minClusterSize: Number($('#cluster-min-size').value),
-      minSamples: Number($('#cluster-min-samples').value), normalize: $('#cluster-normalize').checked };
+      minSamples: Number($('#cluster-min-samples').value), normalize: this.normalize };
   }
 
   async source(id, name) {
@@ -172,9 +178,9 @@ export class Clustering {
     if (generation !== this.analysis.generation || revision !== this.model.revision) { return; }
     const result = this.model.results.add('clustering', data);
     clusterColumns(this.model, result);
-    this.model.emit('schema');
+    this.model.emit(Events.SCHEMA);
     this.model.analysisViewId = showClustering(this.model, result).id;
-    this.model.emit('analysis-card');
+    this.model.emit(Events.ANALYSIS_CARD);
     this.model.resultsChanged();
     complete(`${data.namingError ? 'Phrase naming unavailable; use Rename all to retry. ' : ''}${result.name} · ${new Set(result.labels.filter(id => id !== -1)).size} groups · ${output.labels.filter(id => id === -1).length} Other records. Open the legend to rename groups; downloads are in Exports.`);
   }

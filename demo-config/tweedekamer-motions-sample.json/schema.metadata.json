@@ -1,0 +1,60 @@
+{
+  "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
+  "fieldsMatch": "partial",
+  "fields": [
+    {
+      "type": "string",
+      "name": "id",
+      "x-linked-codebook": {
+        "identifying": true
+      }
+    },
+    {
+      "type": "string",
+      "name": "year",
+      "x-linked-codebook": {
+        "level": "ordinal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "text"
+    },
+    {
+      "type": "string",
+      "name": "dossier_title"
+    },
+    {
+      "type": "string",
+      "name": "outcome",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "appreciation",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "string",
+      "name": "party",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    },
+    {
+      "type": "integer",
+      "name": "submitters"
+    },
+    {
+      "type": "string",
+      "name": "vote_type",
+      "x-linked-codebook": {
+        "level": "nominal"
+      }
+    }
+  ]
+}

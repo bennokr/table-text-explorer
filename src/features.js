@@ -2,6 +2,8 @@ import { temporal } from './dates.js';
 import { missing, numberOf } from './schema.js';
 import { fieldDescription } from './field-metadata.js';
 import { descriptionEnabled, groupName } from './group-vectors.js';
+import { defaultSentenceModel } from './sentence-models.js';
+import { lexiconFor } from './lexicon.js';
 
 export const isEmbeddingMode = mode => ['words', 'sentences'].includes(mode);
 
@@ -11,6 +13,15 @@ export function featureCandidates(model) {
     : field.kind !== 'empty' && field.kind !== 'text' && !field.identifier);
 }
 
+// The default text field is the one with the most words per record that differ between records: long, and
+// not a label repeated over many records (a dossier title is shared by dozens of motions).
+function wordsPerValue(field) {
+  const sample = (field.unique ?? []).slice(0, 100);
+  if (!sample.length) { return 0; }
+  const words = sample.reduce((total, value) => total + String(value).split(/\s+/u).length, 0) / sample.length;
+  return words * Math.min(1, (field.unique.length / (field.count || field.unique.length)) * 2);
+}
+
 export function featureFields(model) {
   const candidates = featureCandidates(model);
   if (Array.isArray(model.config.features)) {
@@ -18,23 +29,12 @@ export function featureFields(model) {
   }
   const automatic = candidates.filter(field => !field.annotation);
   if (model.config.mode === 'table') { return automatic; }
-  const text = automatic.filter(field => field.kind === 'text');
+  const text = automatic.filter(field => field.kind === 'text').sort((a, b) => wordsPerValue(b) - wordsPerValue(a));
   return (text.length ? text : automatic).slice(0, 1);
 }
 
-const stopwords = {
-  nl: 'de het een en van in op te dat die is was voor met aan er om als ik je hij zij wij niet maar ook dan dit zijn wordt door bij naar tot uit heeft hebben',
-  en: 'the a an and of in on to that is was for with at as I you he she we not but also then this are be by from has have',
-  none: '',
-};
-
-export function stopwordList(config, keepNegation = false) {
-  const negations = new Set(['niet', 'geen', 'nooit', 'not', 'no', 'never']);
-  const base = config.language.split(',').flatMap(language => (stopwords[language] ?? '').toLowerCase().split(/\s+/u))
-    .filter(word => !keepNegation || !negations.has(word));
-  const extra = config.stopwords.toLowerCase().split(/[\s,]+/u);
-  return [...new Set([...base, ...extra].filter(Boolean))];
-}
+// The words a text index leaves out, from the language's stop list and the user's own additions.
+export const stopwordList = config => lexiconFor(config).stop;
 
 function featureDescriptor(field, config) {
   const descriptor = { name: field.name, kind: field.kind };
@@ -48,10 +48,10 @@ function featureDescriptor(field, config) {
 function featureSettings(model, method) {
   const fields = featureFields(model);
   const lexical = ['text', 'words'].includes(model.config.mode);
-  return { revision: model.revision, sentence: { model: model.config.sentenceModel ?? 'multilingual', chunking: model.config.sentenceChunking,
+  return { revision: model.revision, sentence: { model: model.config.sentenceModel ?? defaultSentenceModel(model.config.language), chunking: model.config.sentenceChunking,
     size: model.config.sentenceChunkSize, overlap: model.config.sentenceOverlap },
     fields: fields.map(field => featureDescriptor(field, model.config)), method, mode: model.config.mode,
-    stopwords: lexical ? stopwordList(model.phraseConfig ?? model.config, true) : [],
+    stopwords: lexical ? stopwordList(model.phraseConfig ?? model.config) : [],
     phrases: lexical ? model.phraseConfig ?? null : null, vectorLanguage: model.config.vectorLanguage,
     pooling: model.config.pooling, combine: model.config.combine, weights: model.config.weights,
     includeDescriptions: descriptionEnabled(model.config), groupIdentity: model.config.groupIdentity };

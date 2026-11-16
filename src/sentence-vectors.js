@@ -5,7 +5,7 @@ import { sentenceModelFor } from './sentence-models.js';
 export const sentenceModel = sentenceModelFor();
 
 export function fieldCombinationOptions(mode) {
-  const entries = [['mean', 'Mean across fields'], ['concat', 'Keep fields separate']];
+  const entries = [['mean', 'Mean across columns'], ['concat', 'Keep columns separate']];
   if (mode === 'sentences') { entries.splice(1, 0, ['group-mean', 'Mean within groups']); }
   return entries;
 }
