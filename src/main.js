@@ -59,10 +59,15 @@ async function load(action) {
     model.load(table);
     demoSettings(model, table.demo, registerExampleEmbeddings(model, table.embeddings));
     const precomputed = registerExampleResults(model, table.results);
-    const ignored = table.ignoredFields?.length ? ` · ${table.ignoredFields.length} structured columns ignored` : '';
-    complete(`${table.name} · ${model.rows.length} records, ${model.fields.length} columns${ignored} · ${precomputed}`);
+    complete(loadedSummary(table, precomputed));
   } catch (error) { if (version === importVersion) { reportError(error); } }
   finally { if (version === importVersion) { analysis.busy(false); summary(); } }
+}
+
+function loadedSummary(table, precomputed) {
+  const ignored = table.ignoredFields?.length ? ` · ${table.ignoredFields.length} structured columns ignored` : '';
+  const language = model.languageNote ? ` · ${model.languageNote}` : '';
+  return `${table.name} · ${model.rows.length} records, ${model.fields.length} columns${ignored}${language} · ${precomputed}`;
 }
 
 function bindImportExport() {

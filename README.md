@@ -41,6 +41,12 @@ The **?** button opens offline help; smaller ? buttons explain individual settin
 Read the [getting-started guide](docs/help/start.md) for the learning path, and
 [words and buttons](docs/help/glossary.md) for what the app's terms and glyphs mean.
 Original values are preserved, including when types or cluster names change.
+
+When a table is loaded, each text column is checked for its language (`franc-min`, asked through linked-codebook's
+`inferLanguage`: only columns of prose, a sample of the cells, and most of them must agree). The stoplist and the vector
+model follow it where they exist (Dutch and English); the status line says which language was found, and the
+Column types dialog lists it. A language in the table's codebook is used instead of a guess. Short categorical text has
+no language, and a column in another language keeps the defaults and is reported as having no stoplist.
 The workspace is held in memory: exports are downloads, not reloadable projects.
 
 ## Build and validate

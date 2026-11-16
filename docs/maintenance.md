@@ -51,7 +51,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
 each authored module at 250 statements, Python at 3550 total and JavaScript at
-13160 total. Imports, nested bodies, tooling and tests count. Generated files,
+13260 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -222,3 +222,9 @@ its invariant tests use invented in-memory inputs.
 
 Never commit or upload private fixtures, source codebooks or their derived metadata.
 Public example data requires explicit approval, a license and provenance.
+
+The JavaScript budget rose from 13160 to 13260 for column language detection (about 100 statements, 57 of them tests): `src/language.js` asks
+linked-codebook's `inferLanguage` (franc-min as the detector) for the language of each text column, fills the stoplist and embedding-model
+settings from it, and says so in the loaded summary; `src/language-tags.js` is the ISO 639-3 to 639-1 table the detector needs. The identifier-name
+rule left `src/schema.js` for linked-codebook's `isIdentifierName`, which removed one statement.
+

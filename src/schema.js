@@ -1,10 +1,9 @@
-import { inferColumn } from 'linked-codebook';
+import { inferColumn, isIdentifierName } from 'linked-codebook';
 import { dateNumber, temporal } from './dates.js';
 
 export const missing = (value, field) => value === null || value === undefined || value === '' || value === '\\N'
   || Boolean(field?.missingValues?.some(code => String(value) === String(code.value ?? code)));
 export const keyOf = (value, field) => missing(value, field) ? 'missing:' : `${typeof value}:${String(value)}`;
-const isIdentifier = name => /(^id$|^row.?number$|^resp?no$|_id$)/i.test(name);
 
 // Low-cardinality text is far more likely to be categorical than low-cardinality numbers,
 // so each data type has its own limit. Value labels count as evidence for either.
@@ -44,7 +43,7 @@ function looksLikeIdentifier(unique, count) {
 function inferField(name, rows, metadata, limits = categoryLimits()) {
   const values = rows.map(row => row[name]).filter(value => !missing(value, metadata));
   const unique = [...new Map(values.map(value => [keyOf(value), value])).values()];
-  const base = { ...metadata, name, unique, count: values.length, missing: rows.length - values.length, identifier: metadata?.identifier ?? (isIdentifier(name) || looksLikeIdentifier(unique, values.length)),
+  const base = { ...metadata, name, unique, count: values.length, missing: rows.length - values.length, identifier: metadata?.identifier ?? (isIdentifierName(name) || looksLikeIdentifier(unique, values.length)),
     empty: !values.length, constant: unique.length === 1,
     storage: typeof values[0], label: metadata?.label, valueLabels: metadata?.valueLabels ?? [] };
   return { ...base, kind: kindOf(values, base, limits) };
