@@ -271,7 +271,7 @@ package condition to avoid emitting another binary. GPU/JSPI backend assets are
 excluded. Assets remain locally bundlable and runtime requests stay same-origin.
 
 Ruff/ESLint enforce complexity 8, function statements 35 and module statements 250.
-Current aggregate ceilings are Python 3550 and JavaScript 13160; the rationale is in
+Current aggregate ceilings are Python 3550 and JavaScript 13260; the rationale is in
 [maintenance](maintenance.md) and linked from [AGENTS.md](../AGENTS.md). Browser journeys cover workspace/export, card layout,
 map/index/clustering and explicit embeddings. Unit/native/WASM checks cover numeric
 and boundary behavior. Optional check reports are written under ignored `.cache/checks/`;
