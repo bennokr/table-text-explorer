@@ -1,5 +1,6 @@
 import { defaultConfig, defaultInputMode } from './default-config.js';
 import { inferSchema } from './schema.js';
+import { fieldLanguages, languageNote, languageSettings } from './language.js';
 import { Results } from './results.js';
 import { Events, checkedEvent } from './events.js';
 import { defaultTermSettings } from './term-settings-model.js';
@@ -45,6 +46,9 @@ export class Dataset extends EventTarget {
     this.revision += 1;
     this.fieldRevisions.clear();
     this.fields = inferSchema(this.rows, metadata, this.config);
+    this.languages = fieldLanguages(this.fields, this.rows, metadata);
+    this.languageNote = languageNote(this.languages);
+    Object.assign(this.config, languageSettings(this.languages));
     this.config.overrides = {};
     this.config.mode = defaultInputMode(this.fields);
     this.config.features = null;

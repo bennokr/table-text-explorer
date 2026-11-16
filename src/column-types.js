@@ -7,7 +7,8 @@ function fieldTable(model) {
       model.config.overrides[field.name] ?? '');
     select.disabled = Boolean(field.derived || field.annotation);
     return element('tr', {}, [element('th', { text: field.name, title: field.label ?? '', scope: 'row' }),
-      element('td', {}, [select]), element('td', { text: field.unique.length }),
+      element('td', {}, [select]), element('td', { text: model.languages?.[field.name] ?? '' }),
+      element('td', { text: field.unique.length }),
       element('td', { text: field.missing })]);
   }));
 }
