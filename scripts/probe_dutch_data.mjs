@@ -31,11 +31,7 @@ async function testData() {
   const rows = JSON.parse(bytes);
   await writeFile('.cache/acquisition/bol-testing.json', bytes);
   await writeFile('.cache/acquisition/bol-test-head.json', JSON.stringify(rows.slice(0, 5), null, 2));
-  const preview = rows.map((row, source_index) => ({ ...row, source_index,
-    pros_text: Object.keys(row.pros).join('\n'), cons_text: Object.keys(row.cons).join('\n'),
-    pro_count: Object.keys(row.pros).length, con_count: Object.keys(row.cons).length,
-    word_count: row.text.split(/\s+/u).filter(Boolean).length }));
-  await writeFile('fixtures/bol-absa-preview.json', JSON.stringify(preview));
+  await writeFile('fixtures/bol-absa-preview.json', bytes);
   return { revision, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex'),
     rows: rows.length, fields: Object.keys(rows[0]),
     bothProsAndCons: rows.filter(row => Object.keys(row.pros).length && Object.keys(row.cons).length).length,

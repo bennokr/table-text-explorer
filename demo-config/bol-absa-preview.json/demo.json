@@ -5,21 +5,11 @@
     "language": "nl",
     "vectorLanguage": "nl",
     "features": [
-      "pros_text",
-      "cons_text"
+      "pros",
+      "cons"
     ],
     "neighbors": 15,
     "epochs": 150
   },
-  "views": [
-    {
-      "type": "scatter",
-      "x": "pro_count",
-      "y": "con_count"
-    },
-    {
-      "type": "histogram",
-      "x": "word_count"
-    }
-  ]
+  "views": []
 }

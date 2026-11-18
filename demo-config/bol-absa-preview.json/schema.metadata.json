@@ -2,36 +2,8 @@
   "$schema": "https://datapackage.org/profiles/2.0/tableschema.json",
   "fieldsMatch": "partial",
   "fields": [
-    {
-      "type": "string",
-      "name": "text"
-    },
-    {
-      "type": "string",
-      "name": "pros_text"
-    },
-    {
-      "type": "string",
-      "name": "cons_text"
-    },
-    {
-      "type": "integer",
-      "name": "source_index",
-      "x-linked-codebook": {
-        "identifying": true
-      }
-    },
-    {
-      "type": "number",
-      "name": "pro_count"
-    },
-    {
-      "type": "number",
-      "name": "con_count"
-    },
-    {
-      "type": "number",
-      "name": "word_count"
-    }
+    { "type": "string", "name": "text" },
+    { "type": "string", "name": "pros" },
+    { "type": "string", "name": "cons" }
   ]
 }

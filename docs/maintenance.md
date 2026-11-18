@@ -52,7 +52,7 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
 each authored module at 250 statements, Python at 4055 total and JavaScript at
-13365 total. Imports, nested bodies, tooling and tests count. Generated files,
+13565 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -196,6 +196,10 @@ The budgets rose a fourth time for survey maps that follow the survey distance m
 Python (about 15, 8 of them checks): `neighbour_graph` in `survey_distance.py` lists each respondent's nearest 100 with their distances, and `survey_task.py`
 returns it with the coordinates. JavaScript (about 45, 20 of them tests): `ordinalRanks` and `scaleOf` in `src/survey-input.js` compare a codebook `ordinal`
 list by position, `analysis.js` passes the graph to `umap.worker.js`, which hands it to UMAP as precomputed neighbours.
+
+The JavaScript budget rose a fifth time for nested JSON import, from 13365 to 13565 (about 195 statements, 50 of them tests). `src/flatten.js` (about 95)
+turns nested records into path-named columns, merges the strings of lists, and reads objects with many varying keys as lists of keys; `src/flatten-dialog.js`
+(about 35) shows the resulting columns and asks before importing; `parseTable` and `main.js` carry the flat version beside the original read.
 
 ## Codebook reader
 

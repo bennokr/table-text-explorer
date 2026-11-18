@@ -1,4 +1,5 @@
 import { withBase } from './base.js';
+import { flatTable } from './flatten.js';
 import { schemaMetadata } from './field-metadata.js';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
@@ -19,7 +20,9 @@ export async function importExample(name, progress, example) {
   const response = await fetch(withBase(`fixtures/${encodeURIComponent(name)}`));
   if (!response.ok) { throw new Error('Example is unavailable. Run npm run build to refresh fixtures.'); }
   const bytes = await readBytes(response, counts => progress({ message: 'Reading example', ...counts }));
-  const table = await importer.run('import', { bytes, name }, progress);
+  const read = await importer.run('import', { bytes, name }, progress);
+  // A curated example describes its flat columns, so nested records are flattened without asking.
+  const table = read.flattened ? flatTable(read) : read;
   if (!example?.demo) { return table; }
   const [demo, schema] = await Promise.all([example.demo, example.metadata].map(readDescriptor));
   const embeddings = await fetchExampleEmbeddings(demo?.embeddings, table.rows.length, progress);

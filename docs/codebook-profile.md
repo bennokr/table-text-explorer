@@ -102,8 +102,8 @@ claim full Table Schema validation or implement arbitrary type/format transforma
 
 ## Import and inference
 
-Object/array-valued columns are omitted as a whole on import reported by name in
-ignoredFields and by count in the status bar. Remaining scalar values are untouched.
+Object/array-valued columns are omitted as a whole on import unless the user chooses Flatten in the import dialog
+(see help "Nested JSON"), reported by name in ignoredFields and by count in the status bar. Remaining scalar values are untouched.
 `\N` is a missing marker for inference, queries and numeric analysis, consistent
 with the existing lexical and embedding tokenizers. Zero and false remain values.
 

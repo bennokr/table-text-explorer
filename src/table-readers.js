@@ -1,3 +1,4 @@
+import { flattenRecords, isNested } from './flatten.js';
 import { scalarColumns } from './table-values.js';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
@@ -53,5 +54,6 @@ export function parseTable(bytes, name) {
   if (!Object.hasOwn(readers, extension)) { throw new Error('Choose a CSV, JSON records, SAV or XLSX file.'); }
   const result = readers[extension]();
   if (!result.rows.length) { throw new Error('The table contains no records.'); }
-  return { ...result, ...scalarColumns(result.rows), name };
+  const flattened = isNested(result.rows) ? { flattened: flattenRecords(result.rows) } : {};
+  return { ...result, ...scalarColumns(result.rows), ...flattened, name };
 }

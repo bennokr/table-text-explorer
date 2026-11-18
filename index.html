@@ -201,6 +201,14 @@
     </fieldset>
     <div class="dialog-actions"><button type="button" data-close>Cancel</button><button type="submit">Apply column types</button></div>
   </form></dialog>
+  <dialog id="flatten-dialog" aria-labelledby="flatten-title"><form id="flatten-form" method="dialog">
+    <h2 id="flatten-title">Flatten nested data?</h2>
+    <fieldset><legend><span id="flatten-summary"></span> <button type="button" class="help-hint" data-help="data#nested-json">?</button></legend>
+      <p class="dialog-note">Flattening replaces the nested values; they are not kept in the table.</p>
+      <div class="types-scroll"><table><thead><tr><th>Column</th><th>Kind</th><th>Filled</th><th>Example</th></tr></thead><tbody id="flatten-columns"></tbody></table></div>
+    </fieldset>
+    <div class="dialog-actions"><button value="cancel" formnovalidate>Cancel</button><button value="skip" formnovalidate>Skip nested columns</button><button value="flatten">Flatten</button></div>
+  </form></dialog>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

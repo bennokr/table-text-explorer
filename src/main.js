@@ -5,6 +5,7 @@ import { registerExampleEmbeddings } from './example-embeddings.js';
 import { registerExampleResults } from './example-results.js';
 import { $, options } from './dom.js';
 import { Dataset } from './state.js';
+import { chooseFlattening } from './flatten-dialog.js';
 import { importTable, importExample, exportTable, cancelImport } from './importers.js';
 import { status, progress, complete, analysisControls } from './status.js';
 import { bindSearch } from './search.js';
@@ -43,6 +44,13 @@ function summary() {
   $('#cancel').hidden = !model.analysisBusy;
 }
 
+function showTable(table) {
+  model.load(table);
+  demoSettings(model, table.demo, registerExampleEmbeddings(model, table.embeddings));
+  const precomputed = registerExampleResults(model, table.results);
+  complete(loadedSummary(table, precomputed));
+}
+
 async function load(action) {
   const version = ++importVersion;
   cancelImport();
@@ -51,15 +59,13 @@ async function load(action) {
   $('#cancel').hidden = true;
   progress({ message: 'Reading table locally' });
   try {
-    const table = await action();
+    const table = await chooseFlattening(await action());
+    if (!table) { status('Import cancelled.'); return; }
     if (version !== importVersion) { return; }
     progress({ message: 'Detecting column types and preparing views' });
     await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
     if (version !== importVersion) { return; }
-    model.load(table);
-    demoSettings(model, table.demo, registerExampleEmbeddings(model, table.embeddings));
-    const precomputed = registerExampleResults(model, table.results);
-    complete(loadedSummary(table, precomputed));
+    showTable(table);
   } catch (error) { if (version === importVersion) { reportError(error); } }
   finally { if (version === importVersion) { analysis.busy(false); summary(); } }
 }

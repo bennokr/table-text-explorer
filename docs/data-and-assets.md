@@ -51,9 +51,8 @@ Dutch examples:
   It appears in the picker even without a private `fixtures/` directory. Dutch static
   vectors and the `text` field are selected as defaults; fitting remains explicit.
 - **bol-absa-preview.json** is an acquired local example of 1,000 Dutch product reviews.
-  Select it in the picker after running `npm run probe:dutch-data`. Original `text` is retained; structured `pros` and `cons` dictionaries are omitted
-  from the imported scalar table. Derived
-  `pros_text`/`cons_text` columns join their aspect phrases, with counts for exploration.
+  Select it in the picker after running `npm run probe:dutch-data`. The file is the raw DutchABSA test data (`text`, and `pros`/`cons` dictionaries of aspect phrase to score).
+  Examples flatten nested records on import without asking, so `pros` and `cons` become the lists of their aspect phrases, one per line.
   These two fields are selected for Dutch embeddings by default. The repository has
   no declared license, so this data remains in ignored local fixtures, not vendored.
 

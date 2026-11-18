@@ -13,6 +13,12 @@ Highlight records, create an annotation column and assign a label, then download
 3. Inspect full records and adjust column types when needed.
 4. Export annotations and saved analyses before closing.
 
+## Nested JSON
+
+Nested JSON records can be flattened into one column per path such as `a.b.c`, after you see the columns first.
+
+The import dialog appears only when a record contains objects or lists. Flatten reads every object as dotted paths, so `{"a": {"b": "x"}}` becomes the column `a.b`. The strings found in a list are merged into one text, one value per line, so the phrase cloud and text models read them as a single answer; the lines stay separate in the cell. An object whose keys are themselves data, such as a phrase mapped to a score, with more than 30 different keys across records, becomes the list of its keys. Lists of numbers or mixed values have no flat form and are left out, and a list with a single value is just that value. Skip nested columns imports only the flat columns, and the original file is never changed.
+
 ## Column types
 
 Type overrides change interpretation, never the original cell values.
