@@ -1,4 +1,4 @@
-> Historical stage notes. See [current implementation](../implementation.md) and [plan](../plan.md).
+> Historical stage notes. The harness described here (`feasibility/`, `scripts/browser_check.mjs`, `scripts/sav_reference.py`) has been removed. See [current implementation](../implementation.md) and [plan](../plan.md).
 
 # Stage 1: feasibility findings
 

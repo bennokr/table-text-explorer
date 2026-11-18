@@ -10,7 +10,7 @@ dev = ["ruff==0.14.1"]
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-extend-exclude = ["node_modules", "dist", "dist-feasibility", "vendor", ".cache"]
+extend-exclude = ["node_modules", "dist", "vendor", ".cache"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "C4", "C90", "PLR", "RUF"]

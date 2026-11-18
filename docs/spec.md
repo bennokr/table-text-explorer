@@ -13,8 +13,7 @@ initially, and never refit as a side effect of highlighting or filtering.
 Users choose one or multiple text columns and optional chunking. Cluster records.
 Counts/TF-IDF with words/ngrams, SVD and clustering run in Pyodide/scikit-learn.
 HDBSCAN accepts suitable reduced features or embeddings. UMAP runs in a JS worker;
-PCA/SVD are fast alternatives. NMF/LDA/DBSCAN exist only in the historical
-feasibility harness, not the application or current delivery plan.
+PCA/SVD are fast alternatives. NMF/LDA/DBSCAN were tried in the removed feasibility harness and are not part of the application or the delivery plan.
 Word lists are per language and configurable (stopwords, lead words and negations, plus
 folding rules for inflected forms: `src/lexicon/`); do not strip stopwords from the
 transformer input by default. Chunk vectors must be aggregated back to record IDs.

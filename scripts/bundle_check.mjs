@@ -12,7 +12,7 @@ const bundled = (await readdir('dist/fixtures')).sort();
 assert.deepEqual(bundled.filter(name => !approved.includes(name) && !released.includes(name)), [], 'only approved files are distributed');
 assert.deepEqual(approved.filter(name => !bundled.includes(name)), [], 'every approved example is distributed');
 assert.deepEqual((await readdir('dist/demos')).sort(), examples.filter(example => example.demo).map(example => example.name).sort());
-for (const path of ['dist/feasibility.html', 'dist/reference']) {
+for (const path of ['dist/reference']) {
   assert.equal(await stat(path).catch(error => {
     if (error.code === 'ENOENT') { return null; }
     throw error;

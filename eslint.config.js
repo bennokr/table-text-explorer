@@ -2,7 +2,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-  { ignores: ['dist/**', 'dist-feasibility/**', '**/vendor/**', '.cache/**', '.venv/**'] },
+  { ignores: ['dist/**', '**/vendor/**', '.cache/**', '.venv/**'] },
   js.configs.recommended,
   {
     languageOptions: { globals: { ...globals.browser, ...globals.node, ...globals.worker } },
