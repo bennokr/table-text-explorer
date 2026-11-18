@@ -14,6 +14,11 @@ self.onmessage = async ({ data: { id, payload } }) => {
     const options = { nComponents: 2, nNeighbors: Math.min(payload.neighbors, payload.features.length - 1),
       nEpochs: payload.epochs, random: seededRandom() };
     const umap = new UMAP(options);
+    // Survey maps bring their own nearest neighbours from the survey distance instead of Euclidean distance on coordinates.
+    if (payload.graph) {
+      umap.setPrecomputedKNN(payload.graph.indices.map(row => row.slice(0, options.nNeighbors)),
+        payload.graph.distances.map(row => row.slice(0, options.nNeighbors)));
+    }
     const coordinates = await umap.fitAsync(payload.features, epoch => {
       if (epoch % 10 === 0) { self.postMessage({ id, progress: {
         message: 'Fitting UMAP', completed: epoch, total: payload.epochs } }); }

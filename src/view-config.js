@@ -68,7 +68,7 @@ function barColumns(fields) {
 // A scatter appears only when there are two measures and no categories, never against the row number.
 export function defaultViews(model) {
   const fields = model.fields.filter(field => field.kind !== 'empty' && !field.identifier && !field.annotation
-    && !field.derived && !field.constant);
+    && !field.derived && !field.computed && !field.constant);
   const bars = barColumns(fields).slice(0, 2);
   const numbers = fields.filter(field => field.kind === 'number');
   const measure = numbers[0] ?? fields.find(temporal);
@@ -81,7 +81,7 @@ export function defaultViews(model) {
 
 // The card the plus button adds: a scatter of the first two measures, else the first default view.
 export function newView(model) {
-  const numbers = model.fields.filter(field => field.kind === 'number' && !field.identifier && !field.derived);
+  const numbers = model.fields.filter(field => field.kind === 'number' && !field.identifier && !field.derived && !field.computed);
   if (!numbers.length) { return { ...defaultViews(model)[0] }; }
   return { color: '', title: '', type: 'scatter', x: numbers[0].name, y: numbers[1]?.name ?? '' };
 }

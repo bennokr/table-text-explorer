@@ -57,6 +57,11 @@ def birth_routing(row):
         row["SeksuGewGed"] = None
 
 
+def is_text(field):
+    """Free text: strings other than the identifier and postcode, which are generated apart."""
+    return field["type"] == "string" and field["name"] not in ("ResPno", "Postcode")
+
+
 def adverse_answer(parent, config):
     return 0 if parent in config["positive_questions"] else 1
 
@@ -70,10 +75,7 @@ def structured_row(seed, profile, identity, context):
     fields, families, config, rng = (
         context[key] for key in ("fields", "families", "config", "rng")
     )
-    row = {
-        name: None if field.get("x-role") == "text" else seed.get(name)
-        for name, field in fields.items()
-    }
+    row = {name: None if is_text(field) else seed.get(name) for name, field in fields.items()}
     row["ResPno"] = f"SYN-{identity:06d}"
     row["Postcode"] = f"0{rng.randrange(1000):03d}"
     jitter(row, fields, rng)

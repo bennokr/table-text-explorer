@@ -6,7 +6,7 @@ documents** describe how the app is built and why.
 ## User help (`docs/help/`)
 
 [Start](help/start.md) · [Words and buttons](help/glossary.md) · [Highlight and filter](help/selection.md) ·
-[Subset descriptions](help/descriptions.md) · [Maps](help/maps.md) · [Text models](help/text-models.md) ·
+[Subset descriptions](help/descriptions.md) · [Maps](help/maps.md) · [Text models](help/text-models.md) · [Survey answers](help/survey.md) ·
 [Combining columns](help/combining.md) · [Clustering](help/clustering.md) · [Data and exports](help/data.md).
 Each page starts with a one-sentence summary (shown as a tooltip), then an example, steps and how to read the result.
 A test checks every page's links and the length of every summary.
@@ -23,6 +23,7 @@ A test checks every page's links and the length of every summary.
 | [compare-by-spec.md](compare-by-spec.md) | Design record of the column screen and the first Color stage | Design record: the controls were renamed (Size, Color, Contrast) |
 | [evaluation.md](evaluation.md) · `evaluation-*-report.md` | The evaluation harness and its generated reports | Reports are generated; see the status note |
 | [evaluation-lexicon.md](evaluation-lexicon.md) | Before/after measurement of the lexicon | Generated once, from `npm run report:lexicon` |
+| [evaluation-survey.md](evaluation-survey.md) | Method and results for survey-distance clusters: stability, missingness leakage, agreement | Maintained with `tests/eval/survey_stability.py` |
 | [synthetic-rmc.md](synthetic-rmc.md) | A local synthetic workload for scale checks | Local tooling |
 | [archive/](archive/) | Historical stage notes | Not maintained |
 

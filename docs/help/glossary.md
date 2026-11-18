@@ -11,7 +11,9 @@ You can color a chart by any variable, but phrases are always counted in text co
 - **Column**: an original column of the imported table. Its values never change, even when you correct its type.
 - **Variable**: anything with one value per record that you can chart, color or query: columns, annotations and cluster columns.
 - **Annotation**: a column you make by labeling records. It stays independent of later fits.
+- **Survey answers**: a map input that compares respondents only on questions both answered. A blank is **not shown** (routing skipped the question), **skipped** (shown, left blank) or **unknown**; see [survey answers](survey.md#missing-answers).
 - **Embedding** and **coordinates**: vectors and map positions per record. They are results, not variables.
+- **Stability**: how well a cluster is found again when the records are re-clustered in random subsets, from 0 to 1; see [group stability](clustering.md#group-stability).
 - **Similarity map** (**map**): records placed by how similar their text or values are. **Clustering**: records grouped by similarity; each group is a cluster, with a name you can edit.
 - **Chart**: one card in the Charts area: Scatter, Histogram, Bars, Heatmap, Map or Legend (a clustering's names, colors and counts).
 - **Highlight**: the records selected by brushing, tapping or a query. It previews; **filter** explicitly restricts the visible records.

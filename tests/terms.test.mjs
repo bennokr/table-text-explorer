@@ -32,3 +32,14 @@ test('independent map columns do not change the retained shared phrase selection
   retainPhraseSettings(model);
   assert.strictEqual(model.phraseConfig, saved);
 });
+
+test('a survey map does not narrow the phrase cloud to the survey columns', () => {
+  const model = new Dataset();
+  const answer = name => ({ [name]: 'a few words about this' });
+  model.load({ name: 'survey', rows: [{ ...answer('first'), ...answer('second'), choice: 'yes' }, { ...answer('first'), ...answer('second'), choice: 'no' }] });
+  const original = phraseSettings(model).fields;
+  model.configure({ ...model.config, mode: 'survey', features: ['choice'] });
+  assert.deepEqual(phraseSettings(model).fields, original);
+  retainPhraseSettings(model);
+  assert.deepEqual(model.phraseConfig.fields, original);
+});

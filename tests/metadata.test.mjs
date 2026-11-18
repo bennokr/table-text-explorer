@@ -9,6 +9,7 @@ import { parseQuery } from '../src/query.js';
 import { Dataset } from '../src/state.js';
 import { readCodebook } from '../src/codebook-profile.js';
 import { demoSettings } from '../src/demo-settings.js';
+import { routingStates } from '../src/routing.js';
 
 const example = 'docs/examples/codebook';
 
@@ -146,4 +147,21 @@ test('Excel dates and timestamps preserve their calendar and time distinction', 
   const parsed = parseTable(XLSX.write(book, { type: 'buffer', bookType: 'xlsx' }), 'dates.xlsx');
   assert.deepEqual(inferSchema(parsed.rows).map(field => field.kind), ['date', 'datetime']);
   assert.equal(numberOf(parsed.rows[0].timestamp, { kind: 'datetime' }), Date.UTC(2026, 9, 28, 12, 34, 56));
+});
+
+test('applies_when from the codebook separates skipped questions from questions that were not shown', () => {
+  const schema = { fields: [
+    { name: 'gave_birth', type: 'integer' },
+    { name: 'twins', type: 'integer', 'x-linked-codebook': { applies_when: '[gave_birth] = 1' } },
+    { name: 'broken', type: 'integer', 'x-linked-codebook': { applies_when: '[gave_birth] ===' } },
+  ] };
+  const rows = [{ gave_birth: 1, twins: 2, broken: null }, { gave_birth: 1, twins: null, broken: null },
+    { gave_birth: 0, twins: null, broken: 5 }];
+  const fields = inferSchema(rows, schemaMetadata(schema));
+  assert.equal(fields.find(field => field.name === 'twins').appliesWhen, '[gave_birth] = 1');
+  const { states, errors } = routingStates(rows, fields);
+  assert.deepEqual(states.get('twins'), ['answered', 'asked_but_skipped', 'not_shown']);
+  assert.deepEqual(states.get('gave_birth'), ['answered', 'answered', 'answered']);
+  assert.deepEqual(states.get('broken'), ['unknown', 'unknown', 'answered']);
+  assert.deepEqual(errors.map(error => error.name), ['broken']);
 });

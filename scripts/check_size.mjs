@@ -2,7 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { parse } from 'espree';
 import { KEYS } from 'eslint-visitor-keys';
 
-const excluded = new Set(['node_modules', 'dist', 'dist-feasibility', 'vendor', '.cache', '.venv', '.git']);
+const excluded = new Set(['node_modules', 'dist', 'vendor', '.cache', '.venv', '.git']);
 
 async function files(directory) {
   const found = [];
@@ -34,4 +34,4 @@ for (const path of await files('.')) {
   if (count > 250) { throw new Error(`${path}: module exceeds 250 statements`); }
   total += count;
 }
-if (total > 13260) { throw new Error('JavaScript exceeds 13260 statements'); }
+if (total > 13365) { throw new Error('JavaScript exceeds 13365 statements'); }

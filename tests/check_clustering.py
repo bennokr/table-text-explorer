@@ -6,6 +6,7 @@
 
 import importlib.util
 import json
+import sys
 import unittest
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from sklearn.datasets import make_blobs
 from sklearn.metrics import adjusted_rand_score
 
 ROOT = Path(__file__).parents[1]
+sys.path.insert(0, str(ROOT / "src/workers"))
 spec = importlib.util.spec_from_file_location("clustering", ROOT / "src/workers/clustering.py")
 clustering = importlib.util.module_from_spec(spec)
 density_spec = importlib.util.spec_from_file_location("density", ROOT / "src/workers/density.py")
@@ -34,6 +36,17 @@ class ClusteringChecks(unittest.TestCase):
             second = clustering.cluster(config, features)["labels"]
             self.assertEqual(first, second)
             self.assertGreater(adjusted_rand_score(truth, first), 0.95)
+
+    def test_separated_groups_are_stable_and_noise_suggests_fewer_groups(self):
+        blobs, _ = make_blobs(n_samples=200, n_features=8, centers=4, random_state=42)
+        result = clustering.cluster({"method": "kmeans", "clusters": 4, "normalize": False}, blobs)
+        self.assertEqual(len(result["stability"]), 4)
+        self.assertGreater(min(result["stability"].values()), 0.9)
+        self.assertIsNone(result["suggestedGroups"])
+        noise = np.random.default_rng(3).normal(size=(200, 8))
+        result = clustering.cluster({"method": "kmeans", "clusters": 8, "normalize": False}, noise)
+        self.assertLess(np.mean(list(result["stability"].values())), 0.75)
+        self.assertNotIn("stability", clustering.cluster({"method": "hdbscan"}, blobs))
 
     def test_saved_hierarchy(self):
         features, _ = make_blobs(n_samples=30, centers=3, random_state=42)

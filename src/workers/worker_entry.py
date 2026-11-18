@@ -11,6 +11,8 @@ from column_screen import run_column_screen
 from density import run_density_selection
 from descriptions import describe_descriptions
 from phrase_queries import match_phrases
+from survey_names import name_groups
+from survey_task import run_survey_prepare
 from term_groups import describe_groups
 from terms import build_term_index, describe_terms, index_tokens, matching_terms
 
@@ -26,6 +28,8 @@ TASKS = {
     "terms_describe": describe_terms,
     "terms_matches": matching_terms,
     "column_screen": run_column_screen,
+    "survey_prepare": run_survey_prepare,
+    "survey_names": name_groups,
 }
 
 

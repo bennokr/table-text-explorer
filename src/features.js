@@ -7,10 +7,17 @@ import { lexiconFor } from './lexicon.js';
 
 export const isEmbeddingMode = mode => ['words', 'sentences'].includes(mode);
 
+// Which columns an input type can use: text inputs take string columns; the table takes everything but text;
+// survey answers take every column, because the kind of each decides how it is compared.
+const eligible = {
+  survey: field => field.kind !== 'empty' && !field.identifier && !field.annotation,
+  table: field => field.kind !== 'empty' && field.kind !== 'text' && !field.identifier,
+};
+const textual = field => field.storage === 'string' && !field.identifier;
+
 export function featureCandidates(model) {
-  return model.fields.filter(field => !field.derived).filter(field => model.config.mode !== 'table'
-    ? field.storage === 'string' && !field.identifier
-    : field.kind !== 'empty' && field.kind !== 'text' && !field.identifier);
+  const accepts = eligible[model.config.mode] ?? textual;
+  return model.fields.filter(field => !field.derived && !field.computed).filter(accepts);
 }
 
 // The default text field is the one with the most words per record that differ between records: long, and
@@ -28,7 +35,7 @@ export function featureFields(model) {
     return candidates.filter(field => model.config.features.includes(field.name));
   }
   const automatic = candidates.filter(field => !field.annotation);
-  if (model.config.mode === 'table') { return automatic; }
+  if (['table', 'survey'].includes(model.config.mode)) { return automatic; }
   const text = automatic.filter(field => field.kind === 'text').sort((a, b) => wordsPerValue(b) - wordsPerValue(a));
   return (text.length ? text : automatic).slice(0, 1);
 }
@@ -41,7 +48,8 @@ function featureDescriptor(field, config) {
   if (config.mode === 'sentences' && descriptionEnabled(config)) {
     descriptor.description = fieldDescription(field);
   }
-  if (config.mode === 'sentences' && config.combine === 'group-mean') { descriptor.group = groupName(field, config.fieldGroups); }
+  if (config.mode === 'sentences' && config.combine === 'group-mean') { descriptor.group = groupName(field); }
+  if (config.mode === 'survey') { descriptor.group = groupName(field); }
   return descriptor;
 }
 
@@ -54,7 +62,8 @@ function featureSettings(model, method) {
     stopwords: lexical ? stopwordList(model.phraseConfig ?? model.config) : [],
     phrases: lexical ? model.phraseConfig ?? null : null, vectorLanguage: model.config.vectorLanguage,
     pooling: model.config.pooling, combine: model.config.combine, weights: model.config.weights,
-    includeDescriptions: descriptionEnabled(model.config), groupIdentity: model.config.groupIdentity };
+    includeDescriptions: descriptionEnabled(model.config), groupIdentity: model.config.groupIdentity,
+    survey: model.config.mode === 'survey' ? model.config.survey : null };
 }
 
 export function featureKey(model) {

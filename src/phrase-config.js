@@ -12,8 +12,8 @@ export function phraseSettings(model) {
   const config = model.phraseConfig ?? { sizes: [1, 3], language: model.config.language,
     stopwords: model.config.stopwords, fields: null };
   const fields = config.fields ?? featureFields({ fields: model.fields,
-    config: { ...model.config, mode: 'text', features: model.config.mode === 'table' ? null : model.config.features } }).map(field => field.name);
-  const eligible = new Set(model.fields.filter(field => !field.annotation && !field.derived).map(field => field.name));
+    config: { ...model.config, mode: 'text', features: ['table', 'survey'].includes(model.config.mode) ? null : model.config.features } }).map(field => field.name);
+  const eligible = new Set(model.fields.filter(field => !field.annotation && !field.derived && !field.computed).map(field => field.name));
   const lexicon = lexiconFor(config);
   return { fields: fields.filter(name => eligible.has(name)), sizes: config.sizes, stopwords: lexicon.stop,
     leadwords: lexicon.lead, negations: lexicon.negation, fold: lexicon.fold };

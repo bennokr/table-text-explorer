@@ -32,10 +32,6 @@ without modifying the development picker or its local fixture copies. Its allowl
 contains vendor assets, attribution, approved fixture copies and the picker manifest;
 private reference files and arbitrary files from `public/` are excluded.
 
-The optional `build:feasibility` mode is local diagnostic output. It includes private
-examples/reference data when present and writes `dist-feasibility/`, separate from
-the distributable `dist/`. Do not distribute that diagnostic output with private data.
-
 ## Dataset provenance
 
 Attribution of the approved examples is in `examples/attribution/<dataset>/` and is copied into the build. The

@@ -226,13 +226,11 @@ variable-picker[hidden] { display: none; }
 #feature-weights { max-height: 150px; overflow: auto; }
 #feature-weights label { display: flex; justify-content: space-between; gap: 8px; }
 #feature-weights input { width: 60px; }
+#feature-weights .weight-group { display: block; margin: 6px 0 2px; font-size: 11px; color: #69747a; }
 .help-hint { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; width: 1.35em; min-width: 1.35em; height: 1.35em; min-height: 0; padding: 0; margin: 0 0.2em; border: 1px solid #b9c4cb; border-radius: 50%; background: #f6f8f9; color: #637782; font-size: 0.8em; font-weight: normal; line-height: 1; cursor: help; position: relative; }
 .help-hint::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; }
 .help-hint:focus-visible { outline: 2px solid #527b9c; outline-offset: 3px; }
 .help-hint[title] { min-width: 1.35em; }
-#group-assignments label { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, 40%); gap: 8px; align-items: center; margin: 5px 0; }
-#group-assignments input { width: 100%; min-width: 0; box-sizing: border-box; }
-#group-assignments { max-height: 220px; overflow: auto; }
 #group-identity { width: 150px; vertical-align: middle; }
 #group-identity-value { display: inline-block; min-width: 3em; }
 #shared-fields { max-width: 100%; white-space: normal; text-align: left; }

@@ -82,8 +82,8 @@ in the prepared-feature cache key and are saved in `inputFields` with exported
 representations/maps, so later metadata edits do not change a fitted result.
 Legacy `description-mean` recipes still run, and reopen as a mean plus the context
 checkbox. Grouped means normalize weighted field means per group and give available
-groups equal weight. Group names come from the `group` of the field's metadata (`x-linked-codebook.group` in a codebook), with map-specific
-overrides and an explicit Other fields fallback. A 0–100% identity fraction mixes
+groups equal weight. Group names come from the `group` of the field's metadata (`x-linked-codebook.group` in a codebook);
+an explicit Other fields fallback covers the rest. A 0–100% identity fraction mixes
 normalized shared and concatenated group vectors with square-root scales. Endpoint
 vectors omit unused components; all-empty rows stay excluded. Identity preserves
 zero missing-group blocks and therefore does not eliminate missingness effects.
@@ -158,6 +158,26 @@ are shown explicitly with a link to the phrase dialog; applying it updates the u
 an existing named input representation, while current map settings and explicitly labeled 2D coordinates remain
 selectable. Glyphs mean one thing each: ⚙ opens a modal of settings, ⋯ shows more controls inline, ＋ adds a chart,
 × removes or clears. The × in the Charts header removes all charts and is undoable from the status line (`offerUndo`).
+
+## Survey answers
+
+The map input **Survey answers** (`config.mode === 'survey'`) compares respondents only on questions both answered. `src/routing.js`
+turns each column's codebook `applies_when` rule into a cell state (answered, asked but skipped, not shown, unknown);
+`src/survey-input.js` builds the request (category codes, numbers, codebook group, column weight and state per column) and caches the
+states per table and schema. Free-text columns are embedded by the existing sentence worker with each column's description in front and
+averaged per record. The Python task `survey_prepare` (`survey_task.py`, using `survey_distance.py`) computes the dense pairwise distance
+(groups count equally, a shared common answer counts for little, text only when both have it, thin evidence shrinks toward the typical
+distance) and returns at most 32 classical-MDS coordinates, so the result is an ordinary prepared representation: maps, linear projection
+and every clustering method work on it unchanged. The task also reports how many of each record's nearest neighbours a map of the blanks
+alone shares; the map card's description shows it. A question the codebook marks `level: ordinal` with a closed value list is compared by position in that list; other categories only match or differ.
+Records are limited to 3,000 because the distance is a dense matrix. The task also returns each record's 100 nearest records with their distances;
+UMAP uses them as a precomputed neighbour graph (the first `neighbors` of each), so the map follows the survey distance rather than Euclidean distance on the MDS coordinates. Method and evaluation: [evaluation-survey](evaluation-survey.md).
+
+Clusterings report group stability: `cluster_stability.py` re-clusters random 80% subsets of K-means and agglomerative fits (up to 3,000 records),
+stores each group's best Jaccard overlap as `groups[id].stability`, and when the mean is below 0.75 looks up to four group counts down for one that
+is stable (`suggestedGroups`, shown in the completion message). Survey clusters are named by `survey_names.py` instead of the phrase index: `surveyAnswers`
+lists the answers (question and value, with their records) and each group takes up to the maximum number of answers to different questions that its members
+give much more often than the rest; groups below stability 0.6 keep their number.
 
 ## Subset descriptions
 
@@ -264,14 +284,13 @@ annotation-label comparisons remain planned.
 ## Packaging and validation
 
 The app build uses an explicit public-asset allowlist and approved examples only.
-Dev mode opts into private fixtures. The historical feasibility harness has a
-separate build/output, and the shared zlib compatibility shim lives in `src/`.
+Dev mode opts into private fixtures. The shared zlib compatibility shim lives in `src/`.
 Only required ONNX Runtime WASM pairs are prepared; Vite uses ORT's external-WASM
 package condition to avoid emitting another binary. GPU/JSPI backend assets are
 excluded. Assets remain locally bundlable and runtime requests stay same-origin.
 
 Ruff/ESLint enforce complexity 8, function statements 35 and module statements 250.
-Current aggregate ceilings are Python 3550 and JavaScript 13260; the rationale is in
+Current aggregate ceilings are Python 4055 and JavaScript 13365; the rationale is in
 [maintenance](maintenance.md) and linked from [AGENTS.md](../AGENTS.md). Browser journeys cover workspace/export, card layout,
 map/index/clustering and explicit embeddings. Unit/native/WASM checks cover numeric
 and boundary behavior. Optional check reports are written under ignored `.cache/checks/`;

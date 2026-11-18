@@ -20,7 +20,7 @@ export class PhraseSettings {
 
   open() {
     const config = this.model.phraseConfig ?? { ...this.model.config, sizes: [1, 3], fields: phraseSettings(this.model).fields };
-    const fields = this.model.fields.filter(field => field.storage === 'string' && !field.identifier && !field.annotation && !field.derived);
+    const fields = this.model.fields.filter(field => field.storage === 'string' && !field.identifier && !field.annotation && !field.derived && !field.computed);
     $('#terms-fields').variables = variableOptions(fields, this.model.rows.length);
     this.fill(config);
     options($('#terms-config'), [['', 'Current settings'], ...[...this.indexes.configurations.values()].map(item => [item.id, item.name])]);

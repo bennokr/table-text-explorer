@@ -156,9 +156,8 @@
       <label class="wide">Name <input id="map-name" required maxlength="120"></label>
     </div>
     <fieldset id="map-input"><legend>Input <button type="button" class="help-hint" data-help="maps">?</button></legend>
-      <div class="row"><label>Input <select id="feature-mode"><option value="table">Numeric and categorical columns</option><option value="text">Text · TF-IDF</option><option value="words">Text · static word vectors</option><option value="sentences">Text · sentence embeddings</option></select></label></div>
-      <div class="row"><variable-picker id="feature-list" multiple aria-label="Map input columns" caption="Input" noun="columns"></variable-picker><button type="button" class="help-hint" data-help="maps#input-columns">?</button></div>
-      <div id="lexical-settings-note" class="row" hidden><button id="shared-fields" type="button"></button><button type="button" class="help-hint" data-help="descriptions#phrase-counting">?</button></div>
+      <div class="row input-row"><label>Input <select id="feature-mode"><option value="table">Numeric and categorical columns</option><option value="survey">Survey answers · missing-aware</option><option value="text">Text · TF-IDF</option><option value="words">Text · static word vectors</option><option value="sentences">Text · sentence embeddings</option></select></label><variable-picker id="feature-list" multiple aria-label="Map input columns" caption="Input" noun="columns"></variable-picker><button type="button" class="help-hint" data-help="maps#input-columns">?</button>
+        <span id="lexical-settings-note" hidden><button id="shared-fields" type="button"></button><button type="button" class="help-hint" data-help="descriptions#phrase-counting">?</button></span></div>
       <div id="word-options" hidden>
         <div class="row"><label>Vector model <select id="vector-language"><option value="nl">Dutch · spaCy</option><option value="en">English · spaCy</option></select></label><button type="button" class="help-hint" data-help="text-models">?</button></div>
         <div class="row"><label>Words within each column <select id="word-pooling"><option value="mean">Mean of word vectors</option><option value="tfidf">TF-IDF weighted mean</option></select></label><button type="button" class="help-hint" data-help="text-models#settings">?</button></div>
@@ -171,17 +170,21 @@
       </div>
     </fieldset>
     <fieldset id="embedding-options" hidden><legend>Combining <button type="button" class="help-hint" data-help="combining">?</button></legend>
-      <div class="row"><label>Combine columns <select id="field-combine"></select></label><button type="button" class="help-hint" data-help="combining">?</button></div>
+      <div id="combine-row" class="row"><label>Combine columns <select id="field-combine"></select></label><button type="button" class="help-hint" data-help="combining">?</button></div>
       <div id="description-options" class="row"><label><input id="include-descriptions" type="checkbox">Include column descriptions</label><button type="button" class="help-hint" data-help="text-models#column-descriptions">?</button></div>
       <div id="group-combining" hidden>
         <div class="row"><label>Preserve group identity <input id="group-identity" type="range" min="0" max="100" step="5" value="20"><output id="group-identity-value" for="group-identity">20%</output></label><button type="button" class="help-hint" data-help="combining#preserve-group-identity">?</button></div>
-        <div class="row"><strong id="groups-summary">Variable groups</strong><button type="button" class="help-hint" data-help="combining#variable-groups">?</button></div>
-        <div id="group-assignments"></div>
       </div>
       <div id="weights-details">
         <div class="row"><strong id="weights-summary">Column weights · Equal weights</strong><button type="button" class="help-hint" data-help="combining#column-weights">?</button><button id="weights-reset" type="button">Reset weights</button></div>
         <div id="feature-weights"></div>
       </div>
+    </fieldset>
+    <fieldset id="survey-options" hidden><legend>Survey distance <button type="button" class="help-hint" data-help="survey">?</button></legend>
+      <div class="row"><strong id="survey-missing-summary">Blank answers</strong><button type="button" class="help-hint" data-help="survey#missing-answers">?</button></div>
+      <div class="row"><label>Free-text weight <input id="survey-text-weight" type="range" min="0" max="100" step="5" value="35"><output id="survey-text-weight-value" for="survey-text-weight">35%</output></label><button type="button" class="help-hint" data-help="survey#free-text-weight">?</button></div>
+      <div class="row"><label><input id="survey-balance" type="checkbox" checked>Count variable groups equally</label><button type="button" class="help-hint" data-help="survey#group-balance">?</button></div>
+      <div class="row"><label><input id="survey-common" type="checkbox" checked>Common answers count for little</label><button type="button" class="help-hint" data-help="survey#common-answers">?</button></div>
     </fieldset>
     <fieldset id="umap-options"><legend>Map tuning <button type="button" class="help-hint" data-help="maps#settings">?</button></legend>
       <div class="row"><label>UMAP neighbors <input id="neighbors" type="number" min="2" max="100" required></label><button type="button" class="help-hint" data-help="maps#settings">?</button>

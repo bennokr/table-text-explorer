@@ -6,8 +6,6 @@ async function describedDutchMap(page, fitted, models) {
   await fields(page, ['text', 'notes']);
   await page.selectOption('#field-combine', 'group-mean');
   await page.check('#include-descriptions');
-  await page.getByLabel('Group for text', { exact: true }).fill('Main');
-  await page.getByLabel('Group for notes', { exact: true }).fill('Context');
   await finishMap(page);
   const dutch = await snapshot(page);
   expect(dutch.projections[0].config.sentenceModel).toBe('dutch');

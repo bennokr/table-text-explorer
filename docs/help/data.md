@@ -23,7 +23,7 @@ Inference recognizes numeric values, repeated categories, booleans, dates and da
 
 The export dialog downloads tables and individual saved analysis results; it does not save a reloadable workspace.
 
-Table downloads include original data, independent annotations and cluster name columns. Representations/maps retain embeddings or coordinates, input descriptions, group assignments and analysis settings. Removing a visualization card does not delete its saved analysis. All data and computation stay on this machine.
+Table downloads include original data, independent annotations and cluster name columns. Representations/maps retain embeddings or coordinates, input descriptions, groups and analysis settings. Removing a visualization card does not delete its saved analysis. All data and computation stay on this machine.
 
 ## Settings
 

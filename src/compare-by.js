@@ -2,6 +2,7 @@ import { $, element } from './dom.js';
 import { candidateFields, columnKind, columnPayload, fieldGroups } from './compare-columns.js';
 import { Events } from './events.js';
 import { treeGroup } from './compare-choices.js';
+import { groupName } from './group-vectors.js';
 import { colorColumn, setTermSettings, treeChoice } from './term-settings-model.js';
 import { phraseSettings } from './phrase-config.js';
 import { mapColumn } from './term-regions.js';
@@ -9,6 +10,13 @@ import { mapColumn } from './term-regions.js';
 const MIN_POPULATION = 60;
 const CACHED_SCREENS = 6;
 const KINDS = ['Columns', 'Clusters', 'Annotations'];
+
+// Source columns are grouped by their codebook group; clusters and annotations keep their own headings.
+function optionGroup(field, model) {
+  const kind = columnKind(field);
+  if (kind !== 'Columns' || !model.fields.some(other => other.group)) { return kind; }
+  return groupName(field);
+}
 
 // Dots grade the share of text variation a column explains, in steps of ten and three times the
 // effect floor (0.01, 0.03, 0.10), so the same number of dots means the same thing in every table.
@@ -139,13 +147,15 @@ export class CompareBy {
   // Columns the screen found too sparse or too coarse to test are not offered at all.
   columnOptions(screen) {
     const results = new Map((screen?.columns ?? []).map(column => [column.name, column]));
-    const kinds = Object.fromEntries(KINDS.map(kind => [kind, []]));
+    const lists = new Map(KINDS.map(kind => [kind, []]));
     for (const field of candidateFields(this.model)) {
       const result = results.get(field.name);
       if (screen && !result?.eligible) { continue; }
-      kinds[columnKind(field)].push(new Option(columnLabel(field, result), `col:${field.name}`));
+      const label = optionGroup(field, this.model);
+      if (!lists.has(label)) { lists.set(label, []); }
+      lists.get(label).push(new Option(columnLabel(field, result), `col:${field.name}`));
     }
-    return KINDS.map(kind => [kind, kinds[kind]]);
+    return [...lists];
   }
 
 

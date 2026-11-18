@@ -4,12 +4,11 @@ import argparse
 import hashlib
 import json
 import random
-import re
 import subprocess
 from collections import Counter
 from pathlib import Path
 
-from rmc_sampling import choose_fields, comment_counts, structured_row
+from rmc_sampling import choose_fields, comment_counts, is_text, structured_row
 from rmc_text import extend_families, fill_participant
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -92,7 +91,7 @@ def synthesize(inputs, size, scenario, seed):
 
 
 def text_summary(rows, fields):
-    names = [field["name"] for field in fields if field.get("x-role") == "text"]
+    names = [field["name"] for field in fields if is_text(field)]
     values = [str(row[name]) for row in rows for name in names if row[name] not in (None, "")]
     counts = Counter(sum(row[name] not in (None, "") for name in names) for row in rows)
     lengths = Counter(
@@ -162,9 +161,7 @@ def validate(rows, inputs, details, summary):
         raise ValueError("Invalid text totals or duplicate participant identifiers.")
     for row, count in zip(rows, details["counts"], strict=True):
         actual = sum(
-            row[field["name"]] not in (None, "")
-            for field in schema["fields"]
-            if field.get("x-role") == "text"
+            row[field["name"]] not in (None, "") for field in schema["fields"] if is_text(field)
         )
         if actual != count:
             raise ValueError("Text assignment changed a participant's allocated comment count.")
@@ -182,10 +179,6 @@ def validate_field(rows, field):
         raise ValueError(f"Value below minimum in {field['name']}")
     if "maximum" in bounds and any(value > bounds["maximum"] for value in values):
         raise ValueError(f"Value above maximum in {field['name']}")
-    if "pattern" in bounds and any(
-        not re.fullmatch(bounds["pattern"], str(value)) for value in values
-    ):
-        raise ValueError(f"Invalid format in {field['name']}")
 
 
 def save(rows, inputs, summary, details, output):

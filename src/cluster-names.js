@@ -1,4 +1,5 @@
 import { phraseSettings } from './phrase-config.js';
+import { surveyAnswers } from './survey-input.js';
 import { treeMembers, treeParents, treeChildren, treeRoot } from './cluster-tree.js';
 
 function namingGroups(result) {
@@ -18,16 +19,31 @@ function namingGroups(result) {
   });
 }
 
-export async function nameClusters(model, analysis, result) {
-  const settings = phraseSettings(model);
-  const groups = namingGroups(result);
-  if (!settings.fields.length || groups.every(group => group.locked)) { return; }
-  const index = await analysis.textIndexes.ensure(settings, analysis.progress);
-  const output = await analysis.workers.run('python', { task: 'cluster_names', indexId: index.indexId,
-    groups, maxPhrases: result.maxNamePhrases ?? 4 }, analysis.progress);
+// A group that re-clustering does not reproduce is a pattern in this sample, so its answers do not name it.
+const UNSTABLE = 0.6;
+
+function applyNames(result, output) {
   for (const [id, evidence] of Object.entries(output.labels)) {
     if (result.groups[id].nameEdited) { continue; }
     result.groups[id].name = evidence.phrase;
     result.groups[id].nameEvidence = evidence;
   }
+}
+
+// Survey clusters are named by the answers that set them apart; there is no phrase index to consult.
+async function nameSurveyGroups(model, analysis, result) {
+  const groups = namingGroups(result).map(group => ({ ...group, locked: group.locked || result.groups[group.id].stability < UNSTABLE }));
+  if (groups.every(group => group.locked)) { return; }
+  applyNames(result, await analysis.workers.run('python', { task: 'survey_names', rows: model.rows.length,
+    answers: surveyAnswers(model, result.config), groups, maxPhrases: result.maxNamePhrases ?? 4 }, analysis.progress));
+}
+
+export async function nameClusters(model, analysis, result) {
+  if (result.config?.mode === 'survey') { return nameSurveyGroups(model, analysis, result); }
+  const settings = phraseSettings(model);
+  const groups = namingGroups(result);
+  if (!settings.fields.length || groups.every(group => group.locked)) { return; }
+  const index = await analysis.textIndexes.ensure(settings, analysis.progress);
+  applyNames(result, await analysis.workers.run('python', { task: 'cluster_names', indexId: index.indexId,
+    groups, maxPhrases: result.maxNamePhrases ?? 4 }, analysis.progress));
 }

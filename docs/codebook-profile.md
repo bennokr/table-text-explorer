@@ -7,7 +7,7 @@ categories, categoriesOrdered, missingValues and constraints. Everything else co
 [linked-codebook](https://github.com/bennokr/linked-codebook) and sits under the field property
 `x-linked-codebook`: `level` (nominal, ordinal, ...), `group`, `identifying`, `unit`, `variable`
 (a concept IRI), `values` (a label dictionary; with `closed` it is also written as `categories`) and
-`mappings`. A label dictionary does not imply that other values are invalid. Original cell values remain preserved.
+`applies_when` and `mappings`. A label dictionary does not imply that other values are invalid. Original cell values remain preserved.
 
 ## Spreadsheet profile
 
@@ -46,9 +46,40 @@ and an equivalent [spreadsheet](examples/codebook/codebook.xlsx). It includes an
 identifier, category labels, a partial ordinal dictionary, numeric bounds, text,
 boolean and datetime columns. The converter and ordinary tests need no private files.
 
-Local RMC profiles may exist under `demo-config/RMC_synthetische_data_20_rijen.xlsx/`.
-They and the original source workbook are ignored, not distributed. A private workbook written for the earlier
-profile has to be rewritten in the format above (see the header list) before it can be read.
+Local RMC profiles may exist under `demo-config/RMC*/` (the 20-row source and the three 1,000-row synthetic sets).
+They and the original source workbook are ignored, not distributed. They are written in this profile: the 20-row
+`codebook.xlsx` was rebuilt through `readCodebook` with `--strict` semantics and the schemas come from it, so groups
+(`x-linked-codebook.group`) reach the grouped-mean embeddings. The earlier workbook's source rows, review notes and the
+`pattern` constraint have no place in the profile and were dropped; `review.json` is a leftover of that profile.
+
+## Labels
+
+`label` is the short name shown in legends, pickers and cluster names (about six words); `description` is the full
+question, which the sentence embeddings use as a prefix when "Include field descriptions" is on. For a multi-select
+question, give each option column `label` "Question: option" and a `description` that repeats the question, because the
+options are separate columns and would otherwise lose it. A follow-up (a "last" or comment column) should name its parent.
+The local RMC codebook was relabelled this way: 195 columns, 30 of them options of multi-select questions.
+
+## Routing and missingness
+
+`applies_when` (a Columns header) is a condition in linked-codebook's language, for example `[gave_birth] = 1`. The
+app keeps it as `appliesWhen` in a column's metadata and `src/routing.js` (`routingStates`) evaluates it with
+linked-codebook's own parser, giving every cell one of `answered`, `asked_but_skipped` (blank, rule true),
+`not_shown` (blank, rule false) or `unknown` (blank with no rule, or a rule that cannot be decided). Declared missing
+codes count as blank. The source RMC codebook states very little routing:
+`[ROUTING …]` on the twin/triplet answers of `Meerling` (it points at a block, `DEEL_1 Meerl`, that the workbook does not
+contain), `[Vraag B]` on `SeksuGew` and `SeksuGewGed`, and "Radiobutton/Uitklap" (an unfolding screener) on `DreigAlgmn`
+and `DiscrAlgmn`. The local RMC codebook turns the last two into rules (`SeksuGewGed` when `[SeksuGew] = 1`; the `Dreig*` and
+`Discr*` questions, their `Last` and their `Toel`, when the screener is 1). The remaining 66 rules are inferences, not
+statements of the questionnaire: a `…Last` follow-up ("Had je hier last van?") for the answer that signals a problem, a `…Toel`
+comment box for anyone who answered the item (the codebook marks every `…Toel` as not required), `ModPartVag`/`ModPartKeiz` by
+`ModPart`, and `ErvEerst`…`ErvNegen` by `NrBev`. They match the synthetic data, which was generated with those rules, and
+need checking against the producing system before they are used on real responses.
+
+When at least one column has a rule, loading the table adds five read-only computed columns per record: **Answered**,
+**Skipped** (asked but left blank), **Not shown**, **Text answers** (answered text columns) and **Has text**
+(`src/response-profile.js`). Colour a map or chart by them to see whether routing or response counts explain a layout. They are
+not analysis inputs or phrase columns, ignore the column-type dialog, and are included in exports. Tables without rules get none.
 
 ## Demo loading
 
@@ -71,7 +102,7 @@ claim full Table Schema validation or implement arbitrary type/format transforma
 
 ## Import and inference
 
-Object/array-valued columns are omitted as a whole on import, reported by name in
+Object/array-valued columns are omitted as a whole on import reported by name in
 ignoredFields and by count in the status bar. Remaining scalar values are untouched.
 `\N` is a missing marker for inference, queries and numeric analysis, consistent
 with the existing lexical and embedding tokenizers. Zero and false remain values.

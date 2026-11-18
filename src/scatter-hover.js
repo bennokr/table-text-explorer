@@ -6,10 +6,13 @@ function hoverFields(model, coordinates) {
     return [coordinates.x.field, coordinates.y.field].filter(Boolean);
   }
   const fitted = { fields: model.fields, config: coordinates.config };
-  if (fitted.config.mode !== 'table') { return featureFields(fitted); }
+  if (!tabular(fitted.config)) { return featureFields(fitted); }
   const text = model.fields.filter(field => field.kind === 'text' && !field.identifier && !field.annotation);
   return text.length ? text : featureFields(fitted);
 }
+
+// Table-like inputs have many columns, so a hover lists text if there is any, else a few values.
+const tabular = config => ['table', 'survey'].includes(config.mode);
 
 function escapeHover(value) {
   const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -23,7 +26,7 @@ function recordHover(row, fields, limit) {
 
 export function hoverData(model, coordinates) {
   const fields = [...new Map(hoverFields(model, coordinates).map(field => [field.name, field])).values()];
-  const limit = coordinates.fitted && coordinates.config.mode === 'table' ? 3 : fields.length;
+  const limit = coordinates.fitted && tabular(coordinates.config) ? 3 : fields.length;
   return {
     tooltips: '<div style="max-width:min(420px,55vw);white-space:pre-wrap;overflow-wrap:anywhere">@hover{safe}</div>',
     data: { hover: model.rows.map(row => recordHover(row, fields, limit)) },

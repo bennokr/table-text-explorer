@@ -14,6 +14,7 @@ Run `npm test`, `npm run check`, the relevant native checks, `npm run build` and
 | Lexicon before/after on the examples (writes a table to stdout) | `npm run report:lexicon` |
 | Clustering algorithms / WASM worker bridge | `npm run test:clustering` / `npm run test:clustering:wasm` |
 | Synthetic workload invariants, without private files | `npm run test:rmc` |
+| Survey distance on invented data | `npm run test:survey` |
 | Offline sentence inference and chunking | `npm run test:sentences:wasm` |
 | Production asset boundaries | `npm run check:bundle` |
 
@@ -50,8 +51,8 @@ tests and the bundle check; browser journeys and pretrained-model assets are not
 ## Readability budgets
 
 Ruff/ESLint cap complexity at 8 and statements per function at 35. AST checks cap
-each authored module at 250 statements, Python at 3550 total and JavaScript at
-13260 total. Imports, nested bodies, tooling and tests count. Generated files,
+each authored module at 250 statements, Python at 4055 total and JavaScript at
+13365 total. Imports, nested bodies, tooling and tests count. Generated files,
 dependencies and downloaded assets do not. No per-file exemptions apply.
 
 The JavaScript budget grew from the initial 3750-statement phrase-cloud application
@@ -156,6 +157,46 @@ their unit and browser tests (about 75), the status-line Undo and the help Home 
 glyph and dialog conventions (about 55). The dialog rewrite itself removed code (the folded sections and the invalid-control reveal). A further 10 (13150 to 13160)
 cover the browser check that the ⋯ button stays in the Size / Color / Contrast row.
 
+The JavaScript budget rose from 13160 to 13210 (about 46 statements: 31 in
+`src/routing.js`, 15 in its test). `applies_when` from the codebook becomes a per-cell state (answered, asked but skipped, not shown, unknown) by
+calling linked-codebook's own parser and evaluator; nothing in the app uses the states yet. It is the input of the survey-distance work, and the
+rule parsing is not re-implemented here.
+
+The JavaScript budget rose from 13210 to 13280 (about 64 statements) for the response profile columns: `src/response-profile.js` (33) turns those
+states into five read-only columns per record (Answered, Skipped, Not shown, Text answers, Has text) when a codebook has `applies_when` rules,
+about 8 statements keep them out of default views, analysis inputs and phrase fields, and 33 are its unit tests. Nothing runs for tables without rules.
+
+Removing the first-stage feasibility harness (`feasibility/`, its page and browser check, the SAV reference script) took out about 330 JavaScript and 50
+Python statements, more than the routing and response profile work above added (about 110). The ceilings therefore fall to 13000 (JavaScript, from
+13280) and 3500 (Python, from 3550), leaving a little room above the measured 12942 and 3462.
+
+The Python ceiling then rose from 3500 to 3850 (about 364 statements) for the survey distance: `src/workers/survey_distance.py` (112) is the
+missingness-aware distance the app will use for survey tables, `tests/check_survey_distance.py` (75) checks it on invented data (routing is no
+mismatch, evidence shrinks, groups count equally), and `tests/eval/survey_stability.py` (177) is the evaluation harness: cluster stability under
+subsampling, agreement between maps made with other seeds or neighbour counts, overlap with a missingness-only map, and agreement with known labels.
+The harness and the check are tooling; the distance is not yet used by the app. `scripts/routing_states.mjs` (16 JavaScript statements) writes the
+cell states the harness reads.
+
+The budgets rose again for the survey answers input, Python from 3850 to 3950 and JavaScript from 13000 to 13150. JavaScript (about 128 statements, 37
+of them the end-to-end journey): `src/survey-input.js` (about 77) builds the request (columns with codes, groups, weights and the state of every
+cell, plus the pooled text vectors the sentence worker makes), the new input type reaches the existing map form through small changes (the "Survey
+distance" fieldset, section visibility, the blank-answer summary, settings read and fill), and `Analysis.prepare` split into `prepareFeatures` and
+`prepareSurvey`. Python (about 63): `src/workers/survey_task.py` (41) is the worker task and its diagnostics (neighbours shared with a map of blanks
+alone), and the classical MDS, missingness-only distance and column weights joined `survey_distance.py`, with three more checks. The evaluation harness
+now imports those helpers instead of keeping copies.
+
+The budgets rose a third time for survey clusters you can trust, Python from 3950 to 4035 and JavaScript from 13150 to 13215. Python (about 83, 22 of them checks):
+`src/workers/cluster_stability.py` (about 25) measures how reproducible each group is by re-clustering random 80% subsets and, when the mean is below 0.75,
+looks for a smaller group count that is; `clustering.py` calls it for K-means and agglomerative runs; `src/workers/survey_names.py` (about 38) names a cluster
+from the answers its members give much more often than everyone else, one answer per question. JavaScript (about 55): `surveyAnswers` in
+`src/survey-input.js` lists the answers with their records, `src/cluster-names.js` takes the survey path (no phrase index) and leaves unstable groups
+numbered, and the legend shows each group's stability. The group editor removed in the same change saved about 25 statements.
+
+The budgets rose a fourth time for survey maps that follow the survey distance more closely, Python from 4035 to 4055 and JavaScript from 13215 to 13265. Together with the 100 statements added for column language detection (13160 to 13260), the combined JavaScript ceiling is 13365.
+Python (about 15, 8 of them checks): `neighbour_graph` in `survey_distance.py` lists each respondent's nearest 100 with their distances, and `survey_task.py`
+returns it with the coordinates. JavaScript (about 45, 20 of them tests): `ordinalRanks` and `scaleOf` in `src/survey-input.js` compare a codebook `ordinal`
+list by position, `analysis.js` passes the graph to `umap.worker.js`, which hands it to UMAP as precomputed neighbours.
+
 ## Codebook reader
 
 `src/codebook-profile.js` (`readCodebook`) opens the XLSX codebook, checks every cell against the type its header
@@ -206,19 +247,11 @@ agreement on synthetic Dutch text. This is a parity probe, not a quality benchma
 The multilingual model remains the default. Switching models disposes the previous
 worker model and separates caches; saved result arrays remain intact.
 
-## Historical and local tooling
+## Local tooling
 
-The original feasibility harness is optional, separate from the application:
-
-```sh
-npm run build:feasibility
-npm run feasibility
-```
-
-It writes `dist-feasibility/` and may include private local data. Do not distribute
-that output. Its SAV reference setup is in the [historical notes](archive/feasibility.md).
-The [local sparse-workload generator](synthetic-rmc.md) needs ignored source files;
-its invariant tests use invented in-memory inputs.
+The [local sparse-workload generator](synthetic-rmc.md) needs ignored source files; its invariant tests use invented
+in-memory inputs. The first-stage feasibility harness (a separate page, build and browser check) was removed; its
+findings remain in the [historical notes](archive/feasibility.md).
 
 Never commit or upload private fixtures, source codebooks or their derived metadata.
 Public example data requires explicit approval, a license and provenance.

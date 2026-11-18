@@ -8,7 +8,7 @@ Choose sentence embeddings and two text columns to explore similar wording or me
 
 ## Steps
 
-1. Choose an input type and columns.
+1. Choose an input type and columns. [Survey answers](survey.md) suit questionnaires with routing and blanks.
 2. For text embeddings, choose a model and how to [combine columns](combining.md).
 3. Accept the suggested name or enter your own, then choose Make similarity map.
 
@@ -34,7 +34,9 @@ Keep defaults initially; open advanced settings when you have a concrete compari
 
 ## Troubleshooting
 
-If a map mostly separates missingness, inspect which columns and groups are present. Compare a shared mean with a smaller identity contribution.
+If a map mostly separates missingness, inspect which columns and groups are present.
+
+[Survey answers](survey.md) leave blank answers out of the comparison, which helps when blanks follow from routing. Compare a shared mean with a smaller identity contribution.
 
 There is no universally best representation. Compare nearest records and representative examples, not only attractive shapes. [Combining columns](combining.md) explains the sparse-data trade-offs.
 

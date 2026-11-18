@@ -9,8 +9,8 @@ Average title and summary columns within a Descriptions group, then combine that
 ## Steps
 
 1. Start with Mean across columns.
-2. Choose Mean within groups when your columns have meaningful variable groups.
-3. Review group assignments and adjust Preserve group identity only when needed.
+2. Choose Mean within groups when your codebook defines meaningful variable groups.
+3. Adjust Preserve group identity only when needed.
 
 ## Interpreting the result
 
@@ -20,9 +20,9 @@ Grouping does not create observations or guarantee removal of missingness effect
 
 ## Variable groups
 
-Groups come from column metadata and can be edited for this map without changing the source codebook.
+Groups come from the codebook's group column, so they are the same in every map; change them in the codebook.
 
-Ungrouped columns initially share Other columns. Column vectors are averaged within each group using column weights, then normalized. Available groups have equal influence in the shared mean, so a group with ten columns does not automatically outweigh one with two. Group assignments are saved with the map.
+[Survey answers](survey.md) use the same groups, with each group counting equally. Ungrouped columns initially share Other columns. Column vectors are averaged within each group using column weights, then normalized. Available groups have equal influence in the shared mean, so a group with ten columns does not automatically outweigh one with two.
 
 ## Preserve group identity
 

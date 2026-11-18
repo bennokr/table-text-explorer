@@ -24,6 +24,7 @@
     "test:eval": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --cache-dir .cache/uv --script tests/eval/check_harness.py",
     "prepare:rmc": "python3 scripts/generate_rmc.py",
     "test:rmc": "python3 tests/check_rmc.py",
+    "test:survey": "uv run --offline --cache-dir .cache/uv --script tests/check_survey_distance.py",
     "probe:dutch-data": "node scripts/probe_dutch_data.mjs && node scripts/prepare_examples.mjs",
     "check": "eslint . && python3 scripts/check_size.py && node scripts/check_size.mjs && uv run --offline --cache-dir .cache/uv ruff check . && uv run --offline --cache-dir .cache/uv ruff format --check .",
     "test:terms": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --cache-dir .cache/uv --script tests/check_terms.py",

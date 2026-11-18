@@ -1,6 +1,7 @@
 import { featureFields } from './features.js';
 import { showMap } from './analysis-views.js';
 import { complete } from './status.js';
+import { surveyNote } from './survey-input.js';
 import { Events } from './events.js';
 
 export class Projection {
@@ -21,7 +22,7 @@ export class Projection {
     const axis = d => this.model.rows.map((_, id) => positions.get(id)?.[d] ?? NaN);
     return { fitted: true, method: request.method, mapName: request.name, name: `${request.name}-2d`,
       count: result.rowIds.length, config, coverage: result.coverage, inputFields: result.inputFields,
-      aggregation: result.aggregation,
+      aggregation: result.aggregation, survey: result.survey,
       dimensions: result.dimensions, rowIds: result.rowIds, representationId: result.representationId,
       featureSetId: result.featureSetId,
       x: { values: axis(0), name: `${request.method.toUpperCase()} 1` },
@@ -58,7 +59,7 @@ export class Projection {
       const saved = this.model.results.add('projection', this.fitted(request, result, config));
       this.publish(request, saved);
       this.feedback(request, `${request.name} saved in Exports.`);
-      complete(`${request.name} · ${result.rowIds.length} records · ${this.model.rows.length - result.rowIds.length} without vectors`);
+      complete(`${request.name} · ${result.rowIds.length} records · ${this.model.rows.length - result.rowIds.length} without vectors${surveyNote(result.survey)}`);
       return saved;
     } catch (error) {
       if (generation === this.generation) {

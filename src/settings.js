@@ -16,6 +16,7 @@ class SimilarityMaps {
     $('#feature-mode').onchange = () => { featureList(model, this.base); this.name(); };
     $('#field-combine').onchange = combiningControls;
     $('#group-identity').oninput = combiningControls;
+    $('#survey-text-weight').oninput = combiningControls;
     $('#shared-fields').onclick = () => $('#phrase-settings').click();
     model.on(Events.PHRASE_SETTINGS, () => {
       if ($('#map-dialog').open && ['text', 'words'].includes($('#feature-mode').value)) { featureList(model, this.base); this.name(); }

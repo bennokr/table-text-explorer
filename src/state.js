@@ -2,6 +2,7 @@ import { defaultConfig, defaultInputMode } from './default-config.js';
 import { inferSchema } from './schema.js';
 import { fieldLanguages, languageNote, languageSettings } from './language.js';
 import { Results } from './results.js';
+import { addResponseProfile } from './response-profile.js';
 import { Events, checkedEvent } from './events.js';
 import { defaultTermSettings } from './term-settings-model.js';
 
@@ -37,6 +38,13 @@ export class Dataset extends EventTarget {
     return () => this.removeEventListener(type, callback);
   }
 
+  // The language of each text column, and the settings that follow from it.
+  detectLanguages(metadata) {
+    this.languages = fieldLanguages(this.fields, this.rows, metadata);
+    this.languageNote = languageNote(this.languages);
+    Object.assign(this.config, languageSettings(this.languages));
+  }
+
   load({ rows, metadata = {}, name }) {
     this.rows = rows.map(row => Object.assign(Object.create(null), row));
     this.metadata = metadata;
@@ -46,9 +54,8 @@ export class Dataset extends EventTarget {
     this.revision += 1;
     this.fieldRevisions.clear();
     this.fields = inferSchema(this.rows, metadata, this.config);
-    this.languages = fieldLanguages(this.fields, this.rows, metadata);
-    this.languageNote = languageNote(this.languages);
-    Object.assign(this.config, languageSettings(this.languages));
+    this.detectLanguages(metadata);
+    addResponseProfile(this);
     this.config.overrides = {};
     this.config.mode = defaultInputMode(this.fields);
     this.config.features = null;
@@ -98,7 +105,7 @@ export class Dataset extends EventTarget {
     this.config = config;
     if (!schemaChanged) { this.emit(Events.CONFIG); return; }
     this.schemaRevision += 1;
-    const derived = this.fields.filter(field => field.derived);
+    const derived = this.fields.filter(field => field.derived || field.computed);
     const originals = this.rows.map(row => Object.fromEntries(Object.entries(row)
       .filter(([name]) => !derived.some(field => field.name === name))));
     this.fields = [...inferSchema(originals, this.metadata, config), ...derived];

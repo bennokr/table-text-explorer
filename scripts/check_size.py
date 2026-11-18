@@ -3,7 +3,7 @@
 import ast
 from pathlib import Path
 
-EXCLUDED = {"node_modules", "dist", "dist-feasibility", "vendor", ".cache", ".venv"}
+EXCLUDED = {"node_modules", "dist", "vendor", ".cache", ".venv"}
 
 
 def main():
@@ -16,7 +16,7 @@ def main():
     for path, count in counts.items():
         print(f"{path}: {count} Python statements")
     oversized = [path for path, count in counts.items() if count > 250]
-    if oversized or sum(counts.values()) > 3550:
+    if oversized or sum(counts.values()) > 4055:
         raise SystemExit(
             "Python statement budget exceeded; split responsibilities, keep readability."
         )

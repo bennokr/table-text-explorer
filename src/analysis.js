@@ -1,8 +1,9 @@
 import { phraseSettings } from './phrase-config.js';
-import { payload, featureKey, isEmbeddingMode } from './features.js';
+import { payload, featureKey, featureFields, isEmbeddingMode } from './features.js';
 import { TextIndexes } from './text-index.js';
 import { Workers } from './workers/client.js';
 import { Events } from './events.js';
+import { surveyRequest, surveyTextFields, surveyTextModel } from './survey-input.js';
 
 export class Analysis {
   workers = new Workers();
@@ -32,6 +33,12 @@ export class Analysis {
   async prepare() {
     const key = featureKey(this.model);
     if (this.cache?.key === key) { return this.cache.result; }
+    const result = this.model.config.mode === 'survey' ? await this.prepareSurvey() : await this.prepareFeatures();
+    this.cache = { key, result };
+    return result;
+  }
+
+  async prepareFeatures() {
     const data = payload(this.model, 'prepare');
     await this.lexicalInputs(data);
     const embedded = isEmbeddingMode(data.mode) ? await this.embed(data)
@@ -41,8 +48,22 @@ export class Analysis {
     const result = { ...prepared, ...embedded, inputFields: data.fields,
       featureSetId: `${this.model.revision}:${++this.featureSequence}`,
       config: { ...structuredClone(this.model.config), phrases: phraseSettings(this.model) } };
-    this.cache = { key, result };
     return result;
+  }
+
+  // Survey answers: the free text is embedded first, then the worker compares every pair of records.
+  async prepareSurvey() {
+    const model = this.model;
+    const text = surveyTextFields(model).length ? payload(surveyTextModel(model), 'prepare') : null;
+    const embedded = text ? this.importedEmbeddings(text) ?? await this.workers.run('sentences', text, this.progress)
+      : { rowIds: [], features: new Float32Array(0), coverage: [], sentenceModel: null, aggregation: null, dimensions: null };
+    const request = surveyRequest(model, embedded.rowIds);
+    const prepared = await this.workers.run('python', { ...request, features: embedded.features }, this.progress);
+    const fields = featureFields(model).map(field => ({ name: field.name, kind: field.kind, group: field.group }));
+    return { ...prepared, rowIds: model.rows.map((_, id) => id), coverage: embedded.coverage, embeddings: null,
+      sentenceModel: embedded.sentenceModel, aggregation: embedded.aggregation, embeddingDimensions: embedded.dimensions,
+      inputFields: fields, featureSetId: `${model.revision}:${++this.featureSequence}`,
+      config: { ...structuredClone(model.config), phrases: phraseSettings(model) } };
   }
 
   // Embeddings imported from a file stand in for encoding the text again.
@@ -95,7 +116,7 @@ export class Analysis {
     const config = this.model.config;
     const result = await this.workers.run(method === 'umap' ? 'umap' : 'python', {
       method, mode: 'prepared', features: prepared.features,
-      neighbors: config.neighbors, epochs: config.epochs }, this.progress);
+      neighbors: config.neighbors, epochs: config.epochs, graph: prepared.neighbours }, this.progress);
     return { ...prepared, coordinates: result.coordinates };
   }
 

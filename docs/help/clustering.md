@@ -18,6 +18,12 @@ Clusters are candidate themes or profiles, not validated categories. One cluster
 
 Saved representations retain semantic/numeric features; a saved similarity map uses only its 2D coordinates. Filters and highlights do not change either fit. Maps follow adjacent legends for colors.
 
+## Group stability
+
+A stable group is one that comes back when you cluster a different part of the records.
+
+After a K-means or agglomerative fit (up to 3,000 records), the groups are re-found 8 times on random 80% subsets, and each group gets the best overlap it reaches (0 to 1). The legend shows it when you hover a group name. Above 0.75 a group is stable; between 0.6 and 0.75 it is a pattern worth checking; below 0.6 it is mostly a pattern in this sample. When the mean is below 0.75, the status line names a smaller group count that is stable, if one is found within four steps. Stability says a group is reproducible, not that it means something: a map that only follows who answered what also gives stable groups.
+
 ## Methods
 
 K-means is the fast default. Agglomerative clustering builds a hierarchy; HDBSCAN finds density groups and an Other group, and is experimental because on text vectors it often leaves most records in Other.
@@ -28,7 +34,7 @@ K-means requires a group count and assigns every usable record. Hierarchical cut
 
 Leave tuning controls collapsed until you have inspected the first result.
 
-Phrase names are suggested by default (untick it to keep numbers) and reuse or build compatible counts. Names avoid function words and negations at their edges and phrases found in over a third of the other records. Every cluster gets a name: if no distinctive phrase is free, a looser one is used, and only a cluster with no usable phrase at all keeps its number. Rename all suggests up to the selected maximum number of phrases; edited names stay locked until cleared. Tree names and descendant colors remain editable. Naming suggestions describe clusters; they do not fit or change membership.
+Phrase names are suggested by default (untick it to keep numbers) and reuse or build compatible counts. Names avoid function words and negations at their edges and phrases found in over a third of the other records. Every cluster gets a name: if no distinctive phrase is free, a looser one is used, and only a cluster with no usable phrase at all keeps its number. Rename all suggests up to the selected maximum number of phrases; edited names stay locked until cleared. On survey maps groups are named by the answers that set them apart, such as Pet: dog, one answer per question and only answers given by at least three members and a fifth of the group; unstable groups keep their number. Tree names and descendant colors remain editable. Naming suggestions describe clusters; they do not fit or change membership.
 
 ## Troubleshooting
 

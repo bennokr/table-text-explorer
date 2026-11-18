@@ -52,8 +52,8 @@ test('color: the best column colors the cloud, clicking a value conditions, and 
 test('color: coverage is shown and missingness that depends on the text is flagged', async ({ app }) => {
   const { page } = app;
   await importRows(page, planted());
-  await expect(option(page, 'col:signal')).toHaveCount(1, { timeout: 90000 });
-  await expect(option(page, 'col:signal')).toContainText('60%');
+  // The column is listed at once; its coverage appears only after the screen, which waits for Python to load.
+  await expect(option(page, 'col:signal')).toContainText('60%', { timeout: 90000 });
   await expect(option(page, 'col:signal')).not.toContainText('missing differs');
   await expect(option(page, 'col:mnar')).toContainText('missing differs');
   await expect(option(page, 'col:noise')).toContainText('○○○');

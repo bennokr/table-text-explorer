@@ -58,7 +58,7 @@ examples. Diagnostics include text-cell counts per person and field, duplicate
 strings, lengths, category frequencies, missingness and experience ratings by
 fictional topic profile. The row hash checks reproducibility with the same seed,
 configuration, workbook and text banks. Generated Table Schema and demo settings
-live under `demo-config/<workbook-name>/`; all 39 populated text fields are selected
+live under `demo-config/<workbook-name>/` and use the [codebook profile](codebook-profile.md) (free-text fields are the string columns other than the identifier and postcode); all 39 populated text fields are selected
 for phrase counting by default.
 
 `npm run test:rmc` checks totals, alternate scenarios, deterministic generation,

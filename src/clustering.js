@@ -17,6 +17,15 @@ function inputSummary(model, source) {
   return `${source.rowIds.length} records · ${source.kind === 'projection' ? '2D coordinates' : 'saved feature space'}`;
 }
 
+function recordStability(data, stability = {}) {
+  for (const [id, value] of Object.entries(stability)) { data.groups[id].stability = value; }
+}
+
+// Says so when the groups are not reproducible, and which smaller count would be.
+function stabilityNote({ suggestedGroups }) {
+  return suggestedGroups ? `Groups are not stable; ${suggestedGroups} groups would be. ` : '';
+}
+
 export class Clustering {
   normalize = true;
 
@@ -62,7 +71,7 @@ export class Clustering {
     $('#cluster-min-size').value = Math.min(15, count);
     $('#cluster-min-samples').value = Math.min(5, count);
     // Unit-length vectors suit text representations; 2D maps and table columns keep their scale.
-    this.normalize = source?.kind !== 'projection' && (source?.config?.mode ?? this.model.config.mode) !== 'table';
+    this.normalize = source?.kind !== 'projection' && !['table', 'survey'].includes(source?.config?.mode ?? this.model.config.mode);
     this.name();
   }
 
@@ -172,6 +181,7 @@ export class Clustering {
       parameters, maxNamePhrases: naming.maximum, rowIds: source.rowIds, sourceId: source.representationId,
       featureSetId: source.featureSetId, inputMapId: source.inputMapId,
       config: structuredClone(source.config ?? this.model.config), groups: clusterGroups(output.labels) };
+    recordStability(data, output.stability);
     initializeTree(data);
     try { if (naming.enabled) { await nameClusters(this.model, this.analysis, data); } }
     catch (error) { data.namingError = error.message; }
@@ -182,6 +192,6 @@ export class Clustering {
     this.model.analysisViewId = showClustering(this.model, result).id;
     this.model.emit(Events.ANALYSIS_CARD);
     this.model.resultsChanged();
-    complete(`${data.namingError ? 'Phrase naming unavailable; use Rename all to retry. ' : ''}${result.name} · ${new Set(result.labels.filter(id => id !== -1)).size} groups · ${output.labels.filter(id => id === -1).length} Other records. Open the legend to rename groups; downloads are in Exports.`);
+    complete(`${data.namingError ? 'Phrase naming unavailable; use Rename all to retry. ' : ''}${stabilityNote(output)}${result.name} · ${new Set(result.labels.filter(id => id !== -1)).size} groups · ${output.labels.filter(id => id === -1).length} Other records. Open the legend to rename groups; downloads are in Exports.`);
   }
 }

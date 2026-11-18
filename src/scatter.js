@@ -1,3 +1,4 @@
+import { surveyNote } from './survey-input.js';
 import { temporal } from './dates.js';
 import { B, dimension, figure, linkRecords, PlotHost, ticks } from './plot.js';
 import { HIGHLIGHT, SERIES, UNASSIGNED } from './palette.js';
@@ -14,6 +15,12 @@ function embeddingCoverage(coordinates) {
   const total = coordinates.coverage.reduce((sum, field) => sum + field.total, 0);
   const unit = coordinates.config.mode === 'sentences' ? 'tokens covered' : 'words recognized';
   return total ? ` · ${Math.round(100 * matched / total)}% ${unit}` : '';
+}
+
+// The columns a map was fitted on, with their weights; a survey has too many to list.
+function inputColumns(config) {
+  if (config.mode === 'survey') { return `${config.features?.length ?? 'all'} columns`; }
+  return config.features?.map(name => `${name} ×${config.weights[name] ?? 1}`).join(', ') || 'Automatic columns';
 }
 
 export class Scatter {
@@ -111,9 +118,9 @@ export class Scatter {
     if (!coordinates) { return 'Choose settings, then fit this view.'; }
     if (!coordinates.fitted) { return 'Data axes'; }
     const config = coordinates.config;
-    const fields = config.features?.map(name => `${name} ×${config.weights[name] ?? 1}`).join(', ') || 'Automatic columns';
+    const fields = inputColumns(config);
     const mode = config.mode === 'words' ? `${config.vectorLanguage.toUpperCase()} vectors · ${config.pooling} · ${config.combine}` : config.mode;
     const missing = this.model.rows.length - coordinates.count;
-    return `${coordinates.method.toUpperCase()} · ${mode} · ${fields} · ${missing} unembedded${embeddingCoverage(coordinates)}`;
+    return `${coordinates.method.toUpperCase()} · ${mode} · ${fields} · ${missing} unembedded${embeddingCoverage(coordinates)}${surveyNote(coordinates.survey)}`;
   }
 }

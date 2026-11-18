@@ -4,8 +4,8 @@ export function descriptionEnabled(config) {
   return config.combine === 'description-mean' || Boolean(config.includeDescriptions);
 }
 
-export function groupName(field, overrides = {}) {
-  return String(overrides[field.name] ?? field.group ?? '').trim() || 'Other columns';
+export function groupName(field) {
+  return String(field.group ?? '').trim() || 'Other columns';
 }
 
 function vectorGroups(fields) {

@@ -39,7 +39,7 @@ export class ClusterLegend {
 
   add(group, parent = this.root) {
     const name = element('input', { class: 'cluster-name', value: group.name,
-      title: `Cluster ID ${group.id} · edit name`, 'aria-label': `Name for cluster ${group.id}` });
+      title: `Cluster ID ${group.id}${group.stability === undefined ? '' : ` · stability ${group.stability}`} · edit name`, 'aria-label': `Name for cluster ${group.id}` });
     const commit = () => { name.value = renameCluster(this.model, this.result, group.id, name.value); };
     name.onchange = commit;
     name.onkeydown = event => {

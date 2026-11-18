@@ -3,7 +3,8 @@
 // first axis. In 30 comparisons (TF-IDF, word and sentence representations, three text fields),
 // PCA gave better neighbourhood purity in 27, tied in 2 and was 0.006 behind in 1
 // (docs/evaluation.md), so every mode uses PCA. The table keeps the switch so a mode can change.
-const LINEAR_METHOD = { table: 'pca', text: 'pca', words: 'pca', sentences: 'pca' };
+// Survey answers are already a metric embedding (classical MDS) of their distance, so PCA only rotates it.
+const LINEAR_METHOD = { table: 'pca', survey: 'pca', text: 'pca', words: 'pca', sentences: 'pca' };
 
 export function linearMethod(mode) { return LINEAR_METHOD[mode] ?? 'pca'; }
 

@@ -10,10 +10,6 @@ async function groupedDraft(page) {
   await page.locator('#group-identity').focus();
   await page.locator('#group-identity').press('ArrowRight');
   await expect(page.locator('#group-identity-value')).toHaveText('25%');
-  await page.getByLabel('Group for text', { exact: true }).fill('Communication');
-  await page.getByLabel('Group for notes', { exact: true }).fill('Support');
-  await page.getByLabel('Group for notes', { exact: true }).press('Tab');
-  await expect(page.locator('#groups-summary')).toHaveText('Variable groups · 2 groups');
   await page.getByLabel('Weight of text', { exact: true }).fill('2');
   await expect(page.locator('#weights-summary')).toHaveText('Column weights · 1 customized');
   await page.getByLabel('Weight of text', { exact: true }).fill('-1');

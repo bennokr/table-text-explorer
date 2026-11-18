@@ -19,6 +19,7 @@ Highlight a group of records, inspect their distinctive phrases, and click one t
 - [Highlight and filter](selection.md): brush, query, and commit a filter.
 - [Make a map](maps.md): choose columns and a representation.
 - [Choose a text model](text-models.md): language, context and long text.
+- [Compare survey answers](survey.md): maps that treat blank answers as unknown.
 - [Combine columns](combining.md): averages, variable groups and weights.
 - [Find themes](clustering.md): review clusters and compare groups.
 - [Inspect and export](data.md): types, annotations and saved results.

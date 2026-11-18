@@ -31,7 +31,8 @@ function valueLabels(field, base) {
 
 function fieldMetadata(field, base) {
   return { ...base, ...field, label: field.title ?? base.label, kind: fieldKind(field) ?? base.kind,
-    group: extension(field).group ?? base.group, language: extension(field).language ?? base.language,
+    level: extension(field).level ?? base.level, group: extension(field).group ?? base.group,
+    language: extension(field).language ?? base.language, appliesWhen: extension(field).applies_when ?? base.appliesWhen,
     valueLabels: valueLabels(field, base) };
 }
 

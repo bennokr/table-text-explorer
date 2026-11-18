@@ -26,13 +26,13 @@ def invented_schema(config):
             [
                 {"name": parent, "type": "integer"},
                 {"name": f"{parent}Last", "type": "integer"},
-                {"name": name, "type": "string", "x-role": "text"},
+                {"name": name, "type": "string"},
             ]
         )
     for name in ("NrBev", "ModPart"):
         fields.append({"name": name, "type": "integer"})
     for name in ("ToelVrgl", "ErvTkst"):
-        fields.append({"name": name, "type": "string", "x-role": "text"})
+        fields.append({"name": name, "type": "string"})
     for name in ("Leeftijd", "Inclusie2", "AmduurBev"):
         fields.append(
             {"name": name, "type": "integer", "constraints": {"minimum": 0, "maximum": 3000}}

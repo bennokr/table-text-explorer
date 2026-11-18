@@ -5,6 +5,7 @@ import time
 
 import bridge
 import numpy as np
+from cluster_stability import MAX_RECORDS, STABLE, group_stability, mean_stability, suggest_groups
 from density import density_result
 from sklearn.cluster import HDBSCAN, AgglomerativeClustering, KMeans, MiniBatchKMeans
 from sklearn.preprocessing import normalize
@@ -60,6 +61,25 @@ def estimator(data, count):
     raise ValueError("Unknown clustering method.")
 
 
+def stability_of(data, matrix, labels):
+    """Per-group stability of a K-means or agglomerative clustering, and a steadier group count."""
+    if data["method"] == "hdbscan" or len(matrix) > MAX_RECORDS:
+        return {}
+    count = integer(data, "clusters", 8, 2, len(matrix))
+
+    def at(groups):
+        settings = {**data, "clusters": groups}
+
+        def refit(subset):
+            return estimator(settings, len(subset)).fit_predict(subset)
+
+        return group_stability(matrix, labels if groups == count else refit(matrix), refit)
+
+    scores = at(count)
+    steadier = None if mean_stability(scores) >= STABLE else suggest_groups(count, at)
+    return {"stability": scores, "suggestedGroups": steadier}
+
+
 def cluster(data, features):
     matrix = np.asarray(features, dtype=np.float32)
     if matrix.ndim != 2 or min(matrix.shape) < 1 or len(matrix) < 2:
@@ -72,6 +92,7 @@ def cluster(data, features):
     fitted = estimator(data, len(matrix))
     labels = fitted.fit_predict(matrix)
     result = {"labels": labels.tolist(), "seconds": time.perf_counter() - started}
+    result.update(stability_of(data, matrix, labels))
     if data["method"] == "agglomerative":
         result["tree"] = {
             "children": fitted.children_.tolist(),

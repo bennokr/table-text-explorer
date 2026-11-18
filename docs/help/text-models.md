@@ -42,4 +42,4 @@ Static vectors support ordinary or TF-IDF-weighted word means. Their language mo
 
 Both sentence models produce 384-dimensional column vectors before aggregation, using local CPU/WASM inference.
 
-Chunks are weighted by newly covered text tokens. Description prefixes use at most 32 tokens and one third of the chunk budget; they do not inflate text-token coverage. Excessive overlap is rejected. Compatible field vectors are cached; changing weights, group assignments or aggregation can reuse them. Changing a description re-encodes affected fields when prefixes are enabled.
+Chunks are weighted by newly covered text tokens. Description prefixes use at most 32 tokens and one third of the chunk budget; they do not inflate text-token coverage. Excessive overlap is rejected. Compatible field vectors are cached; changing weights or aggregation can reuse them. Changing a description re-encodes affected fields when prefixes are enabled.
