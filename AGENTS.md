@@ -22,8 +22,9 @@
 - CI (`.github/workflows/pages.yml`) runs `npm run check` and `npm test` before building, on every branch push; only
   `main` (or a manual run) deploys. Locally, run
   `uv sync --cache-dir .cache/uv` once so the offline `ruff` calls in `npm run check` find the pinned version.
-- `linked-codebook` is a URL tarball in `package.json` (currently 0.9.0); bump it there, run `npm test`
-  (the shared case fixture is `tests/fixtures/column-kind-cases.json`) and read its `docs/changelog.md`.
+- `linked-codebook` comes from npm (exact version in `package.json`, currently 0.11.0; Dependabot tracks it); when you
+  bump it, run `npm test` (the shared case fixture is `tests/fixtures/column-kind-cases.json`) and read its
+  `docs/changelog.md`.
 - The XLSX codebook is read by `src/codebook-profile.js`, which warns loudly about cells whose type does not match
   their header and hands the cells to linked-codebook; see "Codebook reader" in docs/maintenance.md. The output is
   pinned by `tests/fixtures/codebook-schema.json`.
