@@ -44,26 +44,26 @@
     "report:lexicon": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run --offline --cache-dir .cache/uv --script tests/eval/lexicon_report.py"
   },
   "dependencies": {
-    "@bokeh/bokehjs": "3.8.0",
-    "@huggingface/transformers": "4.3.1",
+    "@bokeh/bokehjs": "3.10.2",
+    "@huggingface/transformers": "4.3.2",
     "@irbisadm/statfmt": "0.1.1",
-    "d3-cloud": "1.2.9",
+    "d3-cloud": "2.0.0",
     "fflate": "0.8.3",
     "franc-min": "6.2.0",
     "linked-codebook": "0.11.0",
-    "papaparse": "5.5.3",
-    "pyodide": "0.29.0",
+    "papaparse": "5.7.1",
+    "pyodide": "314.0.8",
     "umap-js": "1.4.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "eslint": "10.13.0",
-    "eslint-visitor-keys": "4.2.1",
-    "espree": "10.4.0",
-    "globals": "16.5.0",
-    "playwright": "1.58.2",
-    "vite": "8.3.5"
+    "eslint": "10.15.0",
+    "eslint-visitor-keys": "5.0.1",
+    "espree": "11.2.0",
+    "globals": "17.14.0",
+    "playwright": "1.65.1",
+    "vite": "8.3.8"
   },
   "overrides": {
     "@xmldom/xmldom": "^0.9.12"
