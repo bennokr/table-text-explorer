@@ -4,10 +4,20 @@ import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { readSav } from '@irbisadm/statfmt';
 
-function jsonRecords(text) {
-  const rows = JSON.parse(text);
+function jsonRecords(text) { return checkedRecords(JSON.parse(text)); }
+
+// JSON Lines: one record object per line; blank lines are skipped.
+function jsonLines(text) {
+  const rows = text.split(/\r?\n/u).map((line, index) => ({ line: index + 1, text: line.trim() })).filter(item => item.text)
+    .map(item => {
+      try { return JSON.parse(item.text); } catch (error) { throw new Error(`JSON Lines: line ${item.line}: ${error.message}`, { cause: error }); }
+    });
+  return checkedRecords(rows);
+}
+
+function checkedRecords(rows) {
   if (!Array.isArray(rows) || rows.some(row => !row || typeof row !== 'object' || Array.isArray(row))) {
-    throw new Error('JSON must contain an array of record objects.');
+    throw new Error('JSON must contain an array of record objects (or one record per line in a .jsonl file).');
   }
   return rows;
 }
@@ -45,13 +55,14 @@ export function parseTable(bytes, name) {
   const text = () => new TextDecoder().decode(bytes);
   const readers = { csv: () => ({ rows: readCsv(text()) }),
     json: () => ({ rows: jsonRecords(text()) }),
+    jsonl: () => ({ rows: jsonLines(text()) }),
     xlsx: () => ({ rows: readExcel(bytes) }),
     sav: () => {
       const data = readSav(new Uint8Array(bytes));
       return { rows: data.toObjects(), metadata: Object.fromEntries(
         data.variables.map(field => [field.name, field])) };
     } };
-  if (!Object.hasOwn(readers, extension)) { throw new Error('Choose a CSV, JSON records, SAV or XLSX file.'); }
+  if (!Object.hasOwn(readers, extension)) { throw new Error('Choose a CSV, JSON, JSON Lines, SAV or XLSX file.'); }
   const result = readers[extension]();
   if (!result.rows.length) { throw new Error('The table contains no records.'); }
   const flattened = isNested(result.rows) ? { flattened: flattenRecords(result.rows) } : {};

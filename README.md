@@ -30,7 +30,7 @@ See [assets, dataset licenses and offline preparation](docs/data-and-assets.md).
 
 ## Explore
 
-1. Import CSV, JSON records, XLSX (first sheet) or SAV, or choose an example.
+1. Import CSV, JSON or JSON Lines records, XLSX (first sheet) or SAV, or choose an example.
 2. Brush a chart or type a query to highlight records. Click phrases or metadata
    predicates to add conditions. Filtering is always an explicit action.
 3. Add charts, resize their dividers, or make a named similarity map

@@ -1,7 +1,7 @@
 # Scope and stages
 
 Browser-only exploration and enrichment of fewer than 20,000 mixed-type records.
-Import CSV, JSON records, XLSX and SAV; export original values plus annotation columns
+Import CSV, JSON records, JSON Lines, XLSX and SAV; export original values plus annotation columns
 as CSV, JSON records or XLSX. No SAV export or project archive initially.
 
 Use Bokeh Canvas for linked distributions, pairwise visual exploration and 2D maps.

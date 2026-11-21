@@ -8,7 +8,7 @@ Highlight records, create an annotation column and assign a label, then download
 
 ## Steps
 
-1. Import CSV, JSON records, XLSX first-sheet data or SAV.
+1. Import CSV, JSON records, JSON Lines (`.jsonl`, one record per line), XLSX first-sheet data or SAV.
 2. Use the table's column picker to show a manageable set of variables.
 3. Inspect full records and adjust column types when needed.
 4. Export annotations and saved analyses before closing.

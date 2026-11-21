@@ -37,3 +37,11 @@ test('nested JSON files carry a flat version beside the original read; flat file
   assert.equal(table.flattened, undefined);
   assert.deepEqual(table.rows, [{ id: 1, 'a.b': 'x' }]);
 });
+
+test('a .jsonl file is read as one record per line, blank lines skipped, and errors name the line', () => {
+  const read = text => parseTable(new TextEncoder().encode(text), 'reviews.jsonl');
+  assert.deepEqual(read('{"id":1,"a":{"b":"x"}}\r\n\n{"id":2}\n').rows.length, 2);
+  assert.deepEqual(read('{"id":1,"a":{"b":"x"}}\n{"id":2}').flattened.rows, [{ id: 1, 'a.b': 'x' }, { id: 2, 'a.b': null }]);
+  assert.throws(() => read('{"id":1}\n{oops}\n'), /line 2/u);
+  assert.throws(() => read('[1,2]\n'), /record objects/u);
+});
